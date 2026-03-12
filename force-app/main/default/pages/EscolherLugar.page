@@ -1,0 +1,102 @@
+<apex:page standardController="Order" extensions="BilheteiraController" docType="html-5.0">
+    <style>
+        .container { max-width: 650px; margin: 30px auto; font-family: sans-serif; }
+        .card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .bilhete-row { display: flex; align-items: flex-end; gap: 15px; margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; animation: fadeIn 0.3s; }
+        .btn-add { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        .btn-remove { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        .btn-finalizar { width: 100%; padding: 18px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; }
+        .label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #444; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .success-area { text-align: center; display: none; padding: 40px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <div class="container">
+        <div id="form-area" class="card">
+            <h2 style="color: #333; margin-top: 0;">🎫 Escolha de Assentos</h2>
+            <p style="color: #666;">Preencha os lugares para a Encomenda: <b>{!Order.OrderNumber}</b></p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+            
+            <div id="bilhetes-list">
+                <div class="bilhete-row" id="row-1">
+                    <div><span class="label">Fila</span><input type="text" placeholder="Ex: A" style="width: 60px;" /></div>
+                    <div><span class="label">Lugar</span><input type="number" value="1" style="width: 80px;" /></div>
+                    <div style="width: 40px;"></div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-add" onclick="addRow()">+ Adicionar Lugar</button>
+            <button type="button" class="btn-finalizar" onclick="finalizar()">Finalizar Compra</button>
+        </div>
+
+        <div id="success-area" class="card success-area">
+            <div style="font-size: 60px;">✅</div>
+            <h1 style="color: #28a745; margin: 10px 0;">Compra Concluída!</h1>
+            <p style="font-size: 16px; color: #555;">Os teus bilhetes foram gerados e enviados por email.</p>
+            <button onclick="window.location.href='/{!Order.Id}'" style="margin-top: 25px; padding: 12px 25px; cursor: pointer; border-radius: 5px; border: 1px solid #ccc;">Ver Detalhes da Order</button>
+        </div>
+    </div>
+
+    <script>
+        let rowCount = 1;
+
+        function addRow() {
+            rowCount++;
+            const container = document.getElementById('bilhetes-list');
+            const newRow = document.createElement('div');
+            newRow.className = 'bilhete-row';
+            newRow.id = 'row-' + rowCount;
+            newRow.innerHTML = `
+                <div><span class="label">Fila</span><input type="text" style="width: 60px;" /></div>
+                <div><span class="label">Lugar</span><input type="number" style="width: 80px;" /></div>
+                <button type="button" class="btn-remove" onclick="removeRow(${rowCount})">🗑️</button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function removeRow(id) { document.getElementById('row-' + id).remove(); }
+        
+        function iniciarVenda(evtId, accId) {
+    Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.BilheteiraController.iniciarCompra}',
+        evtId, accId,
+        function(result, event) {
+            if (event.status && !result.startsWith('ERRO:')) {
+                // SUCESSO: O resultado é um ID real (ex: 801...)
+                window.location.href = '/apex/EscolherLugar?id=' + result;
+            } else {
+                // FALHA: Mostra o erro em vez de tentar abrir a página
+                alert('Não foi possível criar a encomenda: ' + result);
+                console.error('Erro detalhado:', result);
+            }
+        }
+    );
+}
+        
+        function finalizar() {
+            const rows = document.querySelectorAll('.bilhete-row');
+            let dados = [];
+            rows.forEach(r => {
+                let f = r.querySelector('input[type="text"]').value;
+                let l = r.querySelector('input[type="number"]').value;
+                if(f && l) dados.push({ fila: f, lugar: parseInt(l) });
+            });
+
+            if(dados.length === 0) { alert('Escolha pelo menos um lugar!'); return; }
+
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.BilheteiraController.finalizarCompra}',
+                '{!Order.Id}', JSON.stringify(dados),
+                function(result, event) {
+                    if (result === 'OK') {
+                        document.getElementById('form-area').style.display = 'none';
+                        document.getElementById('success-area').style.display = 'block';
+                    } else {
+                        alert(result);
+                    }
+                }
+            );
+        }
+    </script>
+</apex:page>

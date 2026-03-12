@@ -1,0 +1,123 @@
+<apex:page standardController="Bilhete__c" renderAs="pdf" applyBodyTag="false">
+    <head>
+        <style>
+            @page { size: A4; margin: 0; }
+            body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background-color: #1a1a1a; color: #fff; }
+            
+            /* Header com Logo Gigante */
+            .header-branding { background-color: #111111; padding: 20px; text-align: center; border-bottom: 3px solid #00aeef; }
+            .logo { height: 185px; width: auto; }
+
+            /* Info do Evento */
+            .event-banner { padding: 30px 20px; text-align: center; background-color: #111; }
+            .artist-name { font-size: 38px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+            .event-tag { color: #00aeef; font-size: 14px; font-weight: bold; letter-spacing: 4px; margin-top: 10px; }
+
+            /* Corpo do Bilhete (Tudo em 1 Página) */
+            .ticket-wrap { background-color: #fff; color: #000; margin: 15px; border-radius: 5px; overflow: hidden; }
+            
+            .main-table { width: 100%; border-collapse: collapse; }
+            .col-date { width: 25%; text-align: center; border-right: 2px solid #eee; padding: 30px 10px; background: #f9f9f9; }
+            .day { font-size: 55px; font-weight: bold; display: block; line-height: 1; }
+            .month { font-size: 18px; text-transform: uppercase; color: #666; font-weight: bold; }
+
+            .col-details { width: 45%; padding: 30px; }
+            .venue-title { font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+            .address { font-size: 11px; color: #555; line-height: 1.4; }
+            .coords { font-size: 10px; color: #00aeef; font-weight: bold; margin-top: 5px; }
+
+            .col-barcode { width: 30%; text-align: center; padding: 20px; vertical-align: middle; }
+            .barcode-img { width: 160px; }
+
+            /* Seção de Dados do Cliente */
+            .seating-row { background-color: #000; color: #fff; width: 100%; }
+            .seat-item { padding: 20px; text-align: center; border-right: 1px solid #333; }
+            .label { font-size: 10px; color: #00aeef; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 5px; }
+            .value { font-size: 18px; font-weight: bold; }
+
+            /* Informação Completa e Condições */
+            .legal-section { padding: 25px; font-size: 10px; line-height: 1.5; color: #333; background: #fff; }
+            .info-title { font-weight: bold; text-transform: uppercase; color: #000; border-bottom: 2px solid #00aeef; margin-bottom: 8px; display: inline-block; }
+
+            /* Secção do Promotor */
+            .promoter-info { padding: 15px 25px; background: #fff; font-size: 9px; color: #666; border-top: 1px dashed #ccc; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+            .promoter-info strong { color: #000; }
+
+            .footer-safe { padding: 15px; background: #f4f4f4; text-align: center; font-size: 9px; border-top: 1px solid #ddd; }
+        </style>
+    </head>
+    <body>
+        <div class="header-branding">
+            <apex:image url="{!URLFOR($Resource.Logo)}" styleClass="logo"/>
+        </div>
+
+        <div class="event-banner">
+            <div class="artist-name">{!Bilhete__c.Evento__r.Name}</div>
+            <div class="event-tag">BILHETE OFICIAL | WORLDWIDE TOUR 2026</div>
+        </div>
+
+        <div class="ticket-wrap">
+            <table class="main-table">
+                <tr>
+                    <td class="col-date">
+                        <span class="day"><apex:outputText value="{0,date,dd}"><apex:param value="{!Bilhete__c.Evento__r.DataEvento__c}" /></apex:outputText></span>
+                        <span class="month"><apex:outputText value="{0,date,MMM yyyy}"><apex:param value="{!Bilhete__c.Evento__r.DataEvento__c}" /></apex:outputText></span>
+                    </td>
+                    <td class="col-details">
+                        <div class="venue-title">{!Bilhete__c.Evento__r.Recinto__r.Name}</div>
+                        <div class="address">
+                            {!Bilhete__c.Evento__r.Recinto__r.MoradaCompleta__c}<br/>
+                            {!Bilhete__c.Evento__r.Recinto__r.CodigoPostal__c}, {!Bilhete__c.Evento__r.Recinto__r.Cidade__c}<br/>     
+                        </div>
+                        
+                        <div style="background:#000; color:#fff; padding:5px 10px; display:inline-block; margin-top:10px; font-weight:bold;">
+                            PREÇO: {!Bilhete__c.Evento__r.PrecoBilhete__c} € (IVA Inc.)
+                        </div>
+                    </td>
+                    <td class="col-barcode">
+                        <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text={!Bilhete__c.Name}&scale=1&includetext=true" class="barcode-img" />
+                    </td>
+                </tr>
+            </table>
+
+            <table class="main-table seating-row">
+                <tr>
+                    <td class="seat-item" style="text-align: left; padding-left: 30px;">
+                        <span class="label">Titular do Bilhete</span>
+                        <span class="value">{!Bilhete__c.Order__r.Account.Name}</span>
+                    </td>
+                    <td class="seat-item"><span class="label">Fila</span><span class="value">{!Bilhete__c.Fila__c}</span></td>
+                    <td class="seat-item" style="border:none;"><span class="label">Lugar</span><span class="value">{!Bilhete__c.NumeroLugar__c}</span></td>
+                </tr>
+            </table>
+
+            <div class="legal-section">
+                <table width="100%">
+                    <tr>
+                        <td width="48%" valign="top">
+                            <span class="info-title">Informações de Acesso</span><br/>
+                            Abertura de portas: 1h30 antes do início. Interdita a entrada de objetos perigosos, animais, comida ou bebidas externas. Proibida a gravação de vídeo/áudio sem autorização. Programação sujeita a alterações por motivos imprevistos.
+                        </td>
+                        <td width="4%"></td>
+                        <td width="48%" valign="top">
+                            <span class="info-title">Condições Gerais</span><br/>
+                            Guarde este bilhete em local seguro. Não são permitidas trocas ou devoluções. Em caso de cancelamento, o promotor obriga-se à devolução do valor no prazo de 30 dias. A Bilheteira Salesforce não assume responsabilidades do promotor.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="promoter-info">
+                <strong>PROMOTOR:</strong> {!Bilhete__c.Evento__r.Account__r.Name} &nbsp;|&nbsp; 
+                <strong>NIF:</strong> {!Bilhete__c.Evento__r.Account__r.NIF__c} &nbsp;|&nbsp; 
+                <strong>SEDE:</strong> {!Bilhete__c.Evento__r.Account__r.BillingStreet}, {!Bilhete__c.Evento__r.Account__r.BillingCity} &nbsp;|&nbsp; 
+                <strong>CONTATOS:</strong> {!Bilhete__c.Evento__r.Account__r.Phone} - {!Bilhete__c.Evento__r.Account__r.Website}
+            </div>
+
+            <div class="footer-safe">
+                <strong>VERIFICAÇÃO DIGITAL:</strong> {!Bilhete__c.Name} | <strong>SEGURANÇA:</strong> {!Bilhete__c.ChaveUnicaSeguranca__c}<br/>
+                Emissão: <apex:outputText value="{0,date,dd/MM/yyyy HH:mm:ss}"><apex:param value="{!NOW()}" /></apex:outputText>
+            </div>
+        </div>
+    </body>
+</apex:page>
