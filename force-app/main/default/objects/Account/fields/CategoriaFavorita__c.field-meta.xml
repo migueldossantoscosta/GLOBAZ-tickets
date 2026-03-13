@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CategoriaFavorita__c</fullName>
+    <label>CategoriaFavorita</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>true</sorted>
+            <value>
+                <fullName>Cinema</fullName>
+                <default>false</default>
+                <label>Cinema</label>
+            </value>
+            <value>
+                <fullName>Comédia / Stand-up</fullName>
+                <default>false</default>
+                <label>Comédia / Stand-up</label>
+            </value>
+            <value>
+                <fullName>Concertos</fullName>
+                <default>false</default>
+                <label>Concertos</label>
+            </value>
+            <value>
+                <fullName>Conferências</fullName>
+                <default>false</default>
+                <label>Conferências</label>
+            </value>
+            <value>
+                <fullName>Cultura</fullName>
+                <default>false</default>
+                <label>Cultura</label>
+            </value>
+            <value>
+                <fullName>Desporto</fullName>
+                <default>false</default>
+                <label>Desporto</label>
+            </value>
+            <value>
+                <fullName>Eventos académicos</fullName>
+                <default>false</default>
+                <label>Eventos académicos</label>
+            </value>
+            <value>
+                <fullName>Eventos corporativos</fullName>
+                <default>false</default>
+                <label>Eventos corporativos</label>
+            </value>
+            <value>
+                <fullName>Eventos solidários</fullName>
+                <default>false</default>
+                <label>Eventos solidários</label>
+            </value>
+            <value>
+                <fullName>Exposições</fullName>
+                <default>false</default>
+                <label>Exposições</label>
+            </value>
+            <value>
+                <fullName>Feiras</fullName>
+                <default>false</default>
+                <label>Feiras</label>
+            </value>
+            <value>
+                <fullName>Festas / nightlife</fullName>
+                <default>false</default>
+                <label>Festas / nightlife</label>
+            </value>
+            <value>
+                <fullName>Festivais</fullName>
+                <default>false</default>
+                <label>Festivais</label>
+            </value>
+            <value>
+                <fullName>Gaming / eSports</fullName>
+                <default>false</default>
+                <label>Gaming / eSports</label>
+            </value>
+            <value>
+                <fullName>Gastronomia</fullName>
+                <default>false</default>
+                <label>Gastronomia</label>
+            </value>
+            <value>
+                <fullName>Moda</fullName>
+                <default>false</default>
+                <label>Moda</label>
+            </value>
+            <value>
+                <fullName>Música eletrónica / DJs</fullName>
+                <default>false</default>
+                <label>Música eletrónica / DJs</label>
+            </value>
+            <value>
+                <fullName>Teatro</fullName>
+                <default>false</default>
+                <label>Teatro</label>
+            </value>
+            <value>
+                <fullName>Tecnologia</fullName>
+                <default>false</default>
+                <label>Tecnologia</label>
+            </value>
+            <value>
+                <fullName>Workshops</fullName>
+                <default>false</default>
+                <label>Workshops</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

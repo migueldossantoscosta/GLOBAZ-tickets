@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>LocalizacaoEvento__c</fullName>
+    <externalId>false</externalId>
+    <formula>Recinto__r.Name &amp; &quot; - &quot; &amp; Recinto__r.MoradaCompleta__c &amp; &quot; - &quot; &amp; Recinto__r.Cidade__c &amp; &quot; | &quot; &amp; TEXT(DataEvento__c)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Localizacao Evento</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

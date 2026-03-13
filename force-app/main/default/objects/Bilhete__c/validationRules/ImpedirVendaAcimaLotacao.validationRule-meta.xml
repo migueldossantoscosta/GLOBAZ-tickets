@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ImpedirVendaAcimaLotacao</fullName>
+    <active>true</active>
+    <description>Impede a venda de bilhetes acima da capacidade do evento</description>
+    <errorConditionFormula>AND(
+  NOT(ISBLANK(Evento__c)),
+  Evento__r.BilhetesDisponiveis__c &lt;= 0
+)</errorConditionFormula>
+    <errorMessage>Não é possível vender mais bilhetes. A lotação máxima para este evento foi atingida!</errorMessage>
+</ValidationRule>

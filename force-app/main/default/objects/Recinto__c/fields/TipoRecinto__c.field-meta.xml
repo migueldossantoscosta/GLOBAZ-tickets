@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TipoRecinto__c</fullName>
+    <label>Tipo de Recinto</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Arena</fullName>
+                <default>false</default>
+                <label>Arena</label>
+            </value>
+            <value>
+                <fullName>Auditório</fullName>
+                <default>false</default>
+                <label>Auditório</label>
+            </value>
+            <value>
+                <fullName>Estádio</fullName>
+                <default>false</default>
+                <label>Estádio</label>
+            </value>
+            <value>
+                <fullName>Sala de Concertos</fullName>
+                <default>false</default>
+                <label>Sala de Concertos</label>
+            </value>
+            <value>
+                <fullName>Teatro</fullName>
+                <default>false</default>
+                <label>Teatro</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

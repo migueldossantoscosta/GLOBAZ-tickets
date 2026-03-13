@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EventoCompact</fullName>
+    <fields>Name</fields>
+    <fields>Recinto__c</fields>
+    <fields>TipoEvento__c</fields>
+    <fields>LocalizacaoEvento__c</fields>
+    <fields>DuracaoEvento__c</fields>
+    <fields>ClassificacaoEtaria__c</fields>
+    <fields>DataEvento__c</fields>
+    <label>EventoCompact</label>
+</CompactLayout>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ClassificacaoEtaria__c</fullName>
+    <label>Classificacao Etaria</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>M3</fullName>
+                <default>false</default>
+                <label>M3</label>
+            </value>
+            <value>
+                <fullName>M6</fullName>
+                <default>false</default>
+                <label>M6</label>
+            </value>
+            <value>
+                <fullName>M12</fullName>
+                <default>false</default>
+                <label>M12</label>
+            </value>
+            <value>
+                <fullName>M14</fullName>
+                <default>false</default>
+                <label>M14</label>
+            </value>
+            <value>
+                <fullName>M16</fullName>
+                <default>false</default>
+                <label>M16</label>
+            </value>
+            <value>
+                <fullName>M18</fullName>
+                <default>false</default>
+                <label>M18</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ImpedirVendaEventoInativo</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+  NOT(ISBLANK(Evento__c)),
+  NOT(ISBLANK(TEXT(Evento__r.EstadoEvento__c))),
+  NOT(ISPICKVAL(Evento__r.EstadoEvento__c, &quot;Ativo&quot;))
+)</errorConditionFormula>
+    <errorMessage>Não é possível emitir bilhetes para eventos que não estejam no estado &apos;Ativo&apos;.</errorMessage>
+</ValidationRule>

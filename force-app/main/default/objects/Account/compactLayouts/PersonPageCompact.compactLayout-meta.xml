@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PersonPageCompact</fullName>
+    <fields>Name</fields>
+    <fields>DataNascimento__c</fields>
+    <fields>DataUltimaCompra__c</fields>
+    <fields>Idade__c</fields>
+    <fields>CategoriaFavorita__c</fields>
+    <label>PersonPageCompact</label>
+</CompactLayout>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ValidoNIFEmpresa</fullName>
+    <active>true</active>
+    <description>Verifica se o NIF de empresa existe e começa por 5, 6, 90, 91, 97, 98 ou 99.</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(NIF__c)),
+    OR(
+        /* Regra Regex para Empresa: 9 dígitos E começa por 5, 6, 90, 91, 97, 98, 99 */
+        AND(
+            RecordType.DeveloperName = &quot;Business_Account&quot;,
+            NOT(REGEX(NIF__c, &quot;^(5[0-9]{8}|6[0-9]{8}|(90|91|97|98|99)[0-9]{7})$&quot;))
+        ),
+        
+        /* Regra Regex para Cliente: Apenas 9 dígitos numéricos */
+        AND(
+            RecordType.DeveloperName = &quot;PersonAccount&quot;,
+            NOT(REGEX(NIF__c, &quot;^[0-9]{9}$&quot;))
+        ),
+        
+        /* A Matemática do Módulo 11 (Aplica-se a ambos!) */
+        VALUE(MID(NIF__c, 9, 1)) &lt;&gt; 
+        IF(
+            MOD(
+                (VALUE(MID(NIF__c, 1, 1)) * 9) +
+                (VALUE(MID(NIF__c, 2, 1)) * 8) +
+                (VALUE(MID(NIF__c, 3, 1)) * 7) +
+                (VALUE(MID(NIF__c, 4, 1)) * 6) +
+                (VALUE(MID(NIF__c, 5, 1)) * 5) +
+                (VALUE(MID(NIF__c, 6, 1)) * 4) +
+                (VALUE(MID(NIF__c, 7, 1)) * 3) +
+                (VALUE(MID(NIF__c, 8, 1)) * 2), 
+                11
+            ) &lt; 2,
+            0,
+            11 - MOD(
+                (VALUE(MID(NIF__c, 1, 1)) * 9) +
+                (VALUE(MID(NIF__c, 2, 1)) * 8) +
+                (VALUE(MID(NIF__c, 3, 1)) * 7) +
+                (VALUE(MID(NIF__c, 4, 1)) * 6) +
+                (VALUE(MID(NIF__c, 5, 1)) * 5) +
+                (VALUE(MID(NIF__c, 6, 1)) * 4) +
+                (VALUE(MID(NIF__c, 7, 1)) * 3) +
+                (VALUE(MID(NIF__c, 8, 1)) * 2), 
+                11
+            )
+        )
+    )
+)</errorConditionFormula>
+    <errorDisplayField>NIF__c</errorDisplayField>
+    <errorMessage>O NIF inserido é inválido. Por favor, verifique se introduziu um NIF válido com 9 algarismos numéricos e sem espaços.</errorMessage>
+</ValidationRule>

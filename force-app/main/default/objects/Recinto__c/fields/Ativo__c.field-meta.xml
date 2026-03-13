@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Ativo__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Define se o recinto pode ser usado para novos eventos (Ativo = True, pode ser usado)</description>
+    <label>Ativo</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ValidarIdadeMinimaEvento</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+    AND(TEXT(Evento__r.ClassificacaoEtaria__c) = &quot;M18&quot;, Order__r.Account.Idade__c &lt; 18),
+    AND(TEXT(Evento__r.ClassificacaoEtaria__c) = &quot;M16&quot;, Order__r.Account.Idade__c &lt; 16),
+    AND(TEXT(Evento__r.ClassificacaoEtaria__c) = &quot;M14&quot;, Order__r.Account.Idade__c &lt; 14),
+    AND(TEXT(Evento__r.ClassificacaoEtaria__c) = &quot;M12&quot;, Order__r.Account.Idade__c &lt; 12),
+    AND(TEXT(Evento__r.ClassificacaoEtaria__c) = &quot;M6&quot;, Order__r.Account.Idade__c &lt; 6),
+    AND(TEXT(Evento__r.ClassificacaoEtaria__c) = &quot;M3&quot;, Order__r.Account.Idade__c &lt; 3)
+)</errorConditionFormula>
+    <errorMessage>Venda Bloqueada: O cliente não tem a idade mínima necessária para a classificação etária deste evento (M3, M6, M12, M14, M16 ou M18).</errorMessage>
+</ValidationRule>

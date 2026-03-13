@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DataInicioEvento</fullName>
+    <active>true</active>
+    <description>A data de inicio do evento não pode ser mais antiga que o dia de hoje</description>
+    <errorConditionFormula>AND(
+   ISNEW(),
+   DataEvento__c &lt; NOW()
+)</errorConditionFormula>
+    <errorMessage>A data de início não pode ser no passado.</errorMessage>
+</ValidationRule>

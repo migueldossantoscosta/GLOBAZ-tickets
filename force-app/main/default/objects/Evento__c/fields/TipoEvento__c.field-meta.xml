@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TipoEvento__c</fullName>
+    <label>Tipo Evento</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Corporativos</fullName>
+                <default>false</default>
+                <label>Corporativos</label>
+            </value>
+            <value>
+                <fullName>Culturais e Entretenimento</fullName>
+                <default>false</default>
+                <label>Culturais e Entretenimento</label>
+            </value>
+            <value>
+                <fullName>Desportivos</fullName>
+                <default>false</default>
+                <label>Desportivos</label>
+            </value>
+            <value>
+                <fullName>Educacionais/Acadêmicos</fullName>
+                <default>false</default>
+                <label>Educacionais/Acadêmicos</label>
+            </value>
+            <value>
+                <fullName>Institucionais/Comunitários</fullName>
+                <default>false</default>
+                <label>Institucionais/Comunitários</label>
+            </value>
+            <value>
+                <fullName>Sociais</fullName>
+                <default>false</default>
+                <label>Sociais</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
