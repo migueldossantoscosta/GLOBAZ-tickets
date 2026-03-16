@@ -10,9 +10,9 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Disponível</fullName>
+                <fullName>Pendente</fullName>
                 <default>false</default>
-                <label>Disponível</label>
+                <label>Pendente</label>
             </value>
             <value>
                 <fullName>Reservado</fullName>

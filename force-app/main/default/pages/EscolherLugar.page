@@ -1,100 +1,103 @@
 <apex:page standardController="Order" extensions="BilheteiraController" docType="html-5.0">
     <style>
-        .container { max-width: 650px; margin: 30px auto; font-family: sans-serif; }
-        .card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .bilhete-row { display: flex; align-items: flex-end; gap: 15px; margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; animation: fadeIn 0.3s; }
-        .btn-add { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        .btn-remove { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
-        .btn-finalizar { width: 100%; padding: 18px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; }
-        .label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #444; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        .success-area { text-align: center; display: none; padding: 40px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .container { max-width: 500px; margin: 40px auto; font-family: sans-serif; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .step { display: none; animation: fadeIn 0.4s; }
+        .step.active { display: block; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-mbway { background: #e30613; color: white; }
+        .bank-mock { background: #f4f4f4; border: 2px solid #ccc; padding: 20px; border-radius: 10px; }
+        .input-group { margin-bottom: 15px; }
+        input, select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 
     <div class="container">
-        <div id="form-area" class="card">
-            <h2 style="color: #333; margin-top: 0;">🎫 Escolha de Assentos</h2>
-            <p style="color: #666;">Preencha os lugares para a Encomenda: <b>{!Order.OrderNumber}</b></p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-            
-            <div id="bilhetes-list">
-                <div class="bilhete-row" id="row-1">
-                    <div><span class="label">Fila</span><input type="text" placeholder="Ex: A" style="width: 60px;" /></div>
-                    <div><span class="label">Lugar</span><input type="number" value="1" style="width: 80px;" /></div>
-                    <div style="width: 40px;"></div>
+        <div id="step1" class="card step active">
+            <h2>🎫 Passo 1: Lugares</h2>
+            <div id="lista-lugares">
+                <div class="input-group">
+                    <input type="text" id="f-1" placeholder="Fila" style="width: 45%; display: inline-block;" />
+                    <input type="number" id="l-1" placeholder="Lugar" style="width: 45%; display: inline-block; float: right;" />
                 </div>
             </div>
-
-            <button type="button" class="btn-add" onclick="addRow()">+ Adicionar Lugar</button>
-            <button type="button" class="btn-finalizar" onclick="finalizar()">Finalizar Compra</button>
+            <button class="btn btn-primary" onclick="irParaStep2()">Próximo: Pagamento</button>
         </div>
 
-        <div id="success-area" class="card success-area">
-            <div style="font-size: 60px;">✅</div>
-            <h1 style="color: #28a745; margin: 10px 0;">Compra Concluída!</h1>
-            <p style="font-size: 16px; color: #555;">Os teus bilhetes foram gerados e enviados por email.</p>
-            <button onclick="window.location.href='/{!Order.Id}'" style="margin-top: 25px; padding: 12px 25px; cursor: pointer; border-radius: 5px; border: 1px solid #ccc;">Ver Detalhes da Order</button>
+        <div id="step2" class="card step">
+            <h2>💳 Passo 2: Pagamento</h2>
+            <p>Escolha como deseja pagar:</p>
+            <select id="metodo">
+                <option value="MBWay">📱 MBWay</option>
+                <option value="Cartão">💳 Cartão de Crédito</option>
+                <option value="Referência">🏦 Entidade e Referência</option>
+            </select>
+            <button class="btn btn-primary" onclick="irParaStep3()">Ir para Checkout</button>
+            <button class="btn" onclick="voltar(1)" style="background:#ccc;">Voltar</button>
+        </div>
+
+        <div id="step3" class="card step">
+            <div id="mock-banco" class="bank-mock">
+                <h3 id="titulo-banco">Confirmar MBWay</h3>
+                <p>Valor: <b id="valor-final">26,50 €</b></p>
+                <p>ID Transação: <small id="trans-id">---</small></p>
+                <hr/>
+                <p style="font-size: 12px;">Esta é uma página segura de simulação.</p>
+                <button class="btn btn-mbway" id="btnConfirmar" onclick="finalizarTudo()">CONFIRMAR PAGAMENTO</button>
+            </div>
+        </div>
+
+        <div id="step-success" class="card step text-center" style="text-align:center;">
+            <div style="font-size: 50px;">✅</div>
+            <h2>Pago com Sucesso!</h2>
+            <p>Obrigado! Os teus bilhetes foram emitidos.</p>
         </div>
     </div>
 
     <script>
-        let rowCount = 1;
+        let orderIdCriada = '';
 
-        function addRow() {
-            rowCount++;
-            const container = document.getElementById('bilhetes-list');
-            const newRow = document.createElement('div');
-            newRow.className = 'bilhete-row';
-            newRow.id = 'row-' + rowCount;
-            newRow.innerHTML = `
-                <div><span class="label">Fila</span><input type="text" style="width: 60px;" /></div>
-                <div><span class="label">Lugar</span><input type="number" style="width: 80px;" /></div>
-                <button type="button" class="btn-remove" onclick="removeRow(${rowCount})">🗑️</button>
-            `;
-            container.appendChild(newRow);
+        function irParaStep2() {
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
         }
 
-        function removeRow(id) { document.getElementById('row-' + id).remove(); }
-        
-        function iniciarVenda(evtId, accId) {
-    Visualforce.remoting.Manager.invokeAction(
-        '{!$RemoteAction.BilheteiraController.iniciarCompra}',
-        evtId, accId,
-        function(result, event) {
-            if (event.status && !result.startsWith('ERRO:')) {
-                // SUCESSO: O resultado é um ID real (ex: 801...)
-                window.location.href = '/apex/EscolherLugar?id=' + result;
-            } else {
-                // FALHA: Mostra o erro em vez de tentar abrir a página
-                alert('Não foi possível criar a encomenda: ' + result);
-                console.error('Erro detalhado:', result);
-            }
+        function irParaStep3() {
+            const metodo = document.getElementById('metodo').value;
+            const fila = document.getElementById('f-1').value;
+            const lugar = document.getElementById('l-1').value;
+            
+            // Aqui chamamos o Apex para criar a reserva antes de mostrar o banco
+            const bilhetes = JSON.stringify([{fila: fila, lugar: parseInt(lugar)}]);
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.BilheteiraController.criarReserva}',
+                'a03d200001dzD7rAAE', '001d200001UmD61AAF', metodo, bilhetes,
+                function(result, event) {
+                    if (event.status && !result.startsWith('ERRO')) {
+                        orderIdCriada = result;
+                        document.getElementById('trans-id').innerText = result;
+                        document.getElementById('titulo-banco').innerText = 'Checkout: ' + metodo;
+                        document.getElementById('step2').classList.remove('active');
+                        document.getElementById('step3').classList.add('active');
+                    } else { alert(result); }
+                }
+            );
         }
-    );
-}
-        
-        function finalizar() {
-            const rows = document.querySelectorAll('.bilhete-row');
-            let dados = [];
-            rows.forEach(r => {
-                let f = r.querySelector('input[type="text"]').value;
-                let l = r.querySelector('input[type="number"]').value;
-                if(f && l) dados.push({ fila: f, lugar: parseInt(l) });
-            });
 
-            if(dados.length === 0) { alert('Escolha pelo menos um lugar!'); return; }
+        function finalizarTudo() {
+            document.getElementById('btnConfirmar').disabled = true;
+            document.getElementById('btnConfirmar').innerText = 'A processar...';
 
             Visualforce.remoting.Manager.invokeAction(
-                '{!$RemoteAction.BilheteiraController.finalizarCompra}',
-                '{!Order.Id}', JSON.stringify(dados),
-                function(result, event) {
-                    if (result === 'OK') {
-                        document.getElementById('form-area').style.display = 'none';
-                        document.getElementById('success-area').style.display = 'block';
-                    } else {
-                        alert(result);
-                    }
+                '{!$RemoteAction.BilheteiraController.processarPagamentoMock}',
+                orderIdCriada,
+                function(result) {
+                    if(result === 'PAGAMENTO_OK') {
+                        document.getElementById('step3').classList.remove('active');
+                        document.getElementById('step-success').classList.add('active');
+                    } else { alert(result); }
                 }
             );
         }
