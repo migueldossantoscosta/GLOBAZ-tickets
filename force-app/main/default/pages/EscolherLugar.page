@@ -1,105 +1,459 @@
-<apex:page standardController="Order" extensions="BilheteiraController" docType="html-5.0">
+<apex:page standardController="Order" extensions="BilheteiraController" docType="html-5.0" showHeader="false" sidebar="false" standardStylesheets="false">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&amp;display=swap" rel="stylesheet"/>
     <style>
-        .container { max-width: 500px; margin: 40px auto; font-family: sans-serif; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .step { display: none; animation: fadeIn 0.4s; }
-        .step.active { display: block; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-mbway { background: #e30613; color: white; }
-        .bank-mock { background: #f4f4f4; border: 2px solid #ccc; padding: 20px; border-radius: 10px; }
-        .input-group { margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        *,*::before,*::after{box-sizing:border-box;}
+        body{font-family:'Inter',sans-serif;background:#f5f5f7;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;transition:background .4s;}
+        .container{width:100%;max-width:1460px;padding:24px 16px;}
+
+        .brand-header{text-align:center;margin-bottom:28px;transition:all .5s cubic-bezier(.22,1,.36,1);}
+        .brand-logo{font-weight:800;font-size:28px;letter-spacing:-1.5px;text-transform:lowercase;color:#000;}
+        .brand-logo span{font-weight:300;color:#888;}
+        .brand-subtitle{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2.5px;margin-top:5px;color:#999;}
+
+        body.t-mbway .brand-header{background:#e30613;border-radius:20px;padding:18px 24px;}
+        body.t-mbway .brand-logo{color:#fff;}
+        body.t-mbway .brand-logo span{color:rgba(255,255,255,.6);}
+        body.t-mbway .brand-subtitle{color:rgba(255,255,255,.75);}
+        body.t-mbway .btn-main{background:#e30613;}
+        body.t-mbway .btn-pay{background:#e30613;}
+        body.t-mbway .receipt-value.total{color:#e30613;}
+        body.t-mbway .success-icon{background:#e30613;}
+        body.t-mbway .method-opt.active{border-color:#e30613;background:#fff0f0;}
+
+        body.t-mb .brand-header{background:#003d7a;border-radius:20px;padding:18px 24px;}
+        body.t-mb .brand-logo{color:#fff;font-size:22px;letter-spacing:2px;}
+        body.t-mb .brand-logo span{color:#7ec8f0;font-weight:800;}
+        body.t-mb .brand-subtitle{color:rgba(255,255,255,.7);}
+        body.t-mb .btn-main{background:#005ea6;}
+        body.t-mb .btn-pay{background:#005ea6;}
+        body.t-mb .receipt-value.total{color:#005ea6;}
+        body.t-mb .success-icon{background:#005ea6;}
+        body.t-mb .method-opt.active{border-color:#005ea6;background:#e8f4fd;}
+
+        body.t-card .brand-header{background:#14532d;border-radius:20px;padding:18px 24px;}
+        body.t-card .brand-logo{color:#fff;}
+        body.t-card .brand-logo span{color:rgba(255,255,255,.55);}
+        body.t-card .brand-subtitle{color:rgba(255,255,255,.7);}
+        body.t-card .btn-main{background:#16a34a;}
+        body.t-card .btn-pay{background:#16a34a;}
+        body.t-card .receipt-value.total{color:#16a34a;}
+        body.t-card .success-icon{background:#16a34a;}
+        body.t-card .method-opt.active{border-color:#16a34a;background:#f0fdf4;}
+
+        .card{background:#fff;padding:28px;border-radius:32px;box-shadow:0 2px 30px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.04);}
+        h2.step-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:20px;}
+
+        /* ARENA */
+        .arena-wrap{overflow-x:auto;padding:4px 0;}
+        .arena{min-width:580px;}
+        .stage-bar{background:#d1d5db;border-radius:6px 6px 0 0;padding:9px 0;font-size:8px;font-weight:700;letter-spacing:5px;color:#6b7280;text-align:center;width:50%;margin:0 auto;}
+        .stage-foot{width:50%;height:7px;background:rgba(0,0,0,.04);border-radius:0 0 4px 4px;margin:0 auto 18px;}
+        .hall{display:flex;flex-direction:column;gap:4px;align-items:center;}
+        .row-line{display:flex;align-items:flex-end;}
+        .rl{width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;}
+        .block-group{display:flex;align-items:flex-end;}
+        .aisle-sm{width:12px;flex-shrink:0;}
+        .aisle-lg{width:28px;flex-shrink:0;}
+        .blk{display:flex;gap:3px;}
+        .sw{display:flex;flex-direction:column;align-items:center;gap:1px;}
+        .sn{font-size:6px;color:#bbb;line-height:1;text-align:center;height:7px;}
+        .seat{width:16px;height:14px;border-radius:3px 3px 1px 1px;cursor:pointer;transition:transform .12s;flex-shrink:0;position:relative;}
+        .seat::after{content:'';position:absolute;bottom:-2px;left:20%;width:60%;height:2px;border-radius:1px;background:rgba(0,0,0,.18);}
+        .seat.selecionado{transform:scale(1.22);z-index:2;outline:2px solid #fbbf24;outline-offset:1px;}
+        .seat.ocupado{opacity:.2;cursor:not-allowed;}
+        .z-blue  {background:#2563eb;}
+        .z-purple{background:#7c3aed;}
+        .z-amber {background:#d97706;}
+        .z-green {background:#16a34a;}
+        .z-navy  {background:#1e3a8a;}
+        .map-divider{height:1px;background:#e5e7eb;margin:14px auto;width:90%;}
+        .bot{display:flex;flex-direction:column;gap:4px;align-items:center;}
+
+        .map-legend{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+        .leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#888;}
+        .ldot{width:10px;height:9px;border-radius:2px;flex-shrink:0;}
+
+        .map-stats{display:flex;justify-content:center;margin-top:14px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
+        .mstat{flex:1;padding:8px;text-align:center;border-right:1px solid #e5e7eb;}
+        .mstat:last-child{border-right:none;}
+        .mstat-val{font-weight:700;font-size:15px;color:#000;}
+        .mstat-lbl{color:#999;font-size:9px;margin-top:1px;}
+
+        /* MÉTODO */
+        .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+        .method-opt{border:1.5px solid #e2e2e7;border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
+        .method-opt:hover{border-color:#aaa;}
+        .method-opt.active{border-color:#000;background:#f5f5f7;}
+        .method-icon{font-size:20px;display:block;margin-bottom:5px;}
+        .method-label{font-size:11px;font-weight:700;color:#444;letter-spacing:.3px;}
+
+        /* RECIBO */
+        .mb-ref-box{display:none;background:#e8f4fd;border:1.5px solid #b3d9f5;border-radius:16px;padding:16px 20px;margin:14px 0;text-align:center;}
+        .mb-ref-entity{font-size:11px;color:#005ea6;font-weight:700;letter-spacing:2px;margin-bottom:4px;}
+        .mb-ref-num{font-size:26px;font-weight:800;color:#003d7a;letter-spacing:4px;margin-bottom:4px;}
+        .mb-ref-val{font-size:13px;color:#005ea6;font-weight:600;}
+        .receipt-table{margin:16px 0;border-top:1px solid #f0f0f0;}
+        .receipt-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f8f8f8;font-size:14px;}
+        .receipt-label{color:#888;}
+        .receipt-value{font-weight:600;color:#000;}
+        .receipt-value.total{font-size:22px;font-weight:800;}
+        .receipt-value.mono{font-size:11px;color:#aaa;font-weight:500;font-family:monospace;}
+
+        /* MODAL */
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);z-index:200;align-items:flex-end;justify-content:center;}
+        .modal-overlay.open{display:flex;}
+        .modal-sheet{background:#fff;border-radius:28px 28px 0 0;padding:28px 28px 44px;width:100%;max-width:1460px;animation:slideUp .38s cubic-bezier(.22,1,.36,1);}
+        @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+        .modal-handle{width:40px;height:4px;background:#e2e2e7;border-radius:2px;margin:0 auto 20px;}
+        .modal-title{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;}
+        .modal-sub{font-size:13px;color:#888;margin-bottom:16px;}
+        .seats-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;max-height:90px;overflow-y:auto;}
+        .chip{background:#f5f5f7;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:#1d1d1f;display:flex;align-items:center;gap:5px;}
+        .chip-dot{width:7px;height:7px;background:#ffc107;border-radius:50%;flex-shrink:0;}
+
+        /* BOTÕES */
+        .btn-main{width:100%;padding:18px;border:none;border-radius:20px;font-weight:700;font-size:16px;cursor:pointer;margin-top:12px;transition:all .25s;background:#000;color:#fff;}
+        .btn-main:hover{transform:scale(1.015);opacity:.92;}
+        .btn-ghost{padding:16px;border-radius:18px;border:1.5px solid #e2e2e7;background:transparent;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;color:#444;width:100%;margin-top:10px;}
+        .btn-ghost:hover{background:#f5f5f7;}
+        .btn-pair{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:16px;}
+        .btn-cancel{padding:16px;border-radius:18px;border:1.5px solid #e2e2e7;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:#444;transition:.2s;}
+        .btn-cancel:hover{background:#f5f5f7;}
+        .btn-pay{padding:16px;border-radius:18px;border:none;background:#000;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;}
+        .btn-pay:hover{opacity:.88;transform:scale(1.01);}
+
+        .success-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;background:#000;color:#fff;}
+        .step{display:none;}
+        .active{display:block;animation:fadeIn .4s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
     </style>
 
     <div class="container">
+        <div id="main-header" class="brand-header">
+            <div id="logo-text" class="brand-logo">globa<span>z</span></div>
+            <div id="subtitle-text" class="brand-subtitle">tickets &amp; events</div>
+        </div>
+
+        <!-- STEP 1: MAPA -->
         <div id="step1" class="card step active">
-            <h2>🎫 Passo 1: Lugares</h2>
-            <div id="lista-lugares">
-                <div class="input-group">
-                    <input type="text" id="f-1" placeholder="Fila" style="width: 45%; display: inline-block;" />
-                    <input type="number" id="l-1" placeholder="Lugar" style="width: 45%; display: inline-block; float: right;" />
+            <h2 class="step-title">Selecione os Lugares</h2>
+            <div class="arena-wrap">
+                <div class="arena">
+                    <div class="stage-bar">PALCO</div>
+                    <div class="stage-foot"></div>
+                    <div class="hall" id="mapa-frente"></div>
+                    <div class="map-divider"></div>
+                    <div class="bot" id="mapa-tras"></div>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="irParaStep2()">Próximo: Pagamento</button>
-        </div>
-
-        <div id="step2" class="card step">
-            <h2>💳 Passo 2: Pagamento</h2>
-            <p>Escolha como deseja pagar:</p>
-            <select id="metodo">
-                <option value="MBWay">📱 MBWay</option>
-                <option value="Cartão">💳 Cartão de Crédito</option>
-                <option value="Referência">🏦 Entidade e Referência</option>
-            </select>
-            <button class="btn btn-primary" onclick="irParaStep3()">Ir para Checkout</button>
-            <button class="btn" onclick="voltar(1)" style="background:#ccc;">Voltar</button>
-        </div>
-
-        <div id="step3" class="card step">
-            <div id="mock-banco" class="bank-mock">
-                <h3 id="titulo-banco">Confirmar MBWay</h3>
-                <p>Valor: <b id="valor-final">26,50 €</b></p>
-                <p>ID Transação: <small id="trans-id">---</small></p>
-                <hr/>
-                <p style="font-size: 12px;">Esta é uma página segura de simulação.</p>
-                <button class="btn btn-mbway" id="btnConfirmar" onclick="finalizarTudo()">CONFIRMAR PAGAMENTO</button>
+            <div class="map-legend">
+                <div class="leg"><div class="ldot" style="background:#2563eb"></div>Lateral A</div>
+                <div class="leg"><div class="ldot" style="background:#7c3aed"></div>Lateral B</div>
+                <div class="leg"><div class="ldot" style="background:#d97706"></div>Lateral C</div>
+                <div class="leg"><div class="ldot" style="background:#16a34a"></div>Central</div>
+                <div class="leg"><div class="ldot" style="background:#1e3a8a"></div>Traseira</div>
+                <div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>
+                <div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>
             </div>
+            <div class="map-stats">
+                <div class="mstat"><div class="mstat-val" id="msTotal">—</div><div class="mstat-lbl">total lugares</div></div>
+                <div class="mstat"><div class="mstat-val" id="msSel" style="color:#d97706;">0</div><div class="mstat-lbl">selecionados</div></div>
+                <div class="mstat"><div class="mstat-val" id="msDisp">—</div><div class="mstat-lbl">disponíveis</div></div>
+            </div>
+            <button class="btn-main" onclick="irParaStep2()">
+                Reservar <span id="count">0</span> Bilhete<span id="plural"></span>
+            </button>
         </div>
 
-        <div id="step-success" class="card step text-center" style="text-align:center;">
-            <div style="font-size: 50px;">✅</div>
-            <h2>Pago com Sucesso!</h2>
-            <p>Obrigado! Os teus bilhetes foram emitidos.</p>
+        <!-- STEP 2: MÉTODO -->
+        <div id="step2" class="card step">
+            <h2 class="step-title">Método de Pagamento</h2>
+            <div class="method-grid">
+                <div class="method-opt active" onclick="selectMetodo('MBWay',this)"><span class="method-icon">📱</span><span class="method-label">MB WAY</span></div>
+                <div class="method-opt"        onclick="selectMetodo('Referência',this)"><span class="method-icon">🏧</span><span class="method-label">MULTIBANCO</span></div>
+                <div class="method-opt"        onclick="selectMetodo('Cartão',this)"><span class="method-icon">💳</span><span class="method-label">CARTÃO</span></div>
+            </div>
+            <button class="btn-main" onclick="abrirModal()">Rever e Confirmar →</button>
+            <button class="btn-ghost" onclick="switchStep('step2','step1')">← Voltar</button>
+        </div>
+
+        <!-- STEP 3: COMPROVATIVO -->
+        <div id="step3" class="card step">
+            <h2 class="step-title" style="text-align:left;">Confirmar Operação</h2>
+            <p style="color:#888;font-size:13px;margin:-10px 0 4px;">Verifique os detalhes antes de validar.</p>
+            <div class="mb-ref-box" id="mbRefBox">
+                <div class="mb-ref-entity">ENTIDADE · 21 147</div>
+                <div class="mb-ref-num" id="mbRefNum">--- --- ---</div>
+                <div class="mb-ref-val" id="mbRefVal">0,00 €</div>
+            </div>
+            <div class="receipt-table">
+                <div class="receipt-row"><span class="receipt-label">Comerciante</span><span class="receipt-value">GLOBAZ TICKETS</span></div>
+                <div class="receipt-row"><span class="receipt-label">Lugares</span><span class="receipt-value" id="receipt-lugares">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Método</span><span class="receipt-value" id="receipt-metodo">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Valor</span><span class="receipt-value total" id="total-display">—</span></div>
+                <div class="receipt-row" style="border:none;"><span class="receipt-label">ID Transação</span><span class="receipt-value mono" id="trans-id">—</span></div>
+            </div>
+            <button class="btn-main" id="btnFinal" onclick="finalizarTudo()">VALIDAR PAGAMENTO</button>
+        </div>
+
+        <!-- SUCCESS -->
+        <div id="step-success" class="card step" style="text-align:center;padding:48px 28px;">
+            <div class="success-icon">✓</div>
+            <h2 style="font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px;">Pago com Sucesso!</h2>
+            <p style="color:#888;font-size:14px;margin-bottom:28px;">Os teus bilhetes foram emitidos com sucesso.</p>
+            <button class="btn-main" onclick="window.open('/apex/BilhetePDF?id='+orderIdAtiva,'_blank')">⬇ Download Bilhete (PDF)</button>
+            <button class="btn-main" style="background:#f5f5f7;color:#000;margin-top:10px;" onclick="window.location.reload()">Nova Reserva</button>
         </div>
     </div>
 
-    <script>
-        let orderIdCriada = '';
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalDetalhes">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-title">Resumo da Encomenda</div>
+            <div class="modal-sub">Confirme os detalhes antes de prosseguir.</div>
+            <div class="seats-chips" id="modalChips"></div>
+            <div class="receipt-table">
+                <div class="receipt-row"><span class="receipt-label">Nº de bilhetes</span><span class="receipt-value" id="mQtd">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Preço unitário</span><span class="receipt-value" id="mPrecoUnit">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Método</span><span class="receipt-value" id="mMetodo">—</span></div>
+                <div class="receipt-row" style="border:none;padding-top:14px;">
+                    <span class="receipt-label" style="font-weight:700;color:#000;font-size:15px;">Total</span>
+                    <span class="receipt-value total" id="mTotal">—</span>
+                </div>
+            </div>
+            <div class="btn-pair">
+                <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-pay" id="btnModalPagar" onclick="confirmarECriar()">Pagar Agora</button>
+            </div>
+        </div>
+    </div>
 
-        function irParaStep2() {
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step2').classList.add('active');
+    <script type="text/javascript">
+    //<![CDATA[
+        const ROWS_FRENTE = ['A','B','C','D','E','F','G'];
+        const ROWS_TRAS   = ['H','I','J','K','L','M','N','O','P','Q','R','S','T','U'];
+        const PRECO       = 26.50;
+
+        // Numeração contínua única por fila:
+        // B1(azul):1-5 | B2(roxo):6-10 | B3(amarelo):11-15 | Central(verde):16-30 | B4(amarelo):31-35 | B5(roxo):36-40 | B6(azul):41-45
+        const FRONT_BLOCKS = [
+            {z:'z-blue',   start:1,  cols:5},  'sm',
+            {z:'z-purple', start:6,  cols:5},  'sm',
+            {z:'z-amber',  start:11, cols:5},  'lg',
+            {z:'z-green',  start:16, cols:15}, 'lg',
+            {z:'z-amber',  start:31, cols:5},  'sm',
+            {z:'z-purple', start:36, cols:5},  'sm',
+            {z:'z-blue',   start:41, cols:5},
+        ];
+        let ocupadosCount = 0;
+        let selecionados = [];
+        let metodoAtual  = 'MBWay';
+        let orderIdAtiva = '';
+        let totalSeats   = 0;
+        const evtId = '{!idDoEvento}';
+        const accId = '{!idDaAccount}';
+
+        const TEMAS = {
+            'MBWay':      {cls:'t-mbway', logo:'MB <span>WAY</span>',     sub:'COMPROVATIVO DIGITAL',    btn:'VALIDAR PAGAMENTO', btnColor:'#e30613'},
+            'Referência': {cls:'t-mb',    logo:'MULTI<span>BANCO</span>', sub:'REFERÊNCIA DE PAGAMENTO', btn:'GERAR REFERÊNCIA',  btnColor:'#005ea6'},
+            'Cartão':     {cls:'t-card',  logo:'globa<span>z</span>',      sub:'PAGAMENTO POR CARTÃO',    btn:'VALIDAR PAGAMENTO', btnColor:'#16a34a'},
+        };
+
+        function aplicarTema(m){
+            document.body.classList.remove('t-mbway','t-mb','t-card');
+            const t = TEMAS[m]; if(!t) return;
+            document.body.classList.add(t.cls);
+            document.getElementById('logo-text').innerHTML     = t.logo;
+            document.getElementById('subtitle-text').innerText = t.sub;
+            document.getElementById('btnFinal').innerText      = t.btn;
         }
 
-        function irParaStep3() {
-            const metodo = document.getElementById('metodo').value;
-            const fila = document.getElementById('f-1').value;
-            const lugar = document.getElementById('l-1').value;
-            
-            // Aqui chamamos o Apex para criar a reserva antes de mostrar o banco
-            const bilhetes = JSON.stringify([{fila: fila, lugar: parseInt(lugar)}]);
-            
+        function selectMetodo(m, el){
+            metodoAtual = m;
+            document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('active'));
+            el.classList.add('active');
+            aplicarTema(m);
+        }
+
+        function makeSeatEl(row, num, zone, ocupado){
+            totalSeats++;
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:1px;';
+            const sn = document.createElement('div');
+            sn.style.cssText = 'font-size:6px;color:#bbb;line-height:1;text-align:center;height:7px;font-family:Inter,sans-serif;';
+            sn.textContent = num;
+            const d = document.createElement('div');
+            d.className = 'seat ' + zone + (ocupado ? ' ocupado' : '');
+            const k = row + '-' + num;
+            d.dataset.k = k;
+            d.title = 'Fila ' + row + ' · Lugar ' + num;
+            if(!ocupado){
+                d.onclick = () => {
+                    const idx = selecionados.findIndex(s => s.k === k);
+                    if(idx > -1){
+                        selecionados.splice(idx,1);
+                        d.classList.remove('selecionado');
+                    } else {
+                        selecionados.push({k, fila:row, lugar:num});
+                        d.classList.add('selecionado');
+                    }
+                    document.getElementById('count').innerText  = selecionados.length;
+                    document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+                    document.getElementById('msSel').innerText  = selecionados.length;
+                    // FIX: disponíveis = total - vendidos - selecionados agora
+                    document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+                };
+            }
+            wrap.appendChild(sn);
+            wrap.appendChild(d);
+            return wrap;
+        }
+
+        function buildFrontRow(parent, row, ocupadosSet){
+            const line = document.createElement('div');
+            line.className = 'row-line';
+            const lbl = document.createElement('div');
+            lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
+            lbl.textContent = row;
+            line.appendChild(lbl);
+            const bg = document.createElement('div');
+            bg.style.cssText = 'display:flex;align-items:flex-end;';
+            FRONT_BLOCKS.forEach(item => {
+                if(item === 'sm'){ const a=document.createElement('div'); a.style.width='12px'; a.style.flexShrink='0'; bg.appendChild(a); }
+                else if(item === 'lg'){ const a=document.createElement('div'); a.style.width='28px'; a.style.flexShrink='0'; bg.appendChild(a); }
+                else {
+                    const blk = document.createElement('div');
+                    blk.style.cssText = 'display:flex;gap:3px;';
+                    for(let i=0; i<item.cols; i++){
+                        const num = item.start + i;
+                        const oc  = ocupadosSet.has(row + '-' + num);
+                        blk.appendChild(makeSeatEl(row, num, item.z, oc));
+                    }
+                    bg.appendChild(blk);
+                }
+            });
+            line.appendChild(bg);
+            parent.appendChild(line);
+        }
+
+        function buildBackRow(parent, row, ocupadosSet){
+            const line = document.createElement('div');
+            line.className = 'row-line';
+            const lbl = document.createElement('div');
+            lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
+            lbl.textContent = row;
+            line.appendChild(lbl);
+            const blk = document.createElement('div');
+            blk.style.cssText = 'display:flex;gap:3px;';
+            for(let n=1; n<=15; n++){
+                const oc = ocupadosSet.has(row + '-' + n);
+                blk.appendChild(makeSeatEl(row, n, 'z-navy', oc));
+            }
+            line.appendChild(blk);
+            parent.appendChild(line);
+        }
+
+                function construirMapa(ocupados){
+            const oc = new Set(ocupados);
+            const frente = document.getElementById('mapa-frente');
+            const tras   = document.getElementById('mapa-tras');
+            ROWS_FRENTE.forEach(r => buildFrontRow(frente, r, oc));
+            ROWS_TRAS.forEach((r, ri) => {
+                if(ri > 0 && ri % 5 === 0){
+                    const sp = document.createElement('div'); sp.style.height='10px'; tras.appendChild(sp);
+                }
+                buildBackRow(tras, r, oc);
+            });
+
+            // FIX: disponíveis = total - já vendidos (ocupados) - selecionados
+            const vendidos = oc.size;
+            document.getElementById('msTotal').innerText = totalSeats;
+            document.getElementById('msDisp').innerText  = totalSeats - vendidos;
+        }
+
+
+        window.onload = function(){
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                function(ocupados){ construirMapa(ocupados || []); }
+            );
+        };
+
+        function switchStep(from, to){
+            document.getElementById(from).classList.remove('active');
+            document.getElementById(to).classList.add('active');
+        }
+
+        function irParaStep2(){
+            if(selecionados.length === 0){ alert('Selecione pelo menos um lugar!'); return; }
+            switchStep('step1','step2');
+        }
+
+        function abrirModal(){
+            const total = (selecionados.length * PRECO).toFixed(2).replace('.',',');
+            document.getElementById('modalChips').innerHTML = selecionados.map(s =>
+                `<div class="chip"><div class="chip-dot"></div>Fila ${s.fila} · Lugar ${s.lugar}</div>`
+            ).join('');
+            document.getElementById('mQtd').innerText       = selecionados.length;
+            document.getElementById('mPrecoUnit').innerText = PRECO.toFixed(2).replace('.',',') + ' €';
+            document.getElementById('mMetodo').innerText    = metodoAtual;
+            document.getElementById('mTotal').innerText     = total + ' €';
+            document.getElementById('btnModalPagar').style.background = TEMAS[metodoAtual].btnColor;
+            document.getElementById('modalDetalhes').classList.add('open');
+        }
+
+        function fecharModal(){
+            document.getElementById('modalDetalhes').classList.remove('open');
+        }
+
+        function confirmarECriar(){
+            const btn = document.getElementById('btnModalPagar');
+            btn.innerText = 'A criar reserva…'; btn.disabled = true;
+            const payload = selecionados.map(s => ({fila: s.fila, lugar: s.lugar}));
             Visualforce.remoting.Manager.invokeAction(
                 '{!$RemoteAction.BilheteiraController.criarReserva}',
-                'a03d200001dzD7rAAE', '001d200001UmD61AAF', metodo, bilhetes,
-                function(result, event) {
-                    if (event.status && !result.startsWith('ERRO')) {
-                        orderIdCriada = result;
-                        document.getElementById('trans-id').innerText = result;
-                        document.getElementById('titulo-banco').innerText = 'Checkout: ' + metodo;
-                        document.getElementById('step2').classList.remove('active');
-                        document.getElementById('step3').classList.add('active');
-                    } else { alert(result); }
-                }
+                evtId, accId, metodoAtual, JSON.stringify(payload),
+                function(result, event){
+                    btn.innerText = 'Pagar Agora'; btn.disabled = false;
+                    if(!event.status || result.startsWith('ERRO')){ alert('Erro: ' + result); return; }
+                    orderIdAtiva = result;
+                    fecharModal();
+                    aplicarTema(metodoAtual);
+                    const totalFmt = (selecionados.length * PRECO).toFixed(2).replace('.',',') + '€';
+                    document.getElementById('receipt-lugares').innerText = selecionados.map(s => s.fila + s.lugar).join(', ');
+                    document.getElementById('receipt-metodo').innerText  = metodoAtual;
+                    document.getElementById('total-display').innerText   = totalFmt;
+                    document.getElementById('trans-id').innerText        = result;
+                    if(metodoAtual === 'Referência'){
+                        const ref = Math.floor(Math.random()*900000000+100000000).toString();
+                        document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
+                        document.getElementById('mbRefVal').innerText = totalFmt;
+                        document.getElementById('mbRefBox').style.display = 'block';
+                    } else {
+                        document.getElementById('mbRefBox').style.display = 'none';
+                    }
+                    switchStep('step2','step3');
+                },
+                {escape:false}
             );
         }
 
-        function finalizarTudo() {
-            document.getElementById('btnConfirmar').disabled = true;
-            document.getElementById('btnConfirmar').innerText = 'A processar...';
-
+        function finalizarTudo(){
+            const btn = document.getElementById('btnFinal');
+            btn.innerText = 'A PROCESSAR…'; btn.disabled = true;
             Visualforce.remoting.Manager.invokeAction(
-                '{!$RemoteAction.BilheteiraController.processarPagamentoMock}',
-                orderIdCriada,
-                function(result) {
-                    if(result === 'PAGAMENTO_OK') {
-                        document.getElementById('step3').classList.remove('active');
-                        document.getElementById('step-success').classList.add('active');
-                    } else { alert(result); }
-                }
+                '{!$RemoteAction.BilheteiraController.processarPagamentoMock}', orderIdAtiva,
+                function(res, event){
+                    if(!event.status || res !== 'PAGAMENTO_OK'){
+                        btn.innerText = TEMAS[metodoAtual].btn; btn.disabled = false;
+                        alert('Erro: ' + res); return;
+                    }
+                    switchStep('step3','step-success');
+                },
+                {escape:false}
             );
         }
+    //]]>
     </script>
 </apex:page>
