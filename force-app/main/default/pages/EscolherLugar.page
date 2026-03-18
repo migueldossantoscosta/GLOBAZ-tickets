@@ -43,7 +43,6 @@
         .card{background:#fff;padding:28px;border-radius:32px;box-shadow:0 2px 30px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.04);}
         h2.step-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:20px;}
 
-        /* ARENA */
         .arena-wrap{overflow-x:auto;padding:4px 0;}
         .arena{min-width:580px;}
         .stage-bar{background:#d1d5db;border-radius:6px 6px 0 0;padding:9px 0;font-size:8px;font-weight:700;letter-spacing:5px;color:#6b7280;text-align:center;width:50%;margin:0 auto;}
@@ -79,7 +78,6 @@
         .mstat-val{font-weight:700;font-size:15px;color:#000;}
         .mstat-lbl{color:#999;font-size:9px;margin-top:1px;}
 
-        /* MÉTODO */
         .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
         .method-opt{border:1.5px solid #e2e2e7;border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
         .method-opt:hover{border-color:#aaa;}
@@ -87,7 +85,6 @@
         .method-icon{font-size:20px;display:block;margin-bottom:5px;}
         .method-label{font-size:11px;font-weight:700;color:#444;letter-spacing:.3px;}
 
-        /* RECIBO */
         .mb-ref-box{display:none;background:#e8f4fd;border:1.5px solid #b3d9f5;border-radius:16px;padding:16px 20px;margin:14px 0;text-align:center;}
         .mb-ref-entity{font-size:11px;color:#005ea6;font-weight:700;letter-spacing:2px;margin-bottom:4px;}
         .mb-ref-num{font-size:26px;font-weight:800;color:#003d7a;letter-spacing:4px;margin-bottom:4px;}
@@ -99,7 +96,6 @@
         .receipt-value.total{font-size:22px;font-weight:800;}
         .receipt-value.mono{font-size:11px;color:#aaa;font-weight:500;font-family:monospace;}
 
-        /* MODAL */
         .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);z-index:200;align-items:flex-end;justify-content:center;}
         .modal-overlay.open{display:flex;}
         .modal-sheet{background:#fff;border-radius:28px 28px 0 0;padding:28px 28px 44px;width:100%;max-width:1460px;animation:slideUp .38s cubic-bezier(.22,1,.36,1);}
@@ -111,7 +107,6 @@
         .chip{background:#f5f5f7;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:#1d1d1f;display:flex;align-items:center;gap:5px;}
         .chip-dot{width:7px;height:7px;background:#ffc107;border-radius:50%;flex-shrink:0;}
 
-        /* BOTÕES */
         .btn-main{width:100%;padding:18px;border:none;border-radius:20px;font-weight:700;font-size:16px;cursor:pointer;margin-top:12px;transition:all .25s;background:#000;color:#fff;}
         .btn-main:hover{transform:scale(1.015);opacity:.92;}
         .btn-ghost{padding:16px;border-radius:18px;border:1.5px solid #e2e2e7;background:transparent;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;color:#444;width:100%;margin-top:10px;}
@@ -231,229 +226,420 @@
 
     <script type="text/javascript">
     //<![CDATA[
-        const ROWS_FRENTE = ['A','B','C','D','E','F','G'];
-        const ROWS_TRAS   = ['H','I','J','K','L','M','N','O','P','Q','R','S','T','U'];
-        const PRECO       = 26.50;
+    let ROWS_FRENTE  = [];
+    let ROWS_TRAS    = [];
+    let FRONT_BLOCKS = [];
+    let COLS_TRAS    = 0;
+    let ZONA_TRAS    = '';
+    let PRECO        = 26.50;
+    let TIPO_MAPA    = 'sba';
+    let STANDS_AA    = [];
 
-        // Numeração contínua única por fila:
-        // B1(azul):1-5 | B2(roxo):6-10 | B3(amarelo):11-15 | Central(verde):16-30 | B4(amarelo):31-35 | B5(roxo):36-40 | B6(azul):41-45
-        const FRONT_BLOCKS = [
-            {z:'z-blue',   start:1,  cols:5},  'sm',
-            {z:'z-purple', start:6,  cols:5},  'sm',
-            {z:'z-amber',  start:11, cols:5},  'lg',
-            {z:'z-green',  start:16, cols:15}, 'lg',
-            {z:'z-amber',  start:31, cols:5},  'sm',
-            {z:'z-purple', start:36, cols:5},  'sm',
-            {z:'z-blue',   start:41, cols:5},
-        ];
-        let ocupadosCount = 0;
-        let selecionados = [];
-        let metodoAtual  = 'MBWay';
-        let orderIdAtiva = '';
-        let totalSeats   = 0;
-        const evtId = '{!idDoEvento}';
-        const accId = '{!idDaAccount}';
+    let ocupadosCount = 0;
+    let selecionados  = [];
+    let metodoAtual   = 'MBWay';
+    let orderIdAtiva  = '';
+    let totalSeats    = 0;
 
-        const TEMAS = {
-            'MBWay':      {cls:'t-mbway', logo:'MB <span>WAY</span>',     sub:'COMPROVATIVO DIGITAL',    btn:'VALIDAR PAGAMENTO', btnColor:'#e30613'},
-            'Referência': {cls:'t-mb',    logo:'MULTI<span>BANCO</span>', sub:'REFERÊNCIA DE PAGAMENTO', btn:'GERAR REFERÊNCIA',  btnColor:'#005ea6'},
-            'Cartão':     {cls:'t-card',  logo:'globa<span>z</span>',      sub:'PAGAMENTO POR CARTÃO',    btn:'VALIDAR PAGAMENTO', btnColor:'#16a34a'},
-        };
+    const evtId = '{!idDoEvento}';
+    const accId = '{!idDaAccount}';
 
-        function aplicarTema(m){
-            document.body.classList.remove('t-mbway','t-mb','t-card');
-            const t = TEMAS[m]; if(!t) return;
-            document.body.classList.add(t.cls);
-            document.getElementById('logo-text').innerHTML     = t.logo;
-            document.getElementById('subtitle-text').innerText = t.sub;
-            document.getElementById('btnFinal').innerText      = t.btn;
-        }
+    const TEMAS = {
+        'MBWay':      {cls:'t-mbway', logo:'MB <span>WAY</span>',     sub:'COMPROVATIVO DIGITAL',    btn:'VALIDAR PAGAMENTO', btnColor:'#e30613'},
+        'Referência': {cls:'t-mb',    logo:'MULTI<span>BANCO</span>', sub:'REFERÊNCIA DE PAGAMENTO', btn:'GERAR REFERÊNCIA',  btnColor:'#005ea6'},
+        'Cartão':     {cls:'t-card',  logo:'globa<span>z</span>',      sub:'PAGAMENTO POR CARTÃO',    btn:'VALIDAR PAGAMENTO', btnColor:'#16a34a'},
+    };
 
-        function selectMetodo(m, el){
-            metodoAtual = m;
-            document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('active'));
-            el.classList.add('active');
-            aplicarTema(m);
-        }
+    function aplicarTema(m){
+        document.body.classList.remove('t-mbway','t-mb','t-card');
+        const t = TEMAS[m]; if(!t) return;
+        document.body.classList.add(t.cls);
+        document.getElementById('logo-text').innerHTML     = t.logo;
+        document.getElementById('subtitle-text').innerText = t.sub;
+        document.getElementById('btnFinal').innerText      = t.btn;
+    }
 
-        function makeSeatEl(row, num, zone, ocupado){
-            totalSeats++;
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:1px;';
-            const sn = document.createElement('div');
-            sn.style.cssText = 'font-size:6px;color:#bbb;line-height:1;text-align:center;height:7px;font-family:Inter,sans-serif;';
-            sn.textContent = num;
-            const d = document.createElement('div');
-            d.className = 'seat ' + zone + (ocupado ? ' ocupado' : '');
-            const k = row + '-' + num;
-            d.dataset.k = k;
-            d.title = 'Fila ' + row + ' · Lugar ' + num;
-            if(!ocupado){
-                d.onclick = () => {
-                    const idx = selecionados.findIndex(s => s.k === k);
-                    if(idx > -1){
-                        selecionados.splice(idx,1);
-                        d.classList.remove('selecionado');
-                    } else {
-                        selecionados.push({k, fila:row, lugar:num});
-                        d.classList.add('selecionado');
-                    }
-                    document.getElementById('count').innerText  = selecionados.length;
-                    document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
-                    document.getElementById('msSel').innerText  = selecionados.length;
-                    // FIX: disponíveis = total - vendidos - selecionados agora
-                    document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
-                };
-            }
-            wrap.appendChild(sn);
-            wrap.appendChild(d);
-            return wrap;
-        }
+    function selectMetodo(m, el){
+        metodoAtual = m;
+        document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+        aplicarTema(m);
+    }
 
-        function buildFrontRow(parent, row, ocupadosSet){
-            const line = document.createElement('div');
-            line.className = 'row-line';
-            const lbl = document.createElement('div');
-            lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
-            lbl.textContent = row;
-            line.appendChild(lbl);
-            const bg = document.createElement('div');
-            bg.style.cssText = 'display:flex;align-items:flex-end;';
-            FRONT_BLOCKS.forEach(item => {
-                if(item === 'sm'){ const a=document.createElement('div'); a.style.width='12px'; a.style.flexShrink='0'; bg.appendChild(a); }
-                else if(item === 'lg'){ const a=document.createElement('div'); a.style.width='28px'; a.style.flexShrink='0'; bg.appendChild(a); }
-                else {
-                    const blk = document.createElement('div');
-                    blk.style.cssText = 'display:flex;gap:3px;';
-                    for(let i=0; i<item.cols; i++){
-                        const num = item.start + i;
-                        const oc  = ocupadosSet.has(row + '-' + num);
-                        blk.appendChild(makeSeatEl(row, num, item.z, oc));
-                    }
-                    bg.appendChild(blk);
+    // ── MAPA SBA ──────────────────────────────────────────────
+
+    function makeSeatEl(row, num, zone, ocupado){
+        totalSeats++;
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:1px;';
+        const sn = document.createElement('div');
+        sn.style.cssText = 'font-size:6px;color:#bbb;line-height:1;text-align:center;height:7px;font-family:Inter,sans-serif;';
+        sn.textContent = num;
+        const d = document.createElement('div');
+        d.className = 'seat ' + zone + (ocupado ? ' ocupado' : '');
+        const k = row + '-' + num;
+        d.dataset.k = k;
+        d.title = 'Fila ' + row + ' · Lugar ' + num;
+        if(!ocupado){
+            d.onclick = () => {
+                const idx = selecionados.findIndex(s => s.k === k);
+                if(idx > -1){
+                    selecionados.splice(idx,1);
+                    d.classList.remove('selecionado');
+                } else {
+                    selecionados.push({k, fila:row, lugar:num});
+                    d.classList.add('selecionado');
                 }
-            });
-            line.appendChild(bg);
-            parent.appendChild(line);
+                document.getElementById('count').innerText  = selecionados.length;
+                document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+                document.getElementById('msSel').innerText  = selecionados.length;
+                document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+            };
         }
+        wrap.appendChild(sn);
+        wrap.appendChild(d);
+        return wrap;
+    }
 
-        function buildBackRow(parent, row, ocupadosSet){
-            const line = document.createElement('div');
-            line.className = 'row-line';
-            const lbl = document.createElement('div');
-            lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
-            lbl.textContent = row;
-            line.appendChild(lbl);
-            const blk = document.createElement('div');
-            blk.style.cssText = 'display:flex;gap:3px;';
-            for(let n=1; n<=15; n++){
-                const oc = ocupadosSet.has(row + '-' + n);
-                blk.appendChild(makeSeatEl(row, n, 'z-navy', oc));
-            }
-            line.appendChild(blk);
-            parent.appendChild(line);
-        }
-
-                function construirMapa(ocupados){
-            const oc = new Set(ocupados);
-            const frente = document.getElementById('mapa-frente');
-            const tras   = document.getElementById('mapa-tras');
-            ROWS_FRENTE.forEach(r => buildFrontRow(frente, r, oc));
-            ROWS_TRAS.forEach((r, ri) => {
-                if(ri > 0 && ri % 5 === 0){
-                    const sp = document.createElement('div'); sp.style.height='10px'; tras.appendChild(sp);
+    function buildFrontRow(parent, row, ocupadosSet){
+        const line = document.createElement('div');
+        line.className = 'row-line';
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
+        lbl.textContent = row;
+        line.appendChild(lbl);
+        const bg = document.createElement('div');
+        bg.style.cssText = 'display:flex;align-items:flex-end;';
+        FRONT_BLOCKS.forEach(item => {
+            if(item === 'sm'){ const a=document.createElement('div'); a.style.width='12px'; a.style.flexShrink='0'; bg.appendChild(a); }
+            else if(item === 'lg'){ const a=document.createElement('div'); a.style.width='28px'; a.style.flexShrink='0'; bg.appendChild(a); }
+            else {
+                const blk = document.createElement('div');
+                blk.style.cssText = 'display:flex;gap:3px;';
+                for(let i=0; i<item.cols; i++){
+                    const num = item.start + i;
+                    const oc  = ocupadosSet.has(row + '-' + num);
+                    blk.appendChild(makeSeatEl(row, num, item.z, oc));
                 }
-                buildBackRow(tras, r, oc);
-            });
+                bg.appendChild(blk);
+            }
+        });
+        line.appendChild(bg);
+        parent.appendChild(line);
+    }
 
-            // FIX: disponíveis = total - já vendidos (ocupados) - selecionados
-            const vendidos = oc.size;
-            document.getElementById('msTotal').innerText = totalSeats;
-            document.getElementById('msDisp').innerText  = totalSeats - vendidos;
+    function buildBackRow(parent, row, ocupadosSet){
+        const line = document.createElement('div');
+        line.className = 'row-line';
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
+        lbl.textContent = row;
+        line.appendChild(lbl);
+        const blk = document.createElement('div');
+        blk.style.cssText = 'display:flex;gap:3px;';
+        // FIX 3 — usa COLS_TRAS e ZONA_TRAS do JSON em vez de hardcoded
+        for(let n=1; n<=COLS_TRAS; n++){
+            const oc = ocupadosSet.has(row + '-' + n);
+            blk.appendChild(makeSeatEl(row, n, ZONA_TRAS, oc));
         }
+        line.appendChild(blk);
+        parent.appendChild(line);
+    }
 
+    function construirMapa(ocupados){
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+        const frente = document.getElementById('mapa-frente');
+        const tras   = document.getElementById('mapa-tras');
+        ROWS_FRENTE.forEach(r => buildFrontRow(frente, r, oc));
+        ROWS_TRAS.forEach((r, ri) => {
+            if(ri > 0 && ri % 5 === 0){
+                const sp = document.createElement('div'); sp.style.height='10px'; tras.appendChild(sp);
+            }
+            buildBackRow(tras, r, oc);
+        });
+        document.getElementById('msTotal').innerText = totalSeats;
+        document.getElementById('msDisp').innerText  = totalSeats - ocupadosCount;
+    }
 
-        window.onload = function(){
-            Visualforce.remoting.Manager.invokeAction(
-                '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
-                function(ocupados){ construirMapa(ocupados || []); }
-            );
-        };
+    // ── MAPA AUTÓDROMO ────────────────────────────────────────
 
-        function switchStep(from, to){
-            document.getElementById(from).classList.remove('active');
-            document.getElementById(to).classList.add('active');
+    function construirMapaAutodromo(stands, ocupados){
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+
+        // Esconde a estrutura SBA e mostra o SVG da pista
+        document.querySelector('.arena').innerHTML = `
+        <div style="font-size:11px;color:#999;text-align:center;margin-bottom:8px;">Clica num stand para ver os lugares</div>
+        <svg id="track-svg" width="100%" viewBox="0 0 680 360" style="display:block;">
+          <path d="M 60,310 L 580,310 Q 630,310 630,265 Q 630,235 600,230 L 530,228 Q 510,228 510,210 Q 510,192 530,190 L 600,188 Q 640,185 640,150 Q 640,110 600,108 L 490,108 Q 460,108 445,128 L 420,158 Q 405,175 385,165 L 355,148 Q 335,138 335,118 Q 335,95 355,85 L 415,60 Q 440,48 440,28 Q 440,10 415,8 L 310,8 Q 285,8 270,25 L 240,58 Q 225,75 200,75 L 155,75 Q 120,75 105,100 Q 88,128 105,155 L 135,190 Q 148,208 135,225 L 105,258 Q 88,278 95,305 Q 98,310 110,312" fill="none" stroke="#d1d5db" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 60,310 L 580,310 Q 630,310 630,265 Q 630,235 600,230 L 530,228 Q 510,228 510,210 Q 510,192 530,190 L 600,188 Q 640,185 640,150 Q 640,110 600,108 L 490,108 Q 460,108 445,128 L 420,158 Q 405,175 385,165 L 355,148 Q 335,138 335,118 Q 335,95 355,85 L 415,60 Q 440,48 440,28 Q 440,10 415,8 L 310,8 Q 285,8 270,25 L 240,58 Q 225,75 200,75 L 155,75 Q 120,75 105,100 Q 88,128 105,155 L 135,190 Q 148,208 135,225 L 105,258 Q 88,278 95,305 Q 98,310 110,312" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 60,310 L 580,310 Q 630,310 630,265 Q 630,235 600,230 L 530,228 Q 510,228 510,210 Q 510,192 530,190 L 600,188 Q 640,185 640,150 Q 640,110 600,108 L 490,108 Q 460,108 445,128 L 420,158 Q 405,175 385,165 L 355,148 Q 335,138 335,118 Q 335,95 355,85 L 415,60 Q 440,48 440,28 Q 440,10 415,8 L 310,8 Q 285,8 270,25 L 240,58 Q 225,75 200,75 L 155,75 Q 120,75 105,100 Q 88,128 105,155 L 135,190 Q 148,208 135,225 L 105,258 Q 88,278 95,305 Q 98,310 110,312" fill="none" stroke="#9ca3af" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="200" y1="326" x2="500" y2="326" stroke="#9ca3af" stroke-width="6"/>
+          <rect x="388" y="302" width="5" height="30" fill="#111827"/>
+          ${gerarStandsSVG(stands, oc)}
+        </svg>
+        <div id="stand-seats-panel" style="display:none;margin-top:12px;border-top:1px solid #e5e7eb;padding-top:12px;"></div>`;
+
+        // Calcula total de lugares
+        let total = 0;
+        stands.forEach(s => { total += s.filas.length * s.colunas; });
+        document.getElementById('msTotal').innerText = total;
+        document.getElementById('msDisp').innerText  = total - ocupadosCount;
+        totalSeats = total;
+    }
+
+    const STAND_POSITIONS = {
+        'samsung':    {x:218, y:18,  w:72,  h:14, vertical:false},
+        'portimao':   {x:328, y:36,  w:82,  h:14, vertical:false},
+        'standing':   {x:452, y:32,  w:80,  h:14, vertical:false},
+        'sagres-top': {x:648, y:100, w:13,  h:68, vertical:true},
+        'solverde':   {x:648, y:180, w:13,  h:60, vertical:true},
+        'sagres-bot': {x:648, y:252, w:13,  h:60, vertical:true},
+        'lagos':      {x:60,  y:118, w:13,  h:58, vertical:true, flip:true},
+        'meo':        {x:60,  y:200, w:13,  h:72, vertical:true, flip:true},
+        'millennium': {x:170, y:340, w:190, h:14, vertical:false},
+    };
+
+    function gerarStandsSVG(stands, oc){
+        return stands.map(s => {
+            const p = STAND_POSITIONS[s.id];
+            if(!p) return '';
+            const ocupadosStand = [...oc].filter(k => k.startsWith(s.id+':')).length;
+            const total = s.filas.length * s.colunas;
+            const cx = p.x + p.w/2;
+            const cy = p.y + p.h/2;
+            const labelRotate = p.vertical ? (p.flip ? `rotate(-90,${cx-14},${cy})` : `rotate(90,${cx+14},${cy})`) : '';
+            const labelX = p.vertical ? (p.flip ? cx-14 : cx+14) : cx;
+            const labelY = p.vertical ? cy : cy;
+            const shortLabel = s.label.replace('Stand ','').replace(' Area','');
+            return `
+            <g style="cursor:pointer;" onclick="abrirStand('${s.id}')">
+              <rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" fill="${s.cor}" fill-opacity="0.9" stroke-width="0.5"/>
+              <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="central" transform="${labelRotate}" style="font-size:7px;fill:white;font-weight:700;pointer-events:none;">${shortLabel}</text>
+            </g>`;
+        }).join('');
+    }
+
+    let standAtual = null;
+
+    function abrirStand(standId){
+        standAtual = standId;
+        const stand = STANDS_AA.find(s => s.id === standId);
+        if(!stand) return;
+
+        const panel = document.getElementById('stand-seats-panel');
+        panel.style.display = 'block';
+
+        let html = `<div style="font-size:13px;font-weight:700;color:${stand.cor};margin-bottom:10px;">${stand.label}</div>`;
+
+        stand.filas.forEach(fila => {
+            html += `<div style="font-size:10px;color:#999;margin:6px 0 3px;">Fila ${fila}</div><div style="display:flex;gap:3px;flex-wrap:wrap;">`;
+            for(let n=1; n<=stand.colunas; n++){
+                const k = standId + ':' + fila + '-' + n;
+                const isOc = ocupadosGlobal.has(fila + '-' + n + '-' + standId);
+                const isSel = selecionados.findIndex(s => s.k === k) > -1;
+                const bg = isSel ? stand.cor : isOc ? '#e5e7eb' : '#fff';
+                const color = isSel ? '#fff' : isOc ? '#bbb' : '#666';
+                const cursor = isOc ? 'not-allowed' : 'pointer';
+                const opacity = isOc ? '0.3' : '1';
+                html += `<div onclick="${isOc ? '' : `toggleStandSeat('${standId}','${fila}',${n},'${stand.cor}')`}"
+                    style="width:20px;height:18px;border-radius:3px;border:1px solid #e2e2e7;
+                    background:${bg};color:${color};cursor:${cursor};opacity:${opacity};
+                    display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500;">
+                    ${n}</div>`;
+            }
+            html += '</div>';
+        });
+
+        panel.innerHTML = html;
+        updateStatsAA();
+    }
+
+    let ocupadosGlobal = new Set();
+
+    function toggleStandSeat(standId, fila, num, cor){
+        const k = standId + ':' + fila + '-' + num;
+        const idx = selecionados.findIndex(s => s.k === k);
+        if(idx > -1){
+            selecionados.splice(idx,1);
+        } else {
+            selecionados.push({k, fila, lugar:num, stand:standId});
         }
+        document.getElementById('count').innerText  = selecionados.length;
+        document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+        updateStatsAA();
+        if(standAtual) abrirStand(standAtual);
+    }
 
-        function irParaStep2(){
-            if(selecionados.length === 0){ alert('Selecione pelo menos um lugar!'); return; }
-            switchStep('step1','step2');
-        }
+    function updateStatsAA(){
+        const total = parseInt(document.getElementById('msTotal').innerText) || 0;
+        document.getElementById('msSel').innerText  = selecionados.length;
+        document.getElementById('msDisp').innerText = total - ocupadosCount - selecionados.length;
+    }
 
-        function abrirModal(){
-            const total = (selecionados.length * PRECO).toFixed(2).replace('.',',');
-            document.getElementById('modalChips').innerHTML = selecionados.map(s =>
-                `<div class="chip"><div class="chip-dot"></div>Fila ${s.fila} · Lugar ${s.lugar}</div>`
-            ).join('');
-            document.getElementById('mQtd').innerText       = selecionados.length;
-            document.getElementById('mPrecoUnit').innerText = PRECO.toFixed(2).replace('.',',') + ' €';
-            document.getElementById('mMetodo').innerText    = metodoAtual;
-            document.getElementById('mTotal').innerText     = total + ' €';
-            document.getElementById('btnModalPagar').style.background = TEMAS[metodoAtual].btnColor;
-            document.getElementById('modalDetalhes').classList.add('open');
-        }
+    // ── WINDOW.ONLOAD DINÂMICO ────────────────────────────────
 
-        function fecharModal(){
-            document.getElementById('modalDetalhes').classList.remove('open');
-        }
+    window.onload = function(){
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getMapaConfig}', evtId,
+            function(mapaJson){
+                if(mapaJson.startsWith('ERRO')){ alert(mapaJson); return; }
 
-        function confirmarECriar(){
-            const btn = document.getElementById('btnModalPagar');
-            btn.innerText = 'A criar reserva…'; btn.disabled = true;
-            const payload = selecionados.map(s => ({fila: s.fila, lugar: s.lugar}));
-            Visualforce.remoting.Manager.invokeAction(
-                '{!$RemoteAction.BilheteiraController.criarReserva}',
-                evtId, accId, metodoAtual, JSON.stringify(payload),
-                function(result, event){
-                    btn.innerText = 'Pagar Agora'; btn.disabled = false;
-                    if(!event.status || result.startsWith('ERRO')){ alert('Erro: ' + result); return; }
-                    orderIdAtiva = result;
+                const mapa = JSON.parse(mapaJson);
+                TIPO_MAPA = mapa.tipo;
+
+                // Atualiza o label do palco
+                const stageBar = document.querySelector('.stage-bar');
+                if(stageBar) stageBar.innerText = mapa.palco;
+
+                if(mapa.tipo === 'sba'){
+                    // Super Bock Arena — grelha normal
+                    ROWS_FRENTE  = mapa.filas_frente;
+                    ROWS_TRAS    = mapa.filas_tras;
+                    FRONT_BLOCKS = [];
+                    mapa.blocos_frente.forEach((b, i) => {
+                        FRONT_BLOCKS.push({z: b.zona, start: b.inicio, cols: b.colunas});
+                        // adiciona aisles entre blocos
+                        if(i === 1 || i === 3) FRONT_BLOCKS.push('lg');
+                        else if(i < mapa.blocos_frente.length - 1) FRONT_BLOCKS.push('sm');
+                    });
+                    COLS_TRAS = mapa.colunas_tras;
+                    ZONA_TRAS = mapa.zona_tras;
+
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){ construirMapa(ocupados || []); }
+                    );
+
+                } else if(mapa.tipo === 'aa'){
+                    // Autódromo do Algarve — mapa de pista com stands
+                    STANDS_AA = mapa.stands;
+
+                    // Atualiza legenda dinamicamente
+                    const legEl = document.querySelector('.map-legend');
+                    if(legEl){
+                        legEl.innerHTML = mapa.stands.map(s =>
+                            `<div class="leg"><div class="ldot" style="background:${s.cor}"></div>${s.label.replace('Stand ','')}</div>`
+                        ).join('') + '<div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>';
+                    }
+
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){
+                            ocupadosGlobal = new Set(ocupados || []);
+                            construirMapaAutodromo(mapa.stands, ocupados || []);
+                        }
+                    );
+                }
+            }
+        );
+    };
+
+    // ── STEPS E MODAL ─────────────────────────────────────────
+
+    function switchStep(from, to){
+        document.getElementById(from).classList.remove('active');
+        document.getElementById(to).classList.add('active');
+    }
+
+    function irParaStep2(){
+        if(selecionados.length === 0){ alert('Selecione pelo menos um lugar!'); return; }
+        switchStep('step1','step2');
+    }
+
+    function abrirModal(){
+        const total = (selecionados.length * PRECO).toFixed(2).replace('.',',');
+        document.getElementById('modalChips').innerHTML = selecionados.map(s => {
+            const label = s.stand
+                ? `${s.stand.replace('-',' ')} · Fila ${s.fila} · Lugar ${s.lugar}`
+                : `Fila ${s.fila} · Lugar ${s.lugar}`;
+            return `<div class="chip"><div class="chip-dot"></div>${label}</div>`;
+        }).join('');
+        document.getElementById('mQtd').innerText       = selecionados.length;
+        document.getElementById('mPrecoUnit').innerText = PRECO.toFixed(2).replace('.',',') + ' €';
+        document.getElementById('mMetodo').innerText    = metodoAtual;
+        document.getElementById('mTotal').innerText     = total + ' €';
+        document.getElementById('btnModalPagar').style.background = TEMAS[metodoAtual].btnColor;
+        document.getElementById('modalDetalhes').classList.add('open');
+    }
+
+    function fecharModal(){
+        document.getElementById('modalDetalhes').classList.remove('open');
+    }
+
+    function confirmarECriar(){
+        const btn = document.getElementById('btnModalPagar');
+        btn.innerText = 'A processar…'; btn.disabled = true;
+
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.criarReserva}',
+            evtId, accId, metodoAtual,
+            function(result, event){
+                btn.innerText = 'Pagar Agora'; btn.disabled = false;
+                if(!event.status){ alert('Erro de comunicação.'); return; }
+                if(result === 'CLIENTE_INVALIDO'){
                     fecharModal();
-                    aplicarTema(metodoAtual);
-                    const totalFmt = (selecionados.length * PRECO).toFixed(2).replace('.',',') + '€';
-                    document.getElementById('receipt-lugares').innerText = selecionados.map(s => s.fila + s.lugar).join(', ');
-                    document.getElementById('receipt-metodo').innerText  = metodoAtual;
-                    document.getElementById('total-display').innerText   = totalFmt;
-                    document.getElementById('trans-id').innerText        = result;
-                    if(metodoAtual === 'Referência'){
-                        const ref = Math.floor(Math.random()*900000000+100000000).toString();
-                        document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
-                        document.getElementById('mbRefVal').innerText = totalFmt;
-                        document.getElementById('mbRefBox').style.display = 'block';
-                    } else {
-                        document.getElementById('mbRefBox').style.display = 'none';
-                    }
-                    switchStep('step2','step3');
-                },
-                {escape:false}
-            );
-        }
+                    alert('Pagamento recusado. Contacte o suporte para mais informações.');
+                    return;
+                }
+                if(result === 'PAGAMENTO_RECUSADO'){
+                    fecharModal();
+                    alert('Pagamento recusado. Contacte o suporte para mais informações.');
+                    return;
+                }
+                if(result.startsWith('ERRO')){ alert('Erro: ' + result); return; }
 
-        function finalizarTudo(){
-            const btn = document.getElementById('btnFinal');
-            btn.innerText = 'A PROCESSAR…'; btn.disabled = true;
-            Visualforce.remoting.Manager.invokeAction(
-                '{!$RemoteAction.BilheteiraController.processarPagamentoMock}', orderIdAtiva,
-                function(res, event){
-                    if(!event.status || res !== 'PAGAMENTO_OK'){
-                        btn.innerText = TEMAS[metodoAtual].btn; btn.disabled = false;
-                        alert('Erro: ' + res); return;
-                    }
-                    switchStep('step3','step-success');
-                },
-                {escape:false}
-            );
-        }
-    //]]>
+                orderIdAtiva = result;
+                fecharModal();
+                aplicarTema(metodoAtual);
+                const totalFmt = (selecionados.length * PRECO).toFixed(2).replace('.',',') + '€';
+                document.getElementById('receipt-lugares').innerText = selecionados.map(s =>
+                    s.stand ? `${s.stand} ${s.fila}${s.lugar}` : `${s.fila}${s.lugar}`
+                ).join(', ');
+                document.getElementById('receipt-metodo').innerText  = metodoAtual;
+                document.getElementById('total-display').innerText   = totalFmt;
+                document.getElementById('trans-id').innerText        = result;
+                if(metodoAtual === 'Referência'){
+                    const ref = Math.floor(Math.random()*900000000+100000000).toString();
+                    document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
+                    document.getElementById('mbRefVal').innerText = totalFmt;
+                    document.getElementById('mbRefBox').style.display = 'block';
+                } else {
+                    document.getElementById('mbRefBox').style.display = 'none';
+                }
+                switchStep('step2','step3');
+            },
+            {escape:false}
+        );
+    }
+
+    function finalizarTudo(){
+        const btn = document.getElementById('btnFinal');
+        btn.innerText = 'A PROCESSAR…'; btn.disabled = true;
+
+        const payload = JSON.stringify(selecionados.map(s => ({
+            fila:  s.fila,
+            lugar: s.lugar,
+            stand: s.stand || null
+        })));
+
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.processarPagamentoMock}',
+            orderIdAtiva, evtId, payload,
+            function(res, event){
+                btn.innerText = TEMAS[metodoAtual].btn; btn.disabled = false;
+                if(!event.status){ alert('Erro de comunicação.'); return; }
+                if(res === 'PAGAMENTO_RECUSADO'){
+                    alert('Pagamento recusado. Contacte o suporte para mais informações.');
+                    return;
+                }
+                if(res !== 'PAGAMENTO_OK'){ alert('Erro: ' + res); return; }
+                switchStep('step3','step-success');
+            },
+            {escape:false}
+        );
+    }
+//]]>
     </script>
 </apex:page>
