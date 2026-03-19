@@ -226,6 +226,11 @@
 
     <script type="text/javascript">
     //<![CDATA[
+    function decodeHtml(str){
+        const txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+    }
     let ROWS_FRENTE  = [];
     let ROWS_TRAS    = [];
     let FRONT_BLOCKS = [];
@@ -484,9 +489,11 @@
         Visualforce.remoting.Manager.invokeAction(
             '{!$RemoteAction.BilheteiraController.getMapaConfig}', evtId,
             function(mapaJson){
+                console.log('RAW:', mapaJson);
                 if(mapaJson.startsWith('ERRO')){ alert(mapaJson); return; }
 
-                const mapa = JSON.parse(mapaJson);
+                const mapa = JSON.parse(decodeHtml(mapaJson));
+
                 TIPO_MAPA = mapa.tipo;
 
                 // Atualiza o label do palco

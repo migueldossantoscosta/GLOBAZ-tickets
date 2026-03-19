@@ -4,7 +4,7 @@ public class BilheteiraController {
     public Id idDaAccount {get;set;}
 
     public BilheteiraController(ApexPages.StandardController controller) {
-       this.idDoEvento  = 'a03d200001fPjvmAAC'; 
+       this.idDoEvento  = 'a03d200001dzD7rAAE'; 
        this.idDaAccount = '001d200001UmD61AAF';  
     }
 
