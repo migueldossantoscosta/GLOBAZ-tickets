@@ -117,17 +117,38 @@
         <locationY>0</locationY>
         <inputReference>Caixa_De_Bilhetes</inputReference>
     </recordCreates>
+    <recordLookups>
+        <name>GetBilhete</name>
+        <label>GetBilhete</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Ainda_faltam_bilhetes</targetReference>
+        </connector>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Bilhete__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Ainda_faltam_bilhetes</targetReference>
+            <targetReference>GetBilhete</targetReference>
         </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Draft</stringValue>
+            </value>
+        </filters>
         <object>Order</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
     <variables>
         <name>Caixa_De_Bilhetes</name>
         <dataType>SObject</dataType>

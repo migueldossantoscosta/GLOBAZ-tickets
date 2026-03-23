@@ -49,8 +49,8 @@
             <targetReference>AtualizarBilhete</targetReference>
         </connector>
         <object>Bilhete__c</object>
-        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
 </Flow>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NumeroLugarInvalido</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+    NumeroLugar__c &lt; 1,
+    NumeroLugar__c &gt; 45
+)</errorConditionFormula>
+    <errorMessage>O número do lugar tem que estar compreendido entre 1 a 45</errorMessage>
+</ValidationRule>

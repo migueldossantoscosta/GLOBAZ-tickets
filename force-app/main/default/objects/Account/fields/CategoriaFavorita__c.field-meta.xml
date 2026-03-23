@@ -8,7 +8,7 @@
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
-            <sorted>true</sorted>
+            <sorted>false</sorted>
             <value>
                 <fullName>Cinema</fullName>
                 <default>false</default>

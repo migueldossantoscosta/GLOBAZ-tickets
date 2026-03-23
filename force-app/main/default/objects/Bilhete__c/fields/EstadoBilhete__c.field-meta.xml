@@ -34,6 +34,12 @@
                 <default>false</default>
                 <label>Usado</label>
             </value>
+            <value>
+                <fullName>Disponível</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Disponível</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
