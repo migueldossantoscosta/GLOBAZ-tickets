@@ -43,6 +43,117 @@
         .card{background:#fff;padding:28px;border-radius:32px;box-shadow:0 2px 30px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.04);}
         h2.step-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:20px;}
 
+        arena-meo-wrap{
+        position:relative;
+        width:100%;
+        max-width:860px;
+        margin:0 auto;
+        background:#070707;
+        border-radius:26px;
+        overflow:hidden;
+        padding:0;
+        }
+
+        .meo-title-top{
+            position:absolute;
+            top:4px;
+            left:50%;
+            transform:translateX(-50%);
+            text-align:center;
+            z-index:10;
+            letter-spacing:1px;
+            pointer-events:none;
+        }
+
+        .meo-title-top .pt{
+            font-size:24px;
+            color:rgba(255,255,255,.22);
+            margin-bottom:8px;
+        }
+
+        .meo-title-top .en{
+            font-size:28px;
+            font-weight:300;
+            color:rgba(255,255,255,.9);
+        }
+
+        .meo-hint{
+            position:absolute;
+            left:50%;
+            top:88px;
+            transform:translateX(-50%);
+            color:rgba(255,255,255,.55);
+            font-size:12px;
+            letter-spacing:.4px;
+            z-index:11;
+            pointer-events:none;
+        }
+
+        .arena-meo-svg{
+            width:100%;
+            height:auto;
+            display:block;
+        }
+
+        .meo-outline{
+            fill:none;
+            stroke:#7f7f7f;
+            stroke-width:4;
+            opacity:.95;
+        }
+
+        .meo-outline-thin{
+            fill:none;
+            stroke:#7f7f7f;
+            stroke-width:3;
+            opacity:.8;
+        }
+
+        .meo-ring-fill{
+            fill:#f1f1f1;
+            stroke:none;
+        }
+
+        .meo-ring-gap{
+            fill:none;
+            stroke:#f1f1f1;
+            stroke-width:10;
+            opacity:.96;
+        }
+
+        .meo-inner-floor{
+            fill:#b9d0d0;
+            stroke:#6e6e6e;
+            stroke-width:4;
+        }
+
+        .meo-lateral-box{
+            fill:#ededed;
+            stroke:#6e6e6e;
+            stroke-width:3;
+        }
+
+        .meo-stage{
+            fill:#55bdb0;
+            stroke:none;
+        }
+
+        .meo-vomitory{
+            fill:#a9bfc0;
+            stroke:#6e6e6e;
+            stroke-width:2;
+        }
+
+        .meo-aisle{
+            stroke:#111;
+            stroke-width:8;
+            stroke-linecap:square;
+        }
+
+        .seat.z-ring{ background:#55c1b4; }
+        .seat.z-floor{ background:#55c1b4; }
+        .seat.z-lateral{ background:#55c1b4; }
+
         .arena-wrap{overflow-x:auto;padding:4px 0;}
         .arena{min-width:580px;}
         .stage-bar{background:#d1d5db;border-radius:6px 6px 0 0;padding:9px 0;font-size:8px;font-weight:700;letter-spacing:5px;color:#6b7280;text-align:center;width:50%;margin:0 auto;}
@@ -461,6 +572,243 @@
         updateStatsAA();
     }
 
+    function makeSvgEl(tag, attrs){
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for(const k in attrs){
+        el.setAttribute(k, attrs[k]);
+    }
+    return el;
+}
+
+function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
+    totalSeats++;
+    const k = fila + '-' + lugar;
+    const ocupado = ocupadosSet.has(k);
+
+    const seat = makeSvgEl('rect', {
+        x: x, y: y, width: w, height: h, rx: 1.5, ry: 1.5,
+        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
+    });
+
+    seat.dataset.k = k;
+    seat.dataset.fila = fila;
+    seat.dataset.lugar = lugar;
+    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
+
+    if(!ocupado){
+        seat.onclick = function(){
+            const idx = selecionados.findIndex(s => s.k === k);
+            if(idx > -1){
+                selecionados.splice(idx,1);
+                seat.classList.remove('selecionado');
+            } else {
+                selecionados.push({k, fila:fila, lugar:lugar});
+                seat.classList.add('selecionado');
+            }
+            document.getElementById('count').innerText  = selecionados.length;
+            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+            document.getElementById('msSel').innerText  = selecionados.length;
+            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+        };
+    }
+
+    group.appendChild(seat);
+}
+
+function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona, ocupadosSet){
+    totalSeats++;
+    const k = fila + '-' + lugar;
+    const ocupado = ocupadosSet.has(k);
+
+    const rad = angleDeg * Math.PI / 180;
+    const x = cx + Math.cos(rad) * radius - w / 2;
+    const y = cy + Math.sin(rad) * radius - h / 2;
+
+    const seat = makeSvgEl('rect', {
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+        rx: 1.5,
+        ry: 1.5,
+        transform: 'rotate(' + (angleDeg + 90) + ' ' + (x + w/2) + ' ' + (y + h/2) + ')',
+        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
+    });
+
+    seat.dataset.k = k;
+    seat.dataset.fila = fila;
+    seat.dataset.lugar = lugar;
+    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
+
+    if(!ocupado){
+        seat.onclick = function(){
+            const idx = selecionados.findIndex(s => s.k === k);
+            if(idx > -1){
+                selecionados.splice(idx,1);
+                seat.classList.remove('selecionado');
+            } else {
+                selecionados.push({k, fila:fila, lugar:lugar});
+                seat.classList.add('selecionado');
+            }
+            document.getElementById('count').innerText  = selecionados.length;
+            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+            document.getElementById('msSel').innerText  = selecionados.length;
+            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+        };
+    }
+
+    group.appendChild(seat);
+}
+
+        function construirMapaMeoArena(mapa, ocupados){
+            const oc = new Set(ocupados);
+            ocupadosCount = oc.size;
+            totalSeats = 0;
+
+            const arena = document.querySelector('.arena');
+            arena.innerHTML = `
+                <div class="arena-meo-wrap">
+                    <div class="meo-title-top">
+                        <div class="pt">${mapa.titulo_pt || 'PLATEIA SENTADA'}</div>
+                        <div class="en">${mapa.titulo_en || 'SEATS'}</div>
+                    </div>
+                    <div class="meo-hint">clica nos lugares para selecionar</div>
+
+                    <svg class="arena-meo-svg" viewBox="0 0 900 1300" aria-label="Mapa estilo MEO Arena">
+                        <path class="meo-outline" d="M120,1140 C35,1010 18,825 26,650 C34,470 95,280 215,170 C305,88 410,58 450,56 C490,58 595,88 685,170 C805,280 866,470 874,650 C882,825 865,1010 780,1140 C710,1248 600,1290 450,1295 C300,1290 190,1248 120,1140 Z"/>
+                        <path class="meo-outline-thin" d="M145,1110 C72,994 52,820 60,650 C68,490 120,325 230,220 C310,145 400,118 450,116 C500,118 590,145 670,220 C780,325 832,490 840,650 C848,820 828,994 755,1110 C694,1205 592,1242 450,1246 C308,1242 206,1205 145,1110 Z"/>
+                        <path class="meo-outline-thin" d="M185,1068 C122,975 102,815 108,654 C114,525 156,386 250,295 C322,225 403,202 450,202 C497,202 578,225 650,295 C744,386 786,525 792,654 C798,815 778,975 715,1068 C659,1150 573,1184 450,1187 C327,1184 241,1150 185,1068 Z"/>
+
+                        <path class="meo-ring-fill" d="M134,1088 C82,985 78,832 82,668 C88,476 148,350 224,279 C288,219 365,186 450,186 C535,186 612,219 676,279 C752,350 812,476 818,668 C822,832 818,985 766,1088 L630,1050 C672,970 682,836 680,682 C678,544 643,454 592,401 C554,362 507,340 450,340 C393,340 346,362 308,401 C257,454 222,544 220,682 C218,836 228,970 270,1050 Z"/>
+
+                        <path class="meo-ring-gap" d="M178,1064 C136,969 132,832 136,680 C142,510 194,397 255,337 C307,286 372,260 450,260 C528,260 593,286 645,337 C706,397 758,510 764,680 C768,832 764,969 722,1064"/>
+                        <path class="meo-ring-gap" d="M212,1046 C177,960 173,833 176,689 C182,536 228,438 281,385 C326,341 383,320 450,320 C517,320 574,341 619,385 C672,438 718,536 724,689 C727,833 723,960 688,1046"/>
+                        <path class="meo-ring-gap" d="M246,1030 C218,953 215,833 218,698 C224,568 264,486 309,438 C348,399 396,381 450,381 C504,381 552,399 591,438 C636,486 676,568 682,698 C685,833 682,953 654,1030"/>
+                        <path class="meo-ring-gap" d="M280,1014 C258,946 256,833 258,706 C264,596 298,528 337,486 C370,451 410,436 450,436 C490,436 530,451 563,486 C602,528 636,596 642,706 C644,833 642,946 620,1014"/>
+
+                        <line class="meo-aisle" x1="124" y1="604" x2="262" y2="604"/>
+                        <line class="meo-aisle" x1="638" y1="604" x2="776" y2="604"/>
+
+                        <path class="meo-inner-floor" d="M305,1046 L305,1000 L250,920 L250,730 C250,552 262,438 316,370 C354,321 397,300 450,300 C503,300 546,321 584,370 C638,438 650,552 650,730 L650,920 L595,1000 L595,1046 C550,1054 502,1058 450,1058 C398,1058 350,1054 305,1046 Z"/>
+
+                        <rect class="meo-lateral-box" x="380" y="344" width="140" height="58"/>
+                        <rect class="meo-lateral-box" x="272" y="450" width="54" height="170"/>
+                        <rect class="meo-lateral-box" x="272" y="634" width="54" height="170"/>
+                        <rect class="meo-vomitory" x="272" y="806" width="54" height="26"/>
+                        <rect class="meo-lateral-box" x="272" y="834" width="54" height="164"/>
+
+                        <rect class="meo-lateral-box" x="574" y="450" width="54" height="170"/>
+                        <rect class="meo-lateral-box" x="574" y="634" width="54" height="170"/>
+                        <rect class="meo-vomitory" x="574" y="806" width="54" height="26"/>
+                        <rect class="meo-lateral-box" x="574" y="834" width="54" height="164"/>
+
+                        <g id="meoTopo"></g>
+                        <g id="meoLaterais"></g>
+                        <g id="meoPlateia"></g>
+                        <g id="meoRings"></g>
+
+                        <rect class="meo-stage" x="392" y="1010" width="116" height="46" rx="12" ry="12"/>
+                    </svg>
+                </div>
+            `;
+
+            const topoG     = document.getElementById('meoTopo');
+            const lateraisG = document.getElementById('meoLaterais');
+            const plateiaG  = document.getElementById('meoPlateia');
+            const ringsG    = document.getElementById('meoRings');
+
+            if(mapa.topo){
+                mapa.topo.filas.forEach((filaBase, r) => {
+                    const fila = filaBase;
+                    for(let c=1; c<=mapa.topo.colunas; c++){
+                        makeMeoSeatRect(
+                            topoG,
+                            mapa.topo.x + ((c-1) * mapa.topo.gap_x),
+                            mapa.topo.y + (r * mapa.topo.gap_y),
+                            mapa.topo.seat_w,
+                            mapa.topo.seat_h,
+                            fila,
+                            c,
+                            mapa.topo.zona,
+                            oc
+                        );
+                    }
+                });
+            }
+
+            if(mapa.plateia_central){
+                mapa.plateia_central.filas.forEach((filaBase, r) => {
+                    const fila = filaBase;
+                    for(let c=1; c<=mapa.plateia_central.colunas; c++){
+                        makeMeoSeatRect(
+                            plateiaG,
+                            mapa.plateia_central.x + ((c-1) * mapa.plateia_central.gap_x),
+                            mapa.plateia_central.y + (r * mapa.plateia_central.gap_y),
+                            mapa.plateia_central.seat_w,
+                            mapa.plateia_central.seat_h,
+                            fila,
+                            c,
+                            mapa.plateia_central.zona,
+                            oc
+                        );
+                    }
+                });
+            }
+
+            if(mapa.laterais){
+                mapa.laterais.forEach((lat) => {
+                    lat.blocos.forEach((bloco, bi) => {
+                        bloco.filas.forEach((filaBase, r) => {
+                            const fila = filaBase;
+                            for(let c=1; c<=bloco.colunas; c++){
+                                makeMeoSeatRect(
+                                    lateraisG,
+                                    lat.x + ((c-1) * lat.gap_x),
+                                    bloco.y + (r * lat.gap_y),
+                                    lat.seat_w,
+                                    lat.seat_h,
+                                    fila,
+                                    c,
+                                    lat.zona,
+                                    oc
+                                );
+                            }
+                        });
+                    });
+                });
+            }
+
+            if(mapa.ring_seats && mapa.rings){
+                mapa.rings.forEach((ring) => {
+                    for(let i=0; i<ring.quantidade; i++){
+                        const t = i / (ring.quantidade - 1);
+                        const ang = ring.angulo_inicio + ((ring.angulo_fim - ring.angulo_inicio) * t);
+
+                        if ((ang > 248 && ang < 292)) continue;
+                        if ((ang > 171 && ang < 189)) continue;
+                        if ((ang > 351 && ang < 369)) continue;
+
+                        makeMeoSeatArc(
+                            ringsG,
+                            450,
+                            690,
+                            ang,
+                            ring.raio,
+                            10,
+                            24,
+                            ring.prefixo_fila,
+                            i + 1,
+                            ring.zona,
+                            oc
+                        );
+                    }
+                });
+            }
+
+            document.getElementById('msTotal').innerText = totalSeats;
+            document.getElementById('msDisp').innerText  = totalSeats - ocupadosCount;
+        }
+
     let ocupadosGlobal = new Set();
 
     function toggleStandSeat(standId, fila, num, cor){
@@ -486,6 +834,16 @@
     // ── WINDOW.ONLOAD DINÂMICO ────────────────────────────────
 
     window.onload = function(){
+        // CHAMADA NOVA: Buscar o preço real do Salesforce
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getPrecoBilhete}', evtId,
+            function(result, event) {
+                if (event.status) {
+                    PRECO = result; // Atualiza a variável global com o valor do Pricebook
+                    console.log('Preço atualizado do Salesforce:', PRECO);
+                }
+            }
+        );
         Visualforce.remoting.Manager.invokeAction(
             '{!$RemoteAction.BilheteiraController.getMapaConfig}', evtId,
             function(mapaJson){
@@ -536,6 +894,13 @@
                         function(ocupados){
                             ocupadosGlobal = new Set(ocupados || []);
                             construirMapaAutodromo(mapa.stands, ocupados || []);
+                        }
+                    );
+                }else if(mapa.tipo === 'meoarena'){
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){
+                            construirMapaMeoArena(mapa, ocupados || []);
                         }
                     );
                 }

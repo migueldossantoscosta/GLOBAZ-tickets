@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>ValorFinal__c</fullName>
-    <formula>QuantidadeBilhetes__c * Evento__r.PrecoBilhete__c * 1.06</formula>
+    <formula>TotalAmount *(1+ IVA__c)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Valor Final</label>
     <precision>18</precision>
