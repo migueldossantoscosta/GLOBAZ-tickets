@@ -2,13 +2,137 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&amp;display=swap" rel="stylesheet"/>
     <style>
         *,*::before,*::after{box-sizing:border-box;}
-        body{font-family:'Inter',sans-serif;background:#f5f5f7;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;transition:background .4s;}
-        .container{width:100%;max-width:1460px;padding:24px 16px;}
+        :root {
+            --bg: #050816;
+            --bg-2: #091125;
+            --surface: rgba(255,255,255,0.06);
+            --surface-2: rgba(255,255,255,0.08);
+            --border: rgba(255,255,255,0.10);
+            --text: #f8fbff;
+            --muted: rgba(255,255,255,0.70);
+            --blue: #5ea2ff;
+            --blue-2: #2563eb;
+            --glow: 0 20px 60px rgba(37,99,235,0.25);
+            --radius-xl: 30px;
+            --radius-lg: 22px;
+            --shadow: 0 20px 50px rgba(0,0,0,0.28);
+        }
 
-        .brand-header{text-align:center;margin-bottom:28px;transition:all .5s cubic-bezier(.22,1,.36,1);}
-        .brand-logo{font-weight:800;font-size:28px;letter-spacing:-1.5px;text-transform:lowercase;color:#000;}
-        .brand-logo span{font-weight:300;color:#888;}
-        .brand-subtitle{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2.5px;margin-top:5px;color:#999;}
+        body{
+            font-family:'Inter',sans-serif;
+            color:var(--text);
+            background:
+                radial-gradient(circle at 10% 0%, rgba(50,120,255,.24), transparent 28%),
+                radial-gradient(circle at 100% 10%, rgba(168,85,247,.14), transparent 24%),
+                linear-gradient(180deg, #030611 0%, #081121 40%, #050816 100%);
+            margin:0;
+            min-height:100vh;
+            transition:background .4s;
+            overflow-x:hidden;
+        }
+
+        .container{
+            width:min(1440px, calc(100vw - 40px));
+            margin:0 auto;
+            padding:28px 0 40px;
+            position:relative;
+            z-index:1;
+        }
+
+        .noise{
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            opacity:.08;
+            background-image:
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size:4px 4px;
+            mix-blend-mode:soft-light;
+            z-index:0;
+        }
+
+        .brand-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:24px;
+            margin-bottom:24px;
+            padding:18px 0;
+            border-bottom:1px solid rgba(255,255,255,.08);
+        }
+
+        .brand-left{
+            display:flex;
+            align-items:center;
+            gap:16px;
+        }
+
+        .brand-mark{
+            width:44px;
+            height:44px;
+            border-radius:14px;
+            background:linear-gradient(135deg, rgba(94,162,255,.95), rgba(37,99,235,.80));
+            box-shadow:var(--glow);
+            position:relative;
+            overflow:hidden;
+            flex-shrink:0;
+        }
+
+        .brand-mark::before,
+        .brand-mark::after{
+            content:"";
+            position:absolute;
+            background:rgba(255,255,255,.9);
+            border-radius:999px;
+        }
+
+        .brand-mark::before{width:24px;height:5px;left:10px;top:13px;}
+        .brand-mark::after{width:16px;height:5px;left:10px;top:24px;}
+
+        .brand-text{
+            display:flex;
+            flex-direction:column;
+            line-height:1;
+        }
+
+        .brand-logo{
+            font-weight:900;
+            font-size:20px;
+            letter-spacing:.8px;
+            color:#fff;
+            text-transform:uppercase;
+        }
+
+        .brand-logo span{
+            color:#fff;
+            font-weight:900;
+        }
+
+        .brand-subtitle{
+            font-size:11px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:1.3px;
+            margin-top:4px;
+            font-weight:700;
+        }
+
+        .top-back{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:46px;
+            padding:0 18px;
+            border-radius:14px;
+            font-weight:800;
+            color:#fff;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.12);
+            text-decoration:none;
+            transition:transform .25s ease;
+        }
+        .top-back:hover{transform:translateY(-2px);}
 
         body.t-mbway .brand-header{background:#e30613;border-radius:20px;padding:18px 24px;}
         body.t-mbway .brand-logo{color:#fff;}
@@ -40,10 +164,34 @@
         body.t-card .success-icon{background:#16a34a;}
         body.t-card .method-opt.active{border-color:#16a34a;background:#f0fdf4;}
 
-        .card{background:#fff;padding:28px;border-radius:32px;box-shadow:0 2px 30px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.04);}
-        h2.step-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:20px;}
+        .card{
+            background:rgba(255,255,255,.05);
+            border:1px solid rgba(255,255,255,.09);
+            border-radius:var(--radius-lg);
+            box-shadow:var(--shadow);
+            backdrop-filter:blur(16px);
+            padding:28px;
+        }
 
-        arena-meo-wrap{
+        h2.step-title{
+            text-align:center;
+            font-size:30px;
+            line-height:1;
+            font-weight:950;
+            letter-spacing:-.8px;
+            margin-bottom:20px;
+            color:#fff;
+        }
+
+        .step-subtitle{
+            text-align:center;
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.6;
+            margin:-6px 0 20px;
+        }
+
+        .arena-meo-wrap{
         position:relative;
         width:100%;
         max-width:860px;
@@ -180,53 +328,163 @@
         .bot{display:flex;flex-direction:column;gap:4px;align-items:center;}
 
         .map-legend{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
-        .leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#888;}
+        .leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
         .ldot{width:10px;height:9px;border-radius:2px;flex-shrink:0;}
 
-        .map-stats{display:flex;justify-content:center;margin-top:14px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
-        .mstat{flex:1;padding:8px;text-align:center;border-right:1px solid #e5e7eb;}
+        .map-stats{
+            display:flex;
+            justify-content:center;
+            margin-top:14px;
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:16px;
+            overflow:hidden;
+            background:rgba(255,255,255,.04);
+        }
+        .mstat{
+            flex:1;
+            padding:12px 10px;
+            text-align:center;
+            border-right:1px solid rgba(255,255,255,.08);
+        }
+
         .mstat:last-child{border-right:none;}
-        .mstat-val{font-weight:700;font-size:15px;color:#000;}
-        .mstat-lbl{color:#999;font-size:9px;margin-top:1px;}
+        .mstat-val{font-weight:800;font-size:18px;color:#fff;}
+        .mstat-lbl{color:rgba(255,255,255,.56);font-size:10px;margin-top:2px;text-transform:uppercase;letter-spacing:.6px;}
 
         .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
-        .method-opt{border:1.5px solid #e2e2e7;border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
-        .method-opt:hover{border-color:#aaa;}
-        .method-opt.active{border-color:#000;background:#f5f5f7;}
+        .method-opt{
+            border:1.5px solid rgba(255,255,255,.10);
+            border-radius:16px;
+            padding:14px 10px;
+            text-align:center;
+            cursor:pointer;
+            transition:all .2s;
+            background:rgba(255,255,255,.04);
+            color:#fff;
+        }
+        .method-opt:hover{border-color:rgba(255,255,255,.20);}
+        .method-opt.active{
+            border-color:rgba(94,162,255,.45);
+            background:rgba(94,162,255,.12);
+        }
         .method-icon{font-size:20px;display:block;margin-bottom:5px;}
-        .method-label{font-size:11px;font-weight:700;color:#444;letter-spacing:.3px;}
+        .method-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px;}
 
         .mb-ref-box{display:none;background:#e8f4fd;border:1.5px solid #b3d9f5;border-radius:16px;padding:16px 20px;margin:14px 0;text-align:center;}
         .mb-ref-entity{font-size:11px;color:#005ea6;font-weight:700;letter-spacing:2px;margin-bottom:4px;}
         .mb-ref-num{font-size:26px;font-weight:800;color:#003d7a;letter-spacing:4px;margin-bottom:4px;}
         .mb-ref-val{font-size:13px;color:#005ea6;font-weight:600;}
-        .receipt-table{margin:16px 0;border-top:1px solid #f0f0f0;}
-        .receipt-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f8f8f8;font-size:14px;}
-        .receipt-label{color:#888;}
-        .receipt-value{font-weight:600;color:#000;}
+        .receipt-table{
+            margin:16px 0;
+            border-top:1px solid rgba(255,255,255,.08);
+        }
+        .receipt-row{
+    display:flex;
+            justify-content:space-between;
+            padding:12px 0;
+            border-bottom:1px solid rgba(255,255,255,.06);
+            font-size:14px;
+            gap:16px;
+        }
+        .receipt-label{color:var(--muted);}
+        .receipt-value{font-weight:700;color:#fff;}
         .receipt-value.total{font-size:22px;font-weight:800;}
-        .receipt-value.mono{font-size:11px;color:#aaa;font-weight:500;font-family:monospace;}
+        .receipt-value.mono{font-size:11px;color:rgba(255,255,255,.55);font-weight:500;font-family:monospace;}
 
         .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);z-index:200;align-items:flex-end;justify-content:center;}
         .modal-overlay.open{display:flex;}
-        .modal-sheet{background:#fff;border-radius:28px 28px 0 0;padding:28px 28px 44px;width:100%;max-width:1460px;animation:slideUp .38s cubic-bezier(.22,1,.36,1);}
+        .modal-sheet{
+            background:#0d1425;
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:28px 28px 0 0;
+            padding:28px 28px 44px;
+            width:100%;
+            max-width:1460px;
+            animation:slideUp .38s cubic-bezier(.22,1,.36,1);
+            color:#fff;
+        }
+
         @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-        .modal-handle{width:40px;height:4px;background:#e2e2e7;border-radius:2px;margin:0 auto 20px;}
-        .modal-title{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;}
-        .modal-sub{font-size:13px;color:#888;margin-bottom:16px;}
+
+        .modal-handle{width:40px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;margin:0 auto 20px;}
+        .modal-title{font-size:20px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;color:#fff;}
+        .modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
         .seats-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;max-height:90px;overflow-y:auto;}
-        .chip{background:#f5f5f7;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:#1d1d1f;display:flex;align-items:center;gap:5px;}
+        .chip{
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:20px;
+            padding:5px 12px;
+            font-size:11px;
+            font-weight:700;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            gap:5px;
+        }
         .chip-dot{width:7px;height:7px;background:#ffc107;border-radius:50%;flex-shrink:0;}
 
-        .btn-main{width:100%;padding:18px;border:none;border-radius:20px;font-weight:700;font-size:16px;cursor:pointer;margin-top:12px;transition:all .25s;background:#000;color:#fff;}
-        .btn-main:hover{transform:scale(1.015);opacity:.92;}
-        .btn-ghost{padding:16px;border-radius:18px;border:1.5px solid #e2e2e7;background:transparent;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;color:#444;width:100%;margin-top:10px;}
-        .btn-ghost:hover{background:#f5f5f7;}
-        .btn-pair{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:16px;}
-        .btn-cancel{padding:16px;border-radius:18px;border:1.5px solid #e2e2e7;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:#444;transition:.2s;}
-        .btn-cancel:hover{background:#f5f5f7;}
-        .btn-pay{padding:16px;border-radius:18px;border:none;background:#000;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;}
-        .btn-pay:hover{opacity:.88;transform:scale(1.01);}
+        .btn-main{
+            width:100%;
+            padding:18px;
+            border:none;
+            border-radius:16px;
+            font-weight:800;
+            font-size:16px;
+            cursor:pointer;
+            margin-top:12px;
+            transition:all .25s;
+            background:linear-gradient(135deg, var(--blue), var(--blue-2));
+            color:#fff;
+            box-shadow:var(--glow);
+        }
+
+        .btn-main:hover{transform:translateY(-2px);}
+
+        .btn-ghost{
+            padding:16px;
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,.12);
+            background:rgba(255,255,255,.06);
+            font-size:14px;
+            font-weight:700;
+            cursor:pointer;
+            transition:.2s;
+            color:#fff;
+            width:100%;
+            margin-top:10px;
+        }
+
+        .btn-ghost:hover{transform:translateY(-2px);}
+
+        .btn-cancel{
+            padding:16px;
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,.12);
+            background:rgba(255,255,255,.06);
+            font-size:14px;
+            font-weight:700;
+            cursor:pointer;
+            color:#fff;
+            transition:.2s;
+        }
+
+        .btn-cancel:hover{transform:translateY(-2px);}
+
+        .btn-pay{
+            padding:16px;
+            border-radius:16px;
+            border:none;
+            background:linear-gradient(135deg, var(--blue), var(--blue-2));
+            color:#fff;
+            font-size:15px;
+            font-weight:800;
+            cursor:pointer;
+            transition:all .25s;
+            box-shadow:var(--glow);
+        }
+
+        .btn-pay:hover{transform:translateY(-2px);}
 
         .success-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;background:#000;color:#fff;}
         .step{display:none;}
@@ -235,14 +493,21 @@
     </style>
 
     <div class="container">
-        <div id="main-header" class="brand-header">
-            <div id="logo-text" class="brand-logo">globa<span>z</span></div>
-            <div id="subtitle-text" class="brand-subtitle">tickets &amp; events</div>
+    <div id="main-header" class="brand-header">
+        <div class="brand-left">
+            <div class="brand-mark"></div>
+            <div class="brand-text">
+                <div id="logo-text" class="brand-logo">GLOBAZ TICKETS</div>
+                <div id="subtitle-text" class="brand-subtitle">premium ticketing experience</div>
+            </div>
         </div>
+
+        <a href="/globaztickets" class="top-back">Voltar</a>
+    </div>
 
         <!-- STEP 1: MAPA -->
         <div id="step1" class="card step active">
-            <h2 class="step-title">Selecione os Lugares</h2>
+            <p class="step-subtitle">Escolhe os lugares disponíveis e avança para o pagamento com a mesma experiência premium do resto do site.</p>
             <div class="arena-wrap">
                 <div class="arena">
                     <div class="stage-bar">PALCO</div>
@@ -273,11 +538,18 @@
 
         <!-- STEP 2: MÉTODO -->
         <div id="step2" class="card step">
-            <h2 class="step-title">Método de Pagamento</h2>
+            <p class="step-subtitle">Seleciona a forma de pagamento para concluir a tua reserva.</p>
             <div class="method-grid">
                 <div class="method-opt active" onclick="selectMetodo('MBWay',this)"><span class="method-icon">📱</span><span class="method-label">MB WAY</span></div>
                 <div class="method-opt"        onclick="selectMetodo('Referência',this)"><span class="method-icon">🏧</span><span class="method-label">MULTIBANCO</span></div>
                 <div class="method-opt"        onclick="selectMetodo('Cartão',this)"><span class="method-icon">💳</span><span class="method-label">CARTÃO</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <input id="checkoutNome" type="text" placeholder="Nome completo"
+                    style="height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;" />
+
+                <input id="checkoutEmail" type="email" placeholder="Email"
+                    style="height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;" />
             </div>
             <button class="btn-main" onclick="abrirModal()">Rever e Confirmar →</button>
             <button class="btn-ghost" onclick="switchStep('step2','step1')">← Voltar</button>
@@ -286,7 +558,7 @@
         <!-- STEP 3: COMPROVATIVO -->
         <div id="step3" class="card step">
             <h2 class="step-title" style="text-align:left;">Confirmar Operação</h2>
-            <p style="color:#888;font-size:13px;margin:-10px 0 4px;">Verifique os detalhes antes de validar.</p>
+            <p class="step-subtitle" style="text-align:left;margin-top:-8px;">Verifique os detalhes antes de validar.</p>
             <div class="mb-ref-box" id="mbRefBox">
                 <div class="mb-ref-entity">ENTIDADE · 21 147</div>
                 <div class="mb-ref-num" id="mbRefNum">--- --- ---</div>
@@ -380,6 +652,212 @@
         document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('active'));
         el.classList.add('active');
         aplicarTema(m);
+    }
+
+    function makeForumSeat(group, x, y, w, h, fila, lugar, zona, ocupado){
+    totalSeats++;
+
+    const k = fila + '-' + lugar;
+
+    const seat = makeSvgEl('rect', {
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+        rx: 2,
+        ry: 2
+    });
+
+    let fill = '#cccccc';
+    if(zona === 'plateia_verde') fill = '#72c53d';
+    if(zona === 'plateia_azul') fill = '#0ea5a8';
+    if(zona === 'camarote') fill = '#b06ac9';
+    if(zona === 'fila_frontal') fill = '#c7d72d';
+
+    seat.setAttribute('fill', fill);
+    seat.setAttribute('stroke', 'rgba(0,0,0,.18)');
+    seat.setAttribute('stroke-width', '0.6');
+    seat.dataset.k = k;
+
+    if (ocupado) {
+        seat.setAttribute('opacity', '0.28');
+        seat.style.cursor = 'not-allowed';
+    } else {
+        seat.style.cursor = 'pointer';
+        seat.onclick = function(){
+            const idx = selecionados.findIndex(s => s.k === k);
+            if(idx > -1){
+                selecionados.splice(idx, 1);
+                seat.setAttribute('stroke', 'rgba(0,0,0,.18)');
+                seat.setAttribute('stroke-width', '0.6');
+            } else {
+                selecionados.push({
+                    k: k,
+                    fila: fila,
+                    lugar: lugar
+                });
+                seat.setAttribute('stroke', '#fbbf24');
+                seat.setAttribute('stroke-width', '2');
+            }
+
+            document.getElementById('count').innerText  = selecionados.length;
+            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+            document.getElementById('msSel').innerText  = selecionados.length;
+            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+        };
+    }
+
+    group.appendChild(seat);
+    }
+
+    function buildForumQuadBlock(g, bloco, ocupadosSet, seatW, seatH){
+        const path = makeSvgEl('polygon', {
+            points: [
+                bloco.x + ',' + bloco.y,
+                (bloco.x + bloco.w) + ',' + (bloco.y + 12),
+                (bloco.x + bloco.w - bloco.skew) + ',' + (bloco.y + bloco.h),
+                (bloco.x - bloco.skew) + ',' + (bloco.y + bloco.h - 10)
+            ].join(' '),
+            fill: bloco.zona === 'plateia_verde' ? '#72c53d' : '#0ea5a8',
+            stroke: 'none'
+        });
+        g.appendChild(path);
+
+        const innerPaddingX = 18;
+        const innerPaddingY = 18;
+        const cols = bloco.colunas;
+        const rows = bloco.filas.length;
+        const gapX = Math.max(3, (bloco.w - (innerPaddingX * 2) - (cols * seatW)) / Math.max(1, cols - 1));
+        const gapY = Math.max(4, (bloco.h - (innerPaddingY * 2) - (rows * seatH)) / Math.max(1, rows - 1));
+
+        for(let r = 0; r < rows; r++){
+            const fila = bloco.filas[r];
+            for(let c = 0; c < cols; c++){
+                const lugar = c + 1;
+                const ocupado = ocupadosSet.has(fila + '-' + lugar);
+
+                makeForumSeat(
+                    g,
+                    bloco.x + innerPaddingX + (c * (seatW + gapX)),
+                    bloco.y + innerPaddingY + (r * (seatH + gapY)),
+                    seatW,
+                    seatH,
+                    fila,
+                    lugar,
+                    bloco.zona,
+                    ocupado
+                );
+            }
+        }
+    }
+
+    function buildForumRowBlock(g, bloco, ocupadosSet, seatW, seatH){
+        const fila = bloco.fila || 'AK';
+
+        for(let i = 0; i < bloco.lugares.length; i++){
+            const lugar = bloco.lugares[i];
+            const ocupado = ocupadosSet.has(fila + '-' + lugar);
+
+            makeForumSeat(
+                g,
+                bloco.x + (i * (seatW + 6)),
+                bloco.y,
+                seatW,
+                seatH,
+                fila,
+                lugar,
+                bloco.zona,
+                ocupado
+            );
+
+            const txt = makeSvgEl('text', {
+                x: bloco.x + (i * (seatW + 6)) + (seatW / 2),
+                y: bloco.y + seatH + 12,
+                'text-anchor': 'middle',
+                'font-size': '9',
+                fill: '#111'
+            });
+            txt.textContent = lugar;
+            g.appendChild(txt);
+        }
+    }
+
+    function buildForumBoxBlock(g, bloco, ocupadosSet, seatW, seatH){
+        const box = makeSvgEl('rect', {
+            x: bloco.x,
+            y: bloco.y,
+            width: 36,
+            height: 68,
+            rx: 2,
+            fill: '#b06ac9'
+        });
+        g.appendChild(box);
+
+        for(let r = 0; r < bloco.rows; r++){
+            const fila = bloco.filas[r];
+            for(let c = 0; c < bloco.cols; c++){
+                const lugar = c + 1;
+                const ocupado = ocupadosSet.has(fila + '-' + lugar);
+
+                makeForumSeat(
+                    g,
+                    bloco.x + 6 + (c * (seatW + 4)),
+                    bloco.y + 6 + (r * (seatH + 3)),
+                    seatW,
+                    seatH,
+                    fila,
+                    lugar,
+                    bloco.zona,
+                    ocupado
+                );
+            }
+        }
+    }
+
+    function construirMapaForumBraga(mapa, ocupados){
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+        totalSeats = 0;
+
+        const arena = document.querySelector('.arena');
+        arena.innerHTML = `
+            <div style="display:flex;justify-content:center;margin-bottom:10px;">
+                <div style="background:#bfc3c7;color:#fff;font-weight:800;font-size:24px;padding:10px 34px;border-radius:2px;">
+                    ${mapa.palco || 'PALCO'}
+                </div>
+            </div>
+            <svg id="forum-braga-svg" viewBox="0 0 620 820" style="width:100%;height:auto;display:block;background:#efefef;border-radius:20px;"></svg>
+        `;
+
+        const svg = document.getElementById('forum-braga-svg');
+        const g = makeSvgEl('g', {});
+
+        mapa.blocos.forEach(bloco => {
+            if (bloco.shape === 'quad') {
+                buildForumQuadBlock(g, bloco, oc, mapa.seat_w, mapa.seat_h);
+            } else if (bloco.shape === 'row') {
+                buildForumRowBlock(g, bloco, oc, mapa.seat_w, mapa.seat_h);
+            } else if (bloco.shape === 'box') {
+                buildForumBoxBlock(g, bloco, oc, 9, 8);
+            }
+        });
+
+        svg.appendChild(g);
+
+        document.getElementById('msTotal').innerText = totalSeats;
+        document.getElementById('msDisp').innerText  = totalSeats - ocupadosCount;
+
+        const legEl = document.querySelector('.map-legend');
+        if (legEl) {
+            legEl.innerHTML = `
+                <div class="leg"><div class="ldot" style="background:#72c53d"></div>Plateia Verde</div>
+                <div class="leg"><div class="ldot" style="background:#0ea5a8"></div>Plateia Azul</div>
+                <div class="leg"><div class="ldot" style="background:#b06ac9"></div>Camarotes</div>
+                <div class="leg"><div class="ldot" style="background:#c7d72d"></div>Fila Frontal</div>
+                <div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>
+                <div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>
+            `;
+        }
     }
 
     // ── MAPA SBA ──────────────────────────────────────────────
@@ -903,6 +1381,13 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                             construirMapaMeoArena(mapa, ocupados || []);
                         }
                     );
+                }else if(mapa.tipo === 'forumbraga'){
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){
+                            construirMapaForumBraga(mapa, ocupados || []);
+                        }
+                    );
                 }
             }
         );
@@ -941,50 +1426,92 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
     }
 
     function confirmarECriar(){
-        const btn = document.getElementById('btnModalPagar');
-        btn.innerText = 'A processar…'; btn.disabled = true;
+    const btn = document.getElementById('btnModalPagar');
+    btn.innerText = 'A processar...';
+    btn.disabled = true;
 
-        Visualforce.remoting.Manager.invokeAction(
-            '{!$RemoteAction.BilheteiraController.criarReserva}',
-            evtId, accId, metodoAtual,
-            function(result, event){
-                btn.innerText = 'Pagar Agora'; btn.disabled = false;
-                if(!event.status){ alert('Erro de comunicação.'); return; }
-                if(result === 'CLIENTE_INVALIDO'){
-                    fecharModal();
-                    alert('Pagamento recusado. Contacte o suporte para mais informações.');
-                    return;
-                }
-                if(result === 'PAGAMENTO_RECUSADO'){
-                    fecharModal();
-                    alert('Pagamento recusado. Contacte o suporte para mais informações.');
-                    return;
-                }
-                if(result.startsWith('ERRO')){ alert('Erro: ' + result); return; }
+    const nomeEl = document.getElementById('checkoutNome');
+    const emailEl = document.getElementById('checkoutEmail');
 
-                orderIdAtiva = result;
-                fecharModal();
-                aplicarTema(metodoAtual);
-                const totalFmt = (selecionados.length * PRECO).toFixed(2).replace('.',',') + '€';
-                document.getElementById('receipt-lugares').innerText = selecionados.map(s =>
-                    s.stand ? `${s.stand} ${s.fila}${s.lugar}` : `${s.fila}${s.lugar}`
-                ).join(', ');
-                document.getElementById('receipt-metodo').innerText  = metodoAtual;
-                document.getElementById('total-display').innerText   = totalFmt;
-                document.getElementById('trans-id').innerText        = result;
-                if(metodoAtual === 'Referência'){
-                    const ref = Math.floor(Math.random()*900000000+100000000).toString();
-                    document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
-                    document.getElementById('mbRefVal').innerText = totalFmt;
-                    document.getElementById('mbRefBox').style.display = 'block';
-                } else {
-                    document.getElementById('mbRefBox').style.display = 'none';
-                }
-                switchStep('step2','step3');
-            },
-            {escape:false}
-        );
+    const nome = nomeEl ? nomeEl.value.trim() : '';
+    const email = emailEl ? emailEl.value.trim() : '';
+
+    if(!nome){
+        alert('Introduza o nome.');
+        btn.innerText = 'Pagar Agora';
+        btn.disabled = false;
+        return;
     }
+
+    if(!email){
+        alert('Introduza o email.');
+        btn.innerText = 'Pagar Agora';
+        btn.disabled = false;
+        return;
+    }
+
+    Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.BilheteiraController.criarReserva}',
+        evtId,
+        accId || null,
+        metodoAtual,
+        nome,
+        email,
+        function(result, event){
+            btn.innerText = 'Pagar Agora';
+            btn.disabled = false;
+
+            console.log('criarReserva result:', result);
+            console.log('criarReserva event:', event);
+
+            if(!event.status){
+                alert('Erro de comunicação: ' + (event.message || 'sem detalhe'));
+                return;
+            }
+
+            if(result === 'CLIENTE_INVALIDO'){
+                fecharModal();
+                alert('Cliente inválido.');
+                return;
+            }
+
+            if(result === 'PAGAMENTO_RECUSADO'){
+                fecharModal();
+                alert('Pagamento recusado. Contacte o suporte para mais informações.');
+                return;
+            }
+
+            if(result && result.indexOf('ERRO:') === 0){
+                alert(result);
+                return;
+            }
+
+            orderIdAtiva = result;
+            fecharModal();
+            aplicarTema(metodoAtual);
+
+            const totalFmt = (selecionados.length * PRECO).toFixed(2).replace('.',',') + '€';
+            document.getElementById('receipt-lugares').innerText = selecionados.map(s =>
+                s.stand ? `${s.stand} ${s.fila}${s.lugar}` : `${s.fila}${s.lugar}`
+            ).join(', ');
+            document.getElementById('receipt-metodo').innerText  = metodoAtual;
+            document.getElementById('total-display').innerText   = totalFmt;
+            document.getElementById('trans-id').innerText        = result;
+
+            if(metodoAtual === 'Referência'){
+                const ref = Math.floor(Math.random()*900000000+100000000).toString();
+                document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
+                document.getElementById('mbRefVal').innerText = totalFmt;
+                document.getElementById('mbRefBox').style.display = 'block';
+            } else {
+                document.getElementById('mbRefBox').style.display = 'none';
+            }
+
+            switchStep('step2','step3');
+                    },
+                    { escape: false }
+                );
+            }
 
     function finalizarTudo(){
         const btn = document.getElementById('btnFinal');

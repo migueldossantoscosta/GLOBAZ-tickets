@@ -1,5 +1,9 @@
 trigger BilheteTrigger on Bilhete__c (after insert, after update, after undelete, before delete) {
 
+    if (UserInfo.getUserType() == 'Guest') {
+        return;
+    }
+
     Set<Id> accIds = new Set<Id>();
 
     if (Trigger.isDelete) {

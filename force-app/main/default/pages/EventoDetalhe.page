@@ -1,0 +1,632 @@
+<apex:page controller="EventoDetalheController"
+           showHeader="false"
+           sidebar="false"
+           standardStylesheets="false"
+           docType="html-5.0"
+           applyHtmlTag="false"
+           applyBodyTag="false">
+
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalhe do Evento</title>
+
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-2: #091125;
+      --surface: rgba(255,255,255,0.06);
+      --surface-2: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.10);
+      --text: #f8fbff;
+      --muted: rgba(255,255,255,0.70);
+      --blue: #5ea2ff;
+      --blue-2: #2563eb;
+      --glow: 0 20px 60px rgba(37,99,235,0.25);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --shadow: 0 20px 50px rgba(0,0,0,0.28);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(50, 120, 255, 0.24), transparent 28%),
+        radial-gradient(circle at 100% 10%, rgba(168, 85, 247, 0.14), transparent 24%),
+        linear-gradient(180deg, #030611 0%, #081121 40%, #050816 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 4px 4px;
+      mix-blend-mode: soft-light;
+      z-index: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(18px);
+      background: rgba(7, 10, 18, 0.74);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .topbar-inner,
+    .hero,
+    .content,
+    .footer {
+      width: min(1440px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      gap: 24px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(94,162,255,0.95), rgba(37,99,235,0.80));
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      background: rgba(255,255,255,0.9);
+      border-radius: 999px;
+    }
+
+    .brand-mark::before { width: 24px; height: 5px; left: 10px; top: 13px; }
+    .brand-mark::after { width: 16px; height: 5px; left: 10px; top: 24px; }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .brand strong {
+      font-size: 20px;
+      letter-spacing: 0.8px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+      margin-top: 4px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ghost-btn,
+    .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      min-height: 46px;
+      padding: 0 18px;
+      font-weight: 800;
+      transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+
+    .ghost-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--blue), var(--blue-2));
+      box-shadow: var(--glow);
+    }
+
+    .ghost-btn:hover,
+    .primary-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding-top: 28px;
+    }
+
+    .hero-shell {
+      position: relative;
+      min-height: 680px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+      background: #111827;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(.55);
+      transform: scale(1.08);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(3,6,17,0.96) 0%, rgba(3,6,17,0.74) 38%, rgba(3,6,17,0.18) 100%),
+        linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.35) 100%);
+    }
+
+    .hero-ribbon {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(8,17,37,0.78);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(16px);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+
+    .pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 0 0 rgba(59,130,246,0.6);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
+      70% { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 78px 68px;
+      max-width: 760px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(94,162,255,0.14);
+      border: 1px solid rgba(94,162,255,0.28);
+      color: #dcedff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-size: clamp(40px, 5vw, 74px);
+      line-height: 0.96;
+      font-weight: 950;
+      max-width: 690px;
+      margin-bottom: 18px;
+      text-wrap: balance;
+    }
+
+    .hero-copy {
+      font-size: 16px;
+      line-height: 1.65;
+      max-width: 580px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 15px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      font-size: 14px;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .hero-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      align-items: center;
+      color: rgba(255,255,255,0.74);
+      font-size: 14px;
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 24px;
+      color: #fff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 34px 0 0;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .glass-panel {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      padding: 28px;
+    }
+
+    .section-kicker {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.56);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 3vw, 40px);
+      line-height: 1;
+      font-weight: 950;
+      margin-bottom: 10px;
+    }
+
+    .section-text {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .detail-row strong {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .detail-row span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .buy-stack {
+      display: grid;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stat-box small {
+      display: block;
+      font-size: 11px;
+      color: rgba(255,255,255,0.60);
+      text-transform: uppercase;
+      letter-spacing: .9px;
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 30px;
+      font-weight: 950;
+      color: #fff;
+    }
+
+    .note-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(94,162,255,0.10);
+      border: 1px solid rgba(94,162,255,0.20);
+      color: #dbeafe;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .footer {
+      padding: 80px 0 34px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.54);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1100px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .topbar-inner { padding: 16px 0; }
+      .hero-shell { min-height: 600px; }
+      .hero-content { padding: 54px 30px; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner,
+      .hero,
+      .content,
+      .footer {
+        width: min(1440px, calc(100vw - 24px));
+      }
+
+      .brand strong { font-size: 18px; }
+      .hero-shell { min-height: 560px; border-radius: 22px; }
+      .hero-content { padding: 32px 20px; }
+      .hero-ribbon { top: 16px; right: 16px; }
+      .glass-panel { padding: 20px; }
+      .detail-row { flex-direction: column; }
+      .detail-row span { text-align: left; }
+      .footer-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-wrap">
+        <div class="brand-mark"></div>
+        <div class="brand">
+          <strong>GLOBAZ TICKETS</strong>
+          <span>premium ticketing experience</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <a href="/globaztickets" class="ghost-btn">Voltar</a>
+      </div>
+    </div>
+  </header>
+
+  <apex:outputPanel rendered="{!hasEvento}">
+    <section class="hero">
+      <div class="hero-shell">
+        <div class="hero-ribbon">
+          <span class="pulse"></span>
+          <apex:outputText value="{!IF(evento.Destaque__c, 'Em destaque agora', 'Evento disponível')}" />
+        </div>
+
+        <div class="hero-bg"
+             style="background-image:url('{!IF(ISBLANK(evento.URLImagem__c), 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80', evento.URLImagem__c)}');">
+        </div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+          <div class="eyebrow">
+            <apex:outputText value="{!IF(evento.Destaque__c, 'Evento premium', 'Detalhe do evento')}" />
+          </div>
+
+          <h1 class="hero-title">{!evento.Name}</h1>
+
+          <div class="meta">
+            <span class="meta-pill">{!TEXT(evento.DataEvento__c)}</span>
+            <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
+            <span class="meta-pill">{!evento.CategoriaPrincipal__c}</span>
+          </div>
+
+          <div class="hero-copy">
+            Descobre os detalhes deste evento e entra diretamente no fluxo de compra com a mesma linguagem visual premium do resto do site.
+          </div>
+
+          <div class="cta-row">
+            <a href="/EscolherLugar?idEvento={!evento.Id}" class="primary-btn">Comprar bilhete</a>
+            <a href="/HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
+          </div>
+
+          <div class="hero-bottom">
+            <div class="hero-stat"><strong>Live</strong> experiência premium</div>
+            <div class="hero-stat"><strong>Fast</strong> checkout direto</div>
+            <div class="hero-stat"><strong>Event</strong> detalhe completo</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="glass-panel">
+        <div class="section-kicker">Informação</div>
+        <h2 class="section-title">Sobre o evento</h2>
+        <p class="section-text">
+          Esta página já está alinhada com o visual da homepage para o utilizador sentir continuidade na experiência. Depois podes ligar aqui descrição longa, recinto, lotação, promotor ou qualquer outro campo.
+        </p>
+
+        <div class="detail-list">
+          <div class="detail-row">
+            <strong>Nome do evento</strong>
+            <span>{!evento.Name}</span>
+          </div>
+
+          <div class="detail-row">
+            <strong>Data</strong>
+            <span>{!TEXT(evento.DataEvento__c)}</span>
+          </div>
+
+          <div class="detail-row">
+            <strong>Localização</strong>
+            <span>{!evento.LocalizacaoEvento__c}</span>
+          </div>
+
+          <div class="detail-row">
+            <strong>Categoria</strong>
+            <span>{!evento.CategoriaPrincipal__c}</span>
+          </div>
+
+          <div class="detail-row">
+            <strong>Em destaque</strong>
+            <span><apex:outputText value="{!IF(evento.Destaque__c, 'Sim', 'Não')}" /></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <div class="section-kicker">Compra</div>
+        <h2 class="section-title">Reserva o teu lugar</h2>
+        <p class="section-text">
+          O botão abaixo leva diretamente para a página de escolha de lugares, mantendo a navegação consistente com o resto da bilheteira.
+        </p>
+
+        <div class="buy-stack">
+          <div class="stat-box">
+            <small>Preço desde</small>
+            <strong>25€</strong>
+          </div>
+
+          <a href="/EscolherLugar?idEvento={!evento.Id}" class="primary-btn">Comprar bilhete</a>
+          <a href="/HomeEventos#eventos" class="ghost-btn">Continuar a explorar</a>
+
+          <div class="note-box">
+            Depois podes substituir este valor fixo pelo preço real do evento ou pelo pricebook que estiver associado.
+          </div>
+        </div>
+      </div>
+    </section>
+  </apex:outputPanel>
+
+  <apex:outputPanel rendered="{!!hasEvento}">
+    <section class="hero">
+      <div class="hero-shell">
+        <div class="hero-bg"
+             style="background-image:url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80');">
+        </div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+          <div class="eyebrow">Evento não encontrado</div>
+          <h1 class="hero-title">Não foi possível abrir este evento</h1>
+          <div class="hero-copy">
+            O registo pode não existir, o id pode estar errado ou o utilizador não tem acesso ao evento.
+          </div>
+
+          <div class="cta-row">
+            <a href="/globaztickets" class="primary-btn">Voltar à homepage</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </apex:outputPanel>
+
+  <footer class="footer">
+    <div class="footer-bar">
+      <span>© 2026 Globaz Tickets. Página de detalhe do evento.</span>
+      <span>Visual alinhado com a homepage</span>
+    </div>
+  </footer>
+</body>
+</html>
+</apex:page>
