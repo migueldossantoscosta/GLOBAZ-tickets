@@ -16,7 +16,9 @@ public without sharing class SiteHomeController {
                    LocalizacaoEvento__c,
                    URLImagem__c,
                    CategoriaPrincipal__c,
-                   Destaque__c
+                   Destaque__c,
+                   Recinto__c,
+                   Recinto__r.Cidade__c
             FROM Evento__c
             WHERE DataEvento__c != null
               AND DataEvento__c >= :System.now()
@@ -34,7 +36,9 @@ public without sharing class SiteHomeController {
                    LocalizacaoEvento__c,
                    URLImagem__c,
                    CategoriaPrincipal__c,
-                   Destaque__c
+                   Destaque__c,
+                   Recinto__c,
+                   Recinto__r.Cidade__c
             FROM Evento__c
             WHERE DataEvento__c != null
               AND DataEvento__c >= :System.now()
@@ -44,7 +48,7 @@ public without sharing class SiteHomeController {
     }
 
     public Boolean getHasFeaturedEvents() {
-        system.debug(featuredEvents != null && !featuredEvents.isEmpty());
+        System.debug(featuredEvents != null && !featuredEvents.isEmpty());
         return featuredEvents != null && !featuredEvents.isEmpty();
     }
 

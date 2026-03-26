@@ -83,73 +83,75 @@ public class BilheteiraController {
         }
     }
 
-
-    @RemoteAction
-    public static String criarReserva(
-        Id eventoId,
-        Id accountId,
-        String metodo,
-        String nomeCompleto,
-        String email
-    ) {
-        try {
-            if (String.isBlank(nomeCompleto)) {
-                return 'ERRO: Nome em falta.';
-            }
-
-            if (String.isBlank(email)) {
-                return 'ERRO: Email em falta.';
-            }
-
-            Id finalAccountId;
-
-            if (accountId != null) {
-                List<Account> accs = [
-                    SELECT Id, IsPersonAccount, Valido__c
-                    FROM Account
-                    WHERE Id = :accountId
-                    LIMIT 1
-                ];
-
-                if (!accs.isEmpty()) {
-                    finalAccountId = accs[0].Id;
+        @RemoteAction
+        public static String criarReserva(
+            Id eventoId,
+            Id accountId,
+            String metodo,
+            String nomeCompleto,
+            String email
+        ) {
+            try {
+                if (String.isBlank(nomeCompleto)) {
+                    return 'ERRO: Nome em falta.';
                 }
+
+                if (String.isBlank(email)) {
+                    return 'ERRO: Email em falta.';
+                }
+
+                // 1. Primeiro callout
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint('https://bilheteira-loba.free.beeceptor.com/pagamento');
+                req.setMethod('POST');
+                req.setHeader('Content-Type', 'application/json');
+                req.setBody('{"clienteEmail":"' + escapeJson(email) + '","status":"processar"}');
+                req.setTimeout(10000);
+
+                Http http = new Http();
+                HttpResponse res = http.send(req);
+
+                if (res.getStatusCode() != 200) {
+                    return 'PAGAMENTO_RECUSADO';
+                }
+
+                // 2. Só depois do callout tratar da conta
+                Id finalAccountId = null;
+
+                if (accountId != null) {
+                    List<Account> accs = [
+                        SELECT Id, IsPersonAccount, Valido__c
+                        FROM Account
+                        WHERE Id = :accountId
+                        LIMIT 1
+                    ];
+
+                    if (!accs.isEmpty()) {
+                        finalAccountId = accs[0].Id;
+                    }
+                }
+
+                if (finalAccountId == null) {
+                    finalAccountId = criarOuObterPersonAccount(nomeCompleto, email);
+                }
+
+                // 3. Criar a Order
+                Order ord = new Order(
+                    AccountId             = finalAccountId,
+                    Evento__c             = eventoId,
+                    EffectiveDate         = Date.today(),
+                    Status                = 'Draft',
+                    MetodoPagamento__c    = metodo,
+                    QuantidadeBilhetes__c = 0
+                );
+                insert ord;
+
+                return ord.Id;
+
+            } catch (Exception e) {
+                return 'ERRO: ' + e.getMessage();
             }
-
-            if (finalAccountId == null) {
-                finalAccountId = criarOuObterPersonAccount(nomeCompleto, email);
-            }
-
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://bilheteira-loba.free.beeceptor.com/pagamento');
-            req.setMethod('POST');
-            req.setHeader('Content-Type', 'application/json');
-            req.setBody('{"clienteEmail":"' + escapeJson(email) + '","status":"processar"}');
-            req.setTimeout(10000);
-
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-
-            if (res.getStatusCode() != 200) {
-                return 'PAGAMENTO_RECUSADO';
-            }
-
-            Order ord = new Order(
-                AccountId             = finalAccountId,
-                Evento__c             = eventoId,
-                EffectiveDate         = Date.today(),
-                Status                = 'Draft',
-                MetodoPagamento__c    = metodo,
-                QuantidadeBilhetes__c = 0
-            );
-            insert ord;
-
-            return ord.Id;
-
-        } catch (Exception e) {
-            return 'ERRO: ' + e.getMessage();
         }
-    }
 
     @RemoteAction
     public static String processarPagamentoMock(Id orderId, Id eventoId, String jsonBilhetes) {

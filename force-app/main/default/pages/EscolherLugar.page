@@ -622,6 +622,7 @@
     let PRECO        = 26.50;
     let TIPO_MAPA    = 'sba';
     let STANDS_AA    = [];
+    let STANDS_TEATRO = [];
 
     let ocupadosCount = 0;
     let selecionados  = [];
@@ -1381,11 +1382,27 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                             construirMapaMeoArena(mapa, ocupados || []);
                         }
                     );
-                }else if(mapa.tipo === 'forumbraga'){
+                }else if(mapa.tipo === 'teatro'){
+                    // Fórum Braga — mapa de teatro em grid
+                    STANDS_TEATRO = mapa.zonas;
+
+                    // Atualiza legenda dinamicamente
+                    const legEl = document.querySelector('.map-legend');
+                    if(legEl){
+                        const seen = new Set();
+                        legEl.innerHTML = mapa.zonas.map(z => {
+                            if(seen.has(z.cor)) return '';
+                            seen.add(z.cor);
+                            return `<div class="leg"><div class="ldot" style="background:${z.cor}"></div>${z.label}</div>`;
+                        }).join('') + '<div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>'
+                        + '<div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>';
+                    }
+
                     Visualforce.remoting.Manager.invokeAction(
                         '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
                         function(ocupados){
-                            construirMapaForumBraga(mapa, ocupados || []);
+                            ocupadosGlobal = new Set(ocupados || []);
+                            construirMapaTeatro(mapa.zonas, ocupados || []);
                         }
                     );
                 }

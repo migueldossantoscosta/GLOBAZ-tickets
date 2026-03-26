@@ -917,6 +917,14 @@
       .event-content { padding-left: 18px; padding-right: 18px; }
       .event-card { min-height: 400px; }
     }
+
+    .event-card.is-hidden {
+      display: none !important;
+    }
+
+    .category-box {
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -989,8 +997,8 @@
             </div>
           </apex:repeat>
         </apex:outputPanel>
-        teste:: {!!hasFeaturedEvents}
-        <apex:outputPanel rendered="{!!hasFeaturedEvents}">
+
+        <apex:outputPanel rendered="{!NOT(hasFeaturedEvents)}">
           <div class="slide active">
             <div class="slide-bg"
                  style="background-image:url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80');">
@@ -1017,7 +1025,7 @@
         <div class="mini-panel">
           <div class="panel-label">A acontecer</div>
 
-          <apex:repeat value="{!nextEvents}" var="ev" rows="3">
+          <apex:repeat value="{!nextEvents}" var="ev" rows="4">
             <div class="live-row">
               <div>
                 <strong>{!ev.Name}</strong>
@@ -1037,31 +1045,43 @@
     <div class="search-box">
       <div class="search-item">
         <label>Pesquisar evento</label>
-        <input type="text" placeholder="Nome do evento, artista ou cidade" />
+        <input id="searchInput" type="text" placeholder="Nome do evento, artista ou cidade" />
       </div>
       <div class="search-item">
         <label>Categoria</label>
-        <select>
-          <option>Selecionar categoria</option>
-          <option>Concertos</option>
-          <option>Festivais</option>
-          <option>Teatro</option>
-          <option>Desporto</option>
+        <select id="searchCategory">
+          <option value="">Selecionar categoria</option>
+          <option value="Congressos">Congressos</option>
+          <option value="Conferências">Conferências</option>
+          <option value="Seminários">Seminários</option>
+          <option value="Workshops/Oficinas">Workshops/Oficinas</option>
+          <option value="Feiras">Feiras</option>
+          <option value="Festivais">Festivais</option>
+          <option value="Exposições/Mostras">Exposições/Mostras</option>
+          <option value="Festivais">Festivais</option>
+          <option value="Palestras">Palestras</option>
+          <option value="Simpósios">Simpósios</option>
+          <option value="Rodadas de Negócios">Rodadas de Negócios</option>
+          <option value="Lançamento de Produtos">Lançamento de Produtos</option>
+          <option value="Happy Hour/Coquetel">Happy Hour/Coquetel</option>
+          <option value="Casamentos/Batizados">Casamentos/Batizados</option>
+          <option value="Aniversários/Festas">Aniversários/Festas</option>
+          <option value="Concertos/Shows">Concertos/Shows</option>
+          <option value="Teatro/Performance">Teatro/Performance</option>
+          <option value="Eventos Desportivos">Eventos Desportivos</option>
+          <option value="Convenções">Convenções</option>
+          <option value="Formações/Treinamentos">Formações/Treinamentos</option>
+          <option value="Recriações Históricas/Romarias">Recriações Históricas/Romarias</option>
         </select>
       </div>
       <div class="search-item">
-        <label>Localização</label>
-        <select>
-          <option>Qualquer localização</option>
-          <option>Lisboa</option>
-          <option>Porto</option>
-          <option>Braga</option>
-          <option>Coimbra</option>
-        </select>
-      </div>
-      <button class="primary-btn search-action">Pesquisar eventos</button>
+      <label>Localização</label>
+      <input id="searchLocation" type="text" placeholder="Ex: Braga, Lisboa, Porto..." />
     </div>
-  </section>
+
+    <button type="button" class="primary-btn search-action" id="searchBtn">Pesquisar eventos</button>
+  </div>
+</section>
 
   <section class="section" id="eventos">
     <div class="section-head">
@@ -1070,48 +1090,48 @@
         <h2 class="section-title">Próximos eventos</h2>
         <p class="section-text">Os eventos destacados aparecem logo primeiro e o layout mistura blocos grandes com cards mais compactos para a homepage não parecer repetitiva.</p>
       </div>
-      <div class="chip-row">
-        <a href="#" class="chip-btn active">Todos</a>
-        <a href="#" class="chip-btn">Concertos</a>
-        <a href="#" class="chip-btn">Festivais</a>
-        <a href="#" class="chip-btn">Teatro</a>
-        <a href="#" class="chip-btn">Desporto</a>
+      <div class="chip-row" id="eventCategoryFilters">
+        <a href="javascript:void(0)" class="chip-btn active" data-category="">Todos</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="concert">Concertos</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="festival">Festivais</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="teatro">Teatro</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="desport">Desporto</a>
       </div>
     </div>
 
     <apex:outputPanel rendered="{!hasNextEvents}">
-      <div class="event-grid">
+      <div id="noResultsMessage" class="glass-panel" style="display:none;margin-bottom:20px;">
+        <p class="section-text">Não foram encontrados eventos com esses filtros.</p>
+      </div>
+
+      <div class="event-grid" id="eventGrid">
         <apex:repeat value="{!nextEvents}" var="ev">
-          <a class="event-card medium" href="/apex/EventoDetalhe?id={!ev.Id}">
+          <a class="event-card medium event-filter-card" href="/apex/EventoDetalhe?id={!ev.Id}">
             <div class="bg"
-                 style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1400&q=80', ev.URLImagem__c)}');">
+                style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1400&q=80', ev.URLImagem__c)}');">
             </div>
+
             <div class="overlay"></div>
+
             <div class="event-content">
               <div class="badge-row">
                 <apex:outputPanel rendered="{!ev.Destaque__c}">
                   <span class="tag featured">Destaque</span>
                 </apex:outputPanel>
-                <span class="tag">{!ev.CategoriaPrincipal__c}</span>
+                <span class="tag js-event-category">{!ev.CategoriaPrincipal__c}</span>
               </div>
 
-              <h3>{!ev.Name}</h3>
+              <h3 class="js-event-name">{!ev.Name}</h3>
 
               <div class="event-meta">
                 <span>{!TEXT(ev.DataEvento__c)}</span>
-                <span>{!ev.LocalizacaoEvento__c}</span>
+                <span class="js-event-location">{!ev.Recinto__r.Cidade__c}</span>
               </div>
 
               <span class="event-link">Ver detalhes</span>
             </div>
           </a>
         </apex:repeat>
-      </div>
-    </apex:outputPanel>
-
-    <apex:outputPanel rendered="{!!hasNextEvents}">
-      <div class="glass-panel">
-        <p class="section-text">De momento ainda não existem eventos disponíveis.</p>
       </div>
     </apex:outputPanel>
   </section>
@@ -1171,30 +1191,33 @@
     </div>
 
     <div class="categories">
-      <div class="category-box">
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="concert">
         <div class="category-icon">🎤</div>
         <h3>Concertos</h3>
         <p>Artistas nacionais e internacionais, tours, showcases e atuações especiais.</p>
         <div class="category-count">Categoria visual</div>
-      </div>
-      <div class="category-box">
+      </a>
+
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="festival">
         <div class="category-icon">🎪</div>
         <h3>Festivais</h3>
         <p>Grandes produções ao ar livre, cartazes premium e experiências imersivas.</p>
         <div class="category-count">Categoria visual</div>
-      </div>
-      <div class="category-box">
+      </a>
+
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="teatro">
         <div class="category-icon">🎭</div>
         <h3>Teatro</h3>
         <p>Peças, comédia, musicais e programas culturais para vários públicos.</p>
         <div class="category-count">Categoria visual</div>
-      </div>
-      <div class="category-box">
+      </a>
+
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="desport">
         <div class="category-icon">🏟️</div>
         <h3>Desporto</h3>
         <p>Jogos, torneios, exibições e experiências pensadas para adeptos.</p>
         <div class="category-count">Categoria visual</div>
-      </div>
+      </a>
     </div>
   </section>
 
@@ -1230,51 +1253,200 @@
       var current = 0;
       var interval = null;
 
-      if (!slides.length) return;
-
-      function buildDots() {
-        for (var i = 0; i < slides.length; i++) {
-          var dot = document.createElement('div');
-          dot.className = 'dot';
-          dot.setAttribute('data-index', i);
-          dot.onclick = function () {
-            var index = parseInt(this.getAttribute('data-index'), 10);
-            showSlide(index);
-            restartAuto();
-          };
-          dotsWrap.appendChild(dot);
+      if (slides.length) {
+        function buildDots() {
+          for (var i = 0; i < slides.length; i++) {
+            var dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.setAttribute('data-index', i);
+            dot.onclick = function () {
+              var index = parseInt(this.getAttribute('data-index'), 10);
+              showSlide(index);
+              restartAuto();
+            };
+            dotsWrap.appendChild(dot);
+          }
         }
-      }
 
-      function showSlide(index) {
-        var dots = document.querySelectorAll('.dot');
-        for (var i = 0; i < slides.length; i++) {
-          slides[i].classList.remove('active');
-          if (dots[i]) dots[i].classList.remove('active');
+        function showSlide(index) {
+          var dots = document.querySelectorAll('.dot');
+          for (var i = 0; i < slides.length; i++) {
+            slides[i].classList.remove('active');
+            if (dots[i]) dots[i].classList.remove('active');
+          }
+          slides[index].classList.add('active');
+          if (dots[index]) dots[index].classList.add('active');
+          current = index;
         }
-        slides[index].classList.add('active');
-        if (dots[index]) dots[index].classList.add('active');
-        current = index;
-      }
 
-      function nextSlide() {
-        var next = current + 1;
-        if (next >= slides.length) next = 0;
-        showSlide(next);
-      }
+        function nextSlide() {
+          var next = current + 1;
+          if (next >= slides.length) next = 0;
+          showSlide(next);
+        }
 
-      function startAuto() {
-        interval = setInterval(nextSlide, 5000);
-      }
+        function startAuto() {
+          interval = setInterval(nextSlide, 5000);
+        }
 
-      function restartAuto() {
-        clearInterval(interval);
+        function restartAuto() {
+          clearInterval(interval);
+          startAuto();
+        }
+
+        buildDots();
+        showSlide(0);
         startAuto();
       }
 
-      buildDots();
-      showSlide(0);
-      startAuto();
+      var searchInput = document.getElementById('searchInput');
+      var searchCategory = document.getElementById('searchCategory');
+      var searchLocation = document.getElementById('searchLocation');
+      var searchBtn = document.getElementById('searchBtn');
+      var cards = document.querySelectorAll('.event-filter-card');
+      var chipBtns = document.querySelectorAll('#eventCategoryFilters .chip-btn');
+      var categoryBoxes = document.querySelectorAll('.category-filter-box');
+      var noResultsMessage = document.getElementById('noResultsMessage');
+
+      function normalize(value) {
+        return (value || '').toString().toLowerCase().trim();
+      }
+
+      function setActiveChip(category) {
+        for (var i = 0; i < chipBtns.length; i++) {
+          var btnCategory = chipBtns[i].getAttribute('data-category') || '';
+          if (btnCategory === category) {
+            chipBtns[i].classList.add('active');
+          } else {
+            chipBtns[i].classList.remove('active');
+          }
+        }
+      }
+
+      function showAllCards() {
+        for (var i = 0; i < cards.length; i++) {
+          cards[i].classList.remove('is-hidden');
+        }
+        if (noResultsMessage) {
+          noResultsMessage.style.display = 'none';
+        }
+      }
+
+      function applyFilters() {
+        var text = normalize(searchInput ? searchInput.value : '');
+        var category = normalize(searchCategory ? searchCategory.value : '');
+        var location = normalize(searchLocation ? searchLocation.value : '');
+        var visibleCount = 0;
+
+        if (!text && !category && !location) {
+          showAllCards();
+          setActiveChip('');
+          return;
+        }
+
+        for (var i = 0; i < cards.length; i++) {
+          var card = cards[i];
+
+          var nameEl = card.querySelector('.js-event-name');
+          var categoryEl = card.querySelector('.js-event-category');
+          var locationEl = card.querySelector('.js-event-location');
+
+          var eventName = normalize(nameEl ? nameEl.textContent : '');
+          var eventCategory = normalize(categoryEl ? categoryEl.textContent : '');
+          var eventLocation = normalize(locationEl ? locationEl.textContent : '');
+
+          var matchesText =
+            !text ||
+            eventName.indexOf(text) !== -1 ||
+            eventCategory.indexOf(text) !== -1 ||
+            eventLocation.indexOf(text) !== -1;
+
+          var matchesCategory =
+            !category ||
+            eventCategory.indexOf(category) !== -1;
+
+          var matchesLocation =
+            !location ||
+            eventLocation.indexOf(location) !== -1;
+
+          if (matchesText && matchesCategory && matchesLocation) {
+            card.classList.remove('is-hidden');
+            visibleCount++;
+          } else {
+            card.classList.add('is-hidden');
+          }
+        }
+
+        if (noResultsMessage) {
+          noResultsMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+      }
+
+      if (searchBtn) {
+        searchBtn.addEventListener('click', function () {
+          applyFilters();
+          var eventos = document.getElementById('eventos');
+          if (eventos) {
+            eventos.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      if (searchCategory) {
+        searchCategory.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      if (searchLocation) {
+        searchLocation.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      for (var i = 0; i < chipBtns.length; i++) {
+        chipBtns[i].addEventListener('click', function () {
+          var category = this.getAttribute('data-category') || '';
+          if (searchCategory) {
+            searchCategory.value = category;
+          }
+          setActiveChip(category);
+          applyFilters();
+        });
+      }
+
+      for (var j = 0; j < categoryBoxes.length; j++) {
+        categoryBoxes[j].addEventListener('click', function () {
+          var category = this.getAttribute('data-category') || '';
+          if (searchCategory) {
+            searchCategory.value = category;
+          }
+          setActiveChip(category);
+          applyFilters();
+
+          var eventos = document.getElementById('eventos');
+          if (eventos) {
+            eventos.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      showAllCards();
     })();
   </script>
 </body>
