@@ -1,45 +1,48 @@
 public without sharing class GlobazSiteRegisterController {
 
+    public class RegisterException extends Exception {}
+
     public String firstName { get; set; }
     public String lastName { get; set; }
     public String email { get; set; }
     public String phone { get; set; }
     public String birthdateText { get; set; }
     public String username { get; set; }
-    public String communityNickname { get; set; }
     public String password { get; set; }
     public String confirmPassword { get; set; }
+
     public Boolean marketingOptIn { get; set; }
     public Boolean rgpdAccepted { get; set; }
 
-    private static final String EXTERNAL_PROFILE_ID = 'YOUR_EXTERNAL_PROFILE_ID';
-
     public PageReference registerUser() {
+        Savepoint sp = Database.setSavepoint();
+
         try {
             validateInput();
 
             Id personAccountRtId = getPersonAccountRecordTypeId();
-            Id ownerId = getDefaultOwnerId();
 
             Account pa = new Account();
             pa.RecordTypeId = personAccountRtId;
+            pa.OwnerId = getDefaultOwnerId();
             pa.FirstName = firstName;
             pa.LastName = lastName;
             pa.PersonEmail = email;
             pa.Phone = phone;
-
-            // Campos custom teus — ajusta se os API names forem diferentes
             pa.Marketing__c = marketingOptIn;
-            pa.RGPD__c = System.now();
+
+            if (rgpdAccepted) {
+                pa.RGPD__c = System.now();
+            }
 
             if (!String.isBlank(birthdateText)) {
-                pa.DataNascimento__c = Date.valueOf(birthdateText);
+                pa.DataNascimento__c = parseDatePT(birthdateText);
             }
 
             insert pa;
 
             pa = [
-                SELECT Id, PersonContactId, PersonEmail, FirstName, LastName
+                SELECT Id, PersonContactId, OwnerId
                 FROM Account
                 WHERE Id = :pa.Id
                 LIMIT 1
@@ -50,22 +53,23 @@ public without sharing class GlobazSiteRegisterController {
             u.Email = email;
             u.FirstName = firstName;
             u.LastName = lastName;
-            u.CommunityNickname = communityNickname;
+            u.CommunityNickname = buildCommunityNickname();
             u.Alias = buildAlias(firstName, lastName);
             u.TimeZoneSidKey = 'Europe/Lisbon';
             u.LocaleSidKey = 'pt_PT';
             u.EmailEncodingKey = 'UTF-8';
             u.LanguageLocaleKey = 'pt_PT';
-            u.ProfileId = EXTERNAL_PROFILE_ID;
+            u.ProfileId = getExternalProfileId();
             u.ContactId = pa.PersonContactId;
 
             String newUserId = Site.createPortalUser(u, pa.Id, password);
 
             if (String.isBlank(newUserId)) {
-                delete pa;
+                Database.rollback(sp);
+
                 ApexPages.addMessage(new ApexPages.Message(
                     ApexPages.Severity.ERROR,
-                    'Não foi possível criar o utilizador externo.'
+                    'Não foi possível criar o utilizador externo. Verifica o profile externo, o owner da conta e as permissões do site.'
                 ));
                 return null;
             }
@@ -75,38 +79,49 @@ public without sharing class GlobazSiteRegisterController {
             return loginPage;
 
         } catch (Exception e) {
+            Database.rollback(sp);
+
             ApexPages.addMessage(new ApexPages.Message(
                 ApexPages.Severity.ERROR,
-                e.getMessage()
+                'Erro: ' + e.getMessage()
             ));
+            System.debug('ERRO REGISTO GLOBAZ: ' + e.getMessage());
+            System.debug(e.getStackTraceString());
             return null;
         }
     }
 
     private void validateInput() {
         if (String.isBlank(firstName)) {
-            throw new AuraHandledException('Indica o primeiro nome.');
+            throw new RegisterException('Indica o primeiro nome.');
         }
+
         if (String.isBlank(lastName)) {
-            throw new AuraHandledException('Indica o último nome.');
+            throw new RegisterException('Indica o último nome.');
         }
+
         if (String.isBlank(email)) {
-            throw new AuraHandledException('Indica o email.');
+            throw new RegisterException('Indica o email.');
         }
+
         if (String.isBlank(username)) {
-            throw new AuraHandledException('Indica o username.');
+            throw new RegisterException('Indica o username.');
         }
-        if (String.isBlank(communityNickname)) {
-            throw new AuraHandledException('Indica o community nickname.');
-        }
+
         if (String.isBlank(password) || String.isBlank(confirmPassword)) {
-            throw new AuraHandledException('Indica e confirma a password.');
+            throw new RegisterException('Indica e confirma a password.');
         }
+
         if (password != confirmPassword) {
-            throw new AuraHandledException('As passwords não coincidem.');
+            throw new RegisterException('As passwords não coincidem.');
         }
+
         if (!rgpdAccepted) {
-            throw new AuraHandledException('Tens de aceitar a política de privacidade.');
+            throw new RegisterException('Tens de aceitar a política de privacidade.');
+        }
+
+        if (!String.isBlank(birthdateText)) {
+            parseDatePT(birthdateText);
         }
 
         Integer existingAccounts = [
@@ -115,8 +130,9 @@ public without sharing class GlobazSiteRegisterController {
             WHERE IsPersonAccount = true
               AND PersonEmail = :email
         ];
+
         if (existingAccounts > 0) {
-            throw new AuraHandledException('Já existe uma conta com este email.');
+            throw new RegisterException('Já existe uma Person Account com este email.');
         }
 
         Integer existingUsers = [
@@ -124,38 +140,39 @@ public without sharing class GlobazSiteRegisterController {
             FROM User
             WHERE Username = :username
         ];
-        if (existingUsers > 0) {
-            throw new AuraHandledException('Esse username já está em uso.');
-        }
 
-        if (!String.isBlank(birthdateText)) {
-            try {
-                Date.valueOf(birthdateText);
-            } catch (Exception ex) {
-                throw new AuraHandledException('A data de nascimento deve estar no formato AAAA-MM-DD.');
-            }
+        if (existingUsers > 0) {
+            throw new RegisterException('Esse username já está em uso.');
         }
     }
 
     private static Id getPersonAccountRecordTypeId() {
-    List<RecordType> personRT = [
-        SELECT Id
-        FROM RecordType
-        WHERE SObjectType = 'Account'
-          AND IsPersonType = true
-        LIMIT 1
-    ];
+        List<RecordType> personRT = [
+            SELECT Id
+            FROM RecordType
+            WHERE SObjectType = 'Account'
+              AND IsPersonType = true
+            LIMIT 1
+        ];
 
-    if (personRT.isEmpty()) {
-        throw new AuraHandledException('Não foi encontrado um Record Type de Person Account disponível.');
+        if (personRT.isEmpty()) {
+            throw new RegisterException('Não foi encontrado um Record Type de Person Account disponível.');
+        }
+
+        return personRT[0].Id;
     }
 
-    return personRT[0].Id;
+    private static Id getExternalProfileId() {
+        Profile p = [
+            SELECT Id
+            FROM Profile
+            WHERE Name = 'Customer Community User'
+            LIMIT 1
+        ];
+        return p.Id;
     }
 
     private static Id getDefaultOwnerId() {
-        // Idealmente substitui isto por um Custom Setting/Metadata
-        // e usa um user interno com role.
         User u = [
             SELECT Id
             FROM User
@@ -167,18 +184,70 @@ public without sharing class GlobazSiteRegisterController {
         return u.Id;
     }
 
+    private Date parseDatePT(String inputDate) {
+        try {
+            String cleanDate = inputDate != null ? inputDate.trim() : '';
+
+            if (String.isBlank(cleanDate)) {
+                return null;
+            }
+
+            if (cleanDate.contains('/')) {
+                List<String> parts = cleanDate.split('/');
+
+                if (parts.size() != 3) {
+                    throw new RegisterException('Data de nascimento inválida. Usa DD/MM/AAAA.');
+                }
+
+                Integer dia = Integer.valueOf(parts[0]);
+                Integer mes = Integer.valueOf(parts[1]);
+                Integer ano = Integer.valueOf(parts[2]);
+
+                return Date.newInstance(ano, mes, dia);
+            }
+
+            if (cleanDate.contains('-')) {
+                return Date.valueOf(cleanDate);
+            }
+
+            throw new RegisterException('Data de nascimento inválida. Usa DD/MM/AAAA.');
+        } catch (Exception e) {
+            throw new RegisterException('Data de nascimento inválida. Usa DD/MM/AAAA.');
+        }
+    }
+
+    private String buildCommunityNickname() {
+        String nick = '';
+
+        if (!String.isBlank(firstName)) {
+            nick += firstName.toLowerCase();
+        }
+
+        if (!String.isBlank(lastName)) {
+            nick += '.' + lastName.toLowerCase();
+        }
+
+        nick += '.' + String.valueOf(DateTime.now().getTime()).right(5);
+        return nick.replaceAll('[^a-zA-Z0-9\\._-]', '');
+    }
+
     private static String buildAlias(String fName, String lName) {
-        String baseAlias = '';
+        String aliasValue = '';
+
         if (!String.isBlank(fName)) {
-            baseAlias += fName.substring(0, Math.min(1, fName.length()));
+            aliasValue += fName.substring(0, 1);
         }
+
         if (!String.isBlank(lName)) {
-            baseAlias += lName.substring(0, Math.min(7, lName.length()));
+            aliasValue += lName.substring(0, Math.min(7, lName.length()));
         }
-        baseAlias = baseAlias.replaceAll('[^a-zA-Z0-9]', '');
-        if (String.isBlank(baseAlias)) {
-            baseAlias = 'globaz';
+
+        aliasValue = aliasValue.replaceAll('[^a-zA-Z0-9]', '');
+
+        if (String.isBlank(aliasValue)) {
+            aliasValue = 'globaz';
         }
-        return baseAlias.substring(0, Math.min(8, baseAlias.length()));
+
+        return aliasValue.substring(0, Math.min(8, aliasValue.length()));
     }
 }

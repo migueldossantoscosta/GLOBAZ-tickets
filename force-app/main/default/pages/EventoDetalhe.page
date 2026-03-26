@@ -490,6 +490,8 @@
 
       <div class="nav-actions">
         <a href="/globaztickets" class="ghost-btn">Voltar</a>
+        <a href="/apex/SiteLogin" class="ghost-btn">Entrar</a>
+        <a href="/apex/SiteRegister" class="primary-btn">Criar conta</a>
       </div>
     </div>
   </header>
