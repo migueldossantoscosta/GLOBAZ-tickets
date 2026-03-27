@@ -11,7 +11,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Globaz Tickets — Homepage</title>
+  <script>
+      // Helpers de Cookie
+      function setCookie(name, value, days) {
+          var expires = "";
+          if (days) {
+              var date = new Date();
+              date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+              expires = "; expires=" + date.toUTCString();
+          }
+          document.cookie = name + "=" + (value || "") + expires + "; path=/; secure; samesite=strict";
+      }
+      function getCookie(name) {
+          var nameEQ = name + "=";
+          var ca = document.cookie.split(';');
+          for (var i = 0; i < ca.length; i++) {
+              var c = ca[i];
+              while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+              if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+          }
+          return null;
+      }
+      function eraseCookie(name) { setCookie(name, "", -1); }
 
+      // Guarda UID se vier na URL (cookie)
+      var urlParams = new URLSearchParams(window.location.search);
+      var uid = urlParams.get('uid');
+      if (uid) {
+          setCookie('globaz_uid', uid, 7);
+          window.history.replaceState({}, '', window.location.pathname);
+      }
+
+      // Funções globais (usam apenas cookies)
+      window.isLoggedInGlobaz = function() {
+          return !!getCookie('globaz_uid');
+      };
+      window.getUserAccountId = function() {
+          return getCookie('globaz_uid');
+      };
+  </script>
   <style>
     :root {
       --bg: #050816;
@@ -949,11 +987,31 @@
         <a href="#newsletter">Newsletter</a>
       </nav>
 
-      <div class="nav-actions">
-        <a href="#eventos" class="ghost-btn">Agenda</a>
-        <a href="/apex/SiteLogin" class="ghost-btn">Entrar</a>
-        <a href="/apex/SiteRegister" class="primary-btn">Criar conta</a>
+       <div class="nav-actions">
+          <a href="#eventos" class="ghost-btn">Agenda</a>
+
+          <a href="/apex/SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
+          <a href="/apex/SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
+
+          <a href="/GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;align-items:center;gap:8px;" onclick="event.preventDefault(); var uid = (function(){ try { var c = (function(name){ var n=name+'='; var parts=document.cookie.split(';'); for(var i=0;i<parts.length;i++){ var p=parts[i]; while(p.charAt(0)===' ') p=p.substring(1); if(p.indexOf(n)===0) return p.substring(n.length,p.length);} return null; })('globaz_uid'); if(c) return c; } catch(e) {} return null; })(); window.location.href = '/apex/GlobazSiteAccount' + (uid ? ('?uid=' + encodeURIComponent(uid)) : '');">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+              Conta
+          </a>
+          <a href="/apex/GlobazSiteLogout" class="ghost-btn" id="navLogout" style="display:none;">Sair</a>
       </div>
+
+      <script>
+          // Toggle nav baseado no cookie
+          setTimeout(function() {
+              var uid = getCookie('globaz_uid');
+              document.getElementById('navLogin').style.display = uid ? 'none' : 'inline-flex';
+              document.getElementById('navRegister').style.display = uid ? 'none' : 'inline-flex';
+              document.getElementById('navAccount').style.display = uid ? 'inline-flex' : 'none';
+              document.getElementById('navLogout').style.display = uid ? 'inline-flex' : 'none';
+          }, 100);
+      </script>
     </div>
   </header>
 

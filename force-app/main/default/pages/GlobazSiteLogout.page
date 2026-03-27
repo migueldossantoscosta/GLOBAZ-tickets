@@ -1,0 +1,17 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false">
+    <html>
+
+    <head>
+        <title>Sair — Globaz Tickets</title>
+    </head>
+
+    <body>
+        <script>
+            // Delete cookie on logout
+            document.cookie = 'globaz_uid=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+            window.location.href = '/globaztickets';
+        </script>
+    </body>
+
+    </html>
+</apex:page>

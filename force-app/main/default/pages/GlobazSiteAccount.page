@@ -1,0 +1,86 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false"
+             docType="html-5.0" applyHtmlTag="false" applyBodyTag="false"
+             controller="GlobazSiteAccountController" title="Minha Conta">
+  <html lang="pt">
+  <head>
+      <meta charset="UTF-8"/>
+      <title>Minha Conta — Globaz Tickets</title>
+      <script>
+          // Garante que a página recebe o uid mesmo quando é aberta sem querystring
+          (function ensureUidOnAccountPage() {
+              try {
+                  var params = new URLSearchParams(window.location.search || '');
+                  var uid = params.get('uid');
+                  var stored = localStorage.getItem('globaz_uid');
+                  if (!uid && stored) {
+                      // Recarrega a página acrescentando ?uid=stored
+                      var base = window.location.pathname;
+                      window.location.replace(base + '?uid=' + encodeURIComponent(stored));
+                  }
+              } catch (e) {
+                  // falha silenciosa
+              }
+          })();
+      </script>
+      <style>
+          :root{--bg:#050816;--text:#f8fbff;--muted:rgba(255,255,255,.70);--blue:#5ea2ff;--surface:rgba(255,255,255,.05);--border:rgba(255,255,255,.09);}
+          body{margin:0;font-family:Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#030611,#050816);min-height:100vh;padding:40px 20px;}
+          .card{max-width:700px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:42px 36px;}
+          .eyebrow{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(94,162,255,0.14);color:#dcedff;font-size:12px;font-weight:700;margin-bottom:18px;}
+          .title{font-size:36px;font-weight:900;margin-bottom:8px;}
+          .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
+          .info-box{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:18px;}
+          .info-label{font-size:11px;text-transform:uppercase;color:rgba(255,255,255,.56);font-weight:700;margin-bottom:8px;}
+          .info-value{font-size:16px;color:#fff;font-weight:600;}
+          .actions{display:flex;gap:12px;margin-top:24px;}
+          .btn{padding:16px 24px;border-radius:16px;border:none;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;}
+          .btn-primary{background:linear-gradient(135deg,#5ea2ff,#2563eb);color:#fff;}
+          .btn-ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;}
+      </style>
+  </head>
+  <body>
+      <apex:outputPanel rendered="{!isLoggedIn}">
+          <div class="card">
+              <div class="eyebrow">Área Pessoal</div>
+              <div class="title">Olá, {!account.FirstName}!</div>
+              <div class="info-grid">
+                  <div class="info-box">
+                      <div class="info-label">Nome</div>
+                      <div class="info-value">{!account.FirstName} {!account.LastName}</div>
+                  </div>
+                  <div class="info-box">
+                      <div class="info-label">Email</div>
+                      <div class="info-value">{!account.PersonEmail}</div>
+                  </div>
+                  <div class="info-box">
+                      <div class="info-label">Telemóvel</div>
+                      <div class="info-value">{!IF(ISBLANK(account.Phone), 'Não definido', account.Phone)}</div>
+                  </div>
+              </div>
+              <div class="actions">
+                  <a href="/apex/GlobazSiteLogout" class="btn btn-primary">Terminar Sessão</a>
+                  <a href="/globaztickets" class="btn btn-ghost">Voltar</a>
+              </div>
+          </div>
+      </apex:outputPanel>
+      
+      <apex:outputPanel rendered="{!NOT(isLoggedIn)}">
+          <div class="card" style="text-align:center;">
+              <div class="eyebrow">Acesso Restrito</div>
+              <div class="title">Precisas de fazer login</div>
+              <div class="actions" style="justify-content:center;">
+                  <a href="/apex/SiteLogin" class="btn btn-primary">Entrar</a>
+                  <a href="/apex/SiteRegister" class="btn btn-ghost">Criar Conta</a>
+              </div>
+          </div>
+      </apex:outputPanel>
+
+      <script>
+          // Redirect se não estiver logado
+          if (!localStorage.getItem('globaz_uid')) {
+              // Não faz redirect automático para mostrar mensagem
+          }
+      </script>
+  </body>
+  </html>
+  </apex:page>
