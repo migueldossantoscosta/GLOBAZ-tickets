@@ -386,9 +386,10 @@
             font-size:14px;
             gap:16px;
         }
-        .receipt-label{color:var(--muted);}
+        .receipt-label{color:rgba(255,255,255,0.7);}
+        .receipt-label.total{color:rgba(255,255,255,0.6); font-weight:700;}
         .receipt-value{font-weight:700;color:#fff;}
-        .receipt-value.total{font-size:22px;font-weight:800;}
+        .receipt-value.total{font-size:32px;font-weight:950; color:#fff;}
         .receipt-value.mono{font-size:11px;color:rgba(255,255,255,.55);font-weight:500;font-family:monospace;}
 
         .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);z-index:200;align-items:flex-end;justify-content:center;}
@@ -541,16 +542,24 @@
             <p class="step-subtitle">Seleciona a forma de pagamento para concluir a tua reserva.</p>
             <div class="method-grid">
                 <div class="method-opt active" onclick="selectMetodo('MBWay',this)"><span class="method-icon">📱</span><span class="method-label">MB WAY</span></div>
-                <div class="method-opt"        onclick="selectMetodo('Referência',this)"><span class="method-icon">🏧</span><span class="method-label">MULTIBANCO</span></div>
+                <div class="method-opt"        onclick="selectMetodo('Multibanco',this)"><span class="method-icon">🏧</span><span class="method-label">MULTIBANCO</span></div>
                 <div class="method-opt"        onclick="selectMetodo('Cartão',this)"><span class="method-icon">💳</span><span class="method-label">CARTÃO</span></div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+            <!-- Bloco condicional: logado vs anónimo -->
+            <div id="blocoConta" style="display:none;padding:16px 20px;border-radius:16px;background:rgba(94,162,255,0.10);border:1px solid rgba(94,162,255,0.22);margin-bottom:16px;">
+                <div style="font-size:13px;color:#93c5fd;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Sessão iniciada</div>
+                <div style="font-size:15px;font-weight:800;color:#fff;">👤 <span id="nomeContaLogada"></span></div>
+                <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:4px;">A compra será associada à tua conta automaticamente.</div>
+            </div>
+            <div id="blocoAnonimo" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
                 <input id="checkoutNome" type="text" placeholder="Nome completo"
                     style="height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;" />
 
                 <input id="checkoutEmail" type="email" placeholder="Email"
                     style="height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;" />
             </div>
+
             <button class="btn-main" onclick="abrirModal()">Rever e Confirmar →</button>
             <button class="btn-ghost" onclick="switchStep('step2','step1')">← Voltar</button>
         </div>
@@ -595,10 +604,14 @@
                 <div class="receipt-row"><span class="receipt-label">Nº de bilhetes</span><span class="receipt-value" id="mQtd">—</span></div>
                 <div class="receipt-row"><span class="receipt-label">Preço unitário</span><span class="receipt-value" id="mPrecoUnit">—</span></div>
                 <div class="receipt-row"><span class="receipt-label">Método</span><span class="receipt-value" id="mMetodo">—</span></div>
-                <div class="receipt-row" style="border:none;padding-top:14px;">
-                    <span class="receipt-label" style="font-weight:700;color:#000;font-size:15px;">Total</span>
+                <div class="receipt-row" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:14px; align-items: baseline;">
+                    <span class="receipt-label total">Total</span>
                     <span class="receipt-value total" id="mTotal">—</span>
                 </div>
+            </div>
+            <div id="extras-container" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                <div style="font-weight:700; font-size:13px; color:rgba(255,255,255,0.6); margin-bottom:8px;">Serviços Adicionais</div>
+                <div id="extras-list" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
             <div class="btn-pair">
                 <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
@@ -619,10 +632,13 @@
     let FRONT_BLOCKS = [];
     let COLS_TRAS    = 0;
     let ZONA_TRAS    = '';
-    let PRECO        = 26.50;
+    let PRECO        = 25.00;
+    let PRECO_MAP    = {'BLT-Geral': 25.00};
     let TIPO_MAPA    = 'sba';
     let STANDS_AA    = [];
     let STANDS_TEATRO = [];
+    let SERVICOS_EXTRA = [];
+    let EXTRAS_SELECCIONADOS = {}; // {pbeId: qty}
 
     let ocupadosCount = 0;
     let selecionados  = [];
@@ -632,10 +648,56 @@
 
     const evtId = '{!idDoEvento}';
     const accId = '{!idDaAccount}';
+    
+    const ZONE_PREFIXES = {
+        'samsung': 'SA-', 'portimao': 'PA-', 'standing': 'ST-', 'sagres-top': 'STP-',
+        'solverde': 'SOL-', 'sagres-bot': 'SBT-', 'lagos': 'LAG-', 'meo': 'ME-',
+        'millennium': 'MIL-', 'topo': 'TP-', 'laterais': 'LT-', 'plateia_central': 'PC-',
+        'plateia_verde': 'PV-', 'plateia_azul': 'PAZ-', 'camarote': 'CAM-', 'fila_frontal': 'FF-'
+    };
+    function getPrefixedFila(fila, zoneId){
+        const prefix = (zoneId && ZONE_PREFIXES[zoneId.toLowerCase()]) || '';
+        return prefix + fila;
+    }
+
+    function getTipoBilhete(zona) {
+        if (!zona) return 'BLT-Geral';
+        const z = zona.toLowerCase();
+        // Mapeamento: Sagres = CAMAROTE (Portimão)
+        if (z.includes('sagres')) return 'BLT-CAMAROTE';
+        // Mapeamento: Central/Verde/Green = VIP, Camarote/Box = Camarote, resto = Geral
+        if (z.includes('central') || z.includes('verde') || z.includes('front') || z.includes('green')) return 'BLT-VIP';
+        if (z.includes('camarote') || z.includes('box')) return 'BLT-CAMAROTE';
+        return 'BLT-Geral';
+    }
+
+    // Detectar se utilizador está logado pelo accId
+    const utilizadorLogado = (accId && accId !== 'null' && accId.length > 0);
+
+    // Quando a página carrega, mostrar bloco correto e preencher nome se disponível
+    document.addEventListener('DOMContentLoaded', function() {
+        if (utilizadorLogado) {
+            var blocoAnonimo = document.getElementById('blocoAnonimo');
+            var blocoConta   = document.getElementById('blocoConta');
+            var nomeConta    = document.getElementById('nomeContaLogada');
+            if (blocoAnonimo) blocoAnonimo.style.display = 'none';
+            if (blocoConta)   blocoConta.style.display   = 'block';
+            if (nomeConta)    nomeConta.innerText         = 'A carregar…';
+
+            // Buscar o nome real da conta via RemoteAction
+            BilheteiraController.getNomeAccount(accId, function(result, event) {
+                if (event.status && result) {
+                    if (nomeConta) nomeConta.innerText = result;
+                } else {
+                    if (nomeConta) nomeConta.innerText = 'Utilizador registado';
+                }
+            }, { escape: false });
+        }
+    });
 
     const TEMAS = {
         'MBWay':      {cls:'t-mbway', logo:'MB <span>WAY</span>',     sub:'COMPROVATIVO DIGITAL',    btn:'VALIDAR PAGAMENTO', btnColor:'#e30613'},
-        'Referência': {cls:'t-mb',    logo:'MULTI<span>BANCO</span>', sub:'REFERÊNCIA DE PAGAMENTO', btn:'GERAR REFERÊNCIA',  btnColor:'#005ea6'},
+        'Multibanco': {cls:'t-mb',    logo:'MULTI<span>BANCO</span>', sub:'REFERÊNCIA DE PAGAMENTO', btn:'GERAR REFERÊNCIA',  btnColor:'#005ea6'},
         'Cartão':     {cls:'t-card',  logo:'globa<span>z</span>',      sub:'PAGAMENTO POR CARTÃO',    btn:'VALIDAR PAGAMENTO', btnColor:'#16a34a'},
     };
 
@@ -658,7 +720,7 @@
     function makeForumSeat(group, x, y, w, h, fila, lugar, zona, ocupado){
     totalSeats++;
 
-    const k = fila + '-' + lugar;
+    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
 
     const seat = makeSvgEl('rect', {
         x: x,
@@ -692,10 +754,14 @@
                 seat.setAttribute('stroke', 'rgba(0,0,0,.18)');
                 seat.setAttribute('stroke-width', '0.6');
             } else {
+                const prefixedFila = getPrefixedFila(fila, zona);
+                const tipo = getTipoBilhete(zona);
                 selecionados.push({
                     k: k,
-                    fila: fila,
-                    lugar: lugar
+                    fila: prefixedFila,
+                    lugar: lugar,
+                    stand: zona,
+                    tipo: tipo
                 });
                 seat.setAttribute('stroke', '#fbbf24');
                 seat.setAttribute('stroke-width', '2');
@@ -872,17 +938,19 @@
         sn.textContent = num;
         const d = document.createElement('div');
         d.className = 'seat ' + zone + (ocupado ? ' ocupado' : '');
-        const k = row + '-' + num;
+        const k = getPrefixedFila(row, zone) + '-' + num + '-' + zone;
         d.dataset.k = k;
         d.title = 'Fila ' + row + ' · Lugar ' + num;
         if(!ocupado){
             d.onclick = () => {
                 const idx = selecionados.findIndex(s => s.k === k);
+                const prefixedFila = getPrefixedFila(row, zone);
                 if(idx > -1){
                     selecionados.splice(idx,1);
                     d.classList.remove('selecionado');
                 } else {
-                    selecionados.push({k, fila:row, lugar:num});
+                    const tipo = getTipoBilhete(zone);
+                    selecionados.push({k, fila:prefixedFila, lugar:num, stand:zone, tipo: tipo});
                     d.classList.add('selecionado');
                 }
                 document.getElementById('count').innerText  = selecionados.length;
@@ -1061,7 +1129,7 @@
 
 function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
     totalSeats++;
-    const k = fila + '-' + lugar;
+    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
     const ocupado = ocupadosSet.has(k);
 
     const seat = makeSvgEl('rect', {
@@ -1081,7 +1149,7 @@ function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
                 selecionados.splice(idx,1);
                 seat.classList.remove('selecionado');
             } else {
-                selecionados.push({k, fila:fila, lugar:lugar});
+                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
                 seat.classList.add('selecionado');
             }
             document.getElementById('count').innerText  = selecionados.length;
@@ -1096,7 +1164,7 @@ function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
 
 function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona, ocupadosSet){
     totalSeats++;
-    const k = fila + '-' + lugar;
+    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
     const ocupado = ocupadosSet.has(k);
 
     const rad = angleDeg * Math.PI / 180;
@@ -1126,7 +1194,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                 selecionados.splice(idx,1);
                 seat.classList.remove('selecionado');
             } else {
-                selecionados.push({k, fila:fila, lugar:lugar});
+                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
                 seat.classList.add('selecionado');
             }
             document.getElementById('count').innerText  = selecionados.length;
@@ -1291,12 +1359,14 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
     let ocupadosGlobal = new Set();
 
     function toggleStandSeat(standId, fila, num, cor){
-        const k = standId + ':' + fila + '-' + num;
+        const k = getPrefixedFila(fila, standId) + '-' + num + '-' + standId;
         const idx = selecionados.findIndex(s => s.k === k);
+        const prefixedFila = getPrefixedFila(fila, standId);
         if(idx > -1){
             selecionados.splice(idx,1);
         } else {
-            selecionados.push({k, fila, lugar:num, stand:standId});
+            const tipo = getTipoBilhete(standId);
+            selecionados.push({k, fila:prefixedFila, lugar:num, stand:standId, tipo: tipo});
         }
         document.getElementById('count').innerText  = selecionados.length;
         document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
@@ -1315,11 +1385,12 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
     window.onload = function(){
         // CHAMADA NOVA: Buscar o preço real do Salesforce
         Visualforce.remoting.Manager.invokeAction(
-            '{!$RemoteAction.BilheteiraController.getPrecoBilhete}', evtId,
+            '{!$RemoteAction.BilheteiraController.getPrecosBilhetes}', evtId,
             function(result, event) {
                 if (event.status) {
-                    PRECO = result; // Atualiza a variável global com o valor do Pricebook
-                    console.log('Preço atualizado do Salesforce:', PRECO);
+                    PRECO_MAP = result;
+                    PRECO = result['BLT-Geral'] || 25.00;
+                    console.log('Preços atualizados do Salesforce:', PRECO_MAP);
                 }
             }
         );
@@ -1408,7 +1479,67 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                 }
             }
         );
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getServicosExtras}', evtId,
+            function(result, event) {
+                if (event.status) {
+                    SERVICOS_EXTRA = result;
+                }
+            }
+        );
     };
+
+    function renderExtras() {
+        const list = document.getElementById('extras-list');
+        if (!list) return;
+        if (SERVICOS_EXTRA.length === 0) {
+            list.innerHTML = '<div style="font-size:11px; color:rgba(255,255,255,0.4);">Nenhum serviço adicional disponível para este evento.</div>';
+            return;
+        }
+        list.innerHTML = SERVICOS_EXTRA.map(s => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:8px 12px; border-radius:8px;">
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-size:12px; font-weight:700; color:#fff;">${s.name}</span>
+                    <span style="font-size:11px; color:#5ea2ff;">+${s.price.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button onclick="changeExtraQty('${s.id}', -1)" style="width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#fff; cursor:pointer;">-</button>
+                    <span id="qty-${s.id}" style="font-size:12px; font-weight:700; min-width:15px; text-align:center; color:#fff;">${EXTRAS_SELECCIONADOS[s.id] || 0}</span>
+                    <button onclick="changeExtraQty('${s.id}', 1)" style="width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#fff; cursor:pointer;">+</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function changeExtraQty(pbeId, delta) {
+        const current = EXTRAS_SELECCIONADOS[pbeId] || 0;
+        const newVal = Math.max(0, current + delta);
+        if (newVal === 0) delete EXTRAS_SELECCIONADOS[pbeId];
+        else EXTRAS_SELECCIONADOS[pbeId] = newVal;
+        
+        const el = document.getElementById('qty-' + pbeId);
+        if (el) el.innerText = newVal;
+        atualizarTotalModal();
+    }
+
+    function calcularTotalComExtras() {
+        let baseTotal = 0;
+        selecionados.forEach(s => {
+            const p = PRECO_MAP[s.tipo] || PRECO_MAP['BLT-Geral'] || 25.00;
+            baseTotal += p;
+        });
+
+        let extrasTotal = 0;
+        SERVICOS_EXTRA.forEach(s => {
+            if (EXTRAS_SELECCIONADOS[s.id]) extrasTotal += EXTRAS_SELECCIONADOS[s.id] * s.price;
+        });
+        return baseTotal + extrasTotal;
+    }
+
+    function atualizarTotalModal() {
+        const finalTotal = calcularTotalComExtras();
+        document.getElementById('mTotal').innerText = finalTotal.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+    }
 
     // ── STEPS E MODAL ─────────────────────────────────────────
 
@@ -1423,17 +1554,26 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
     }
 
     function abrirModal(){
-        const total = (selecionados.length * PRECO).toFixed(2).replace('.',',');
+        EXTRAS_SELECCIONADOS = {}; // Reset extras ao abrir modal
+        renderExtras();
+        
         document.getElementById('modalChips').innerHTML = selecionados.map(s => {
             const label = s.stand
                 ? `${s.stand.replace('-',' ')} · Fila ${s.fila} · Lugar ${s.lugar}`
                 : `Fila ${s.fila} · Lugar ${s.lugar}`;
             return `<div class="chip"><div class="chip-dot"></div>${label}</div>`;
         }).join('');
-        document.getElementById('mQtd').innerText       = selecionados.length;
-        document.getElementById('mPrecoUnit').innerText = PRECO.toFixed(2).replace('.',',') + ' €';
+        
+        document.getElementById('mQtd').innerText = selecionados.length;
+        
+        const totalBase = selecionados.reduce((acc, s) => acc + (PRECO_MAP[s.tipo] || PRECO_MAP['BLT-Geral'] || 25.0), 0);
+        const hasVarious = new Set(selecionados.map(s => s.tipo)).size > 1;
+
+        document.getElementById('mPrecoUnit').innerText = hasVarious ? 'Vários' : (totalBase/selecionados.length).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
         document.getElementById('mMetodo').innerText    = metodoAtual;
-        document.getElementById('mTotal').innerText     = total + ' €';
+        
+        atualizarTotalModal(); 
+
         document.getElementById('btnModalPagar').style.background = TEMAS[metodoAtual].btnColor;
         document.getElementById('modalDetalhes').classList.add('open');
     }
@@ -1447,24 +1587,27 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
     btn.innerText = 'A processar...';
     btn.disabled = true;
 
-    const nomeEl = document.getElementById('checkoutNome');
-    const emailEl = document.getElementById('checkoutEmail');
+    let nome  = '';
+    let email = '';
 
-    const nome = nomeEl ? nomeEl.value.trim() : '';
-    const email = emailEl ? emailEl.value.trim() : '';
+    if (!utilizadorLogado) {
+        const nomeEl  = document.getElementById('checkoutNome');
+        const emailEl = document.getElementById('checkoutEmail');
+        nome  = nomeEl  ? nomeEl.value.trim()  : '';
+        email = emailEl ? emailEl.value.trim() : '';
 
-    if(!nome){
-        alert('Introduza o nome.');
-        btn.innerText = 'Pagar Agora';
-        btn.disabled = false;
-        return;
-    }
-
-    if(!email){
-        alert('Introduza o email.');
-        btn.innerText = 'Pagar Agora';
-        btn.disabled = false;
-        return;
+        if (!nome) {
+            alert('Introduza o nome.');
+            btn.innerText = 'Pagar Agora';
+            btn.disabled = false;
+            return;
+        }
+        if (!email) {
+            alert('Introduza o email.');
+            btn.innerText = 'Pagar Agora';
+            btn.disabled = false;
+            return;
+        }
     }
 
     Visualforce.remoting.Manager.invokeAction(
@@ -1507,7 +1650,9 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             fecharModal();
             aplicarTema(metodoAtual);
 
-            const totalFmt = (selecionados.length * PRECO).toFixed(2).replace('.',',') + '€';
+            const totalNum = calcularTotalComExtras();
+            const totalFmt = totalNum.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+            
             document.getElementById('receipt-lugares').innerText = selecionados.map(s =>
                 s.stand ? `${s.stand} ${s.fila}${s.lugar}` : `${s.fila}${s.lugar}`
             ).join(', ');
@@ -1515,7 +1660,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             document.getElementById('total-display').innerText   = totalFmt;
             document.getElementById('trans-id').innerText        = result;
 
-            if(metodoAtual === 'Referência'){
+            if(metodoAtual === 'Multibanco'){
                 const ref = Math.floor(Math.random()*900000000+100000000).toString();
                 document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
                 document.getElementById('mbRefVal').innerText = totalFmt;
@@ -1537,12 +1682,19 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
         const payload = JSON.stringify(selecionados.map(s => ({
             fila:  s.fila,
             lugar: s.lugar,
-            stand: s.stand || null
+            stand: s.stand || null,
+            tipo:  s.tipo || 'BLT-Geral'
         })));
+
+        const listExtras = [];
+        for (let pId in EXTRAS_SELECCIONADOS) {
+            listExtras.push({ pbeId: pId, qty: EXTRAS_SELECCIONADOS[pId] });
+        }
+        const jsonExtras = JSON.stringify(listExtras);
 
         Visualforce.remoting.Manager.invokeAction(
             '{!$RemoteAction.BilheteiraController.processarPagamentoMock}',
-            orderIdAtiva, evtId, payload,
+            orderIdAtiva, evtId, payload, jsonExtras,
             function(res, event){
                 btn.innerText = TEMAS[metodoAtual].btn; btn.disabled = false;
                 if(!event.status){ alert('Erro de comunicação.'); return; }
@@ -1551,7 +1703,15 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                     return;
                 }
                 if(res !== 'PAGAMENTO_OK'){ alert('Erro: ' + res); return; }
+
+                // Success
                 switchStep('step3','step-success');
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#2563eb', '#1d4ed8', '#fbbf24', '#ffffff']
+                });
             },
             {escape:false}
         );

@@ -999,7 +999,7 @@
               </svg>
               Conta
           </a>
-          <a href="/apex/GlobazSiteLogout" class="ghost-btn" id="navLogout" style="display:none;">Sair</a>
+          <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
       </div>
 
       <script>
@@ -1043,7 +1043,7 @@
                 </p>
 
                 <div class="cta-row">
-                  <a href="/EventoDetalhe?id={!ev.Id}" class="primary-btn">Comprar bilhetes</a>
+                  <a href="EventoDetalhe?id={!ev.Id}" class="primary-btn">Comprar bilhetes</a>
                   <a href="#eventos" class="ghost-btn">Ver conceito</a>
                 </div>
 
@@ -1165,7 +1165,7 @@
 
       <div class="event-grid" id="eventGrid">
         <apex:repeat value="{!nextEvents}" var="ev">
-          <a class="event-card medium event-filter-card" href="/apex/EventoDetalhe?id={!ev.Id}">
+          <a class="event-card medium event-filter-card" href="EventoDetalhe?id={!ev.Id}">
             <div class="bg"
                 style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1400&q=80', ev.URLImagem__c)}');">
             </div>

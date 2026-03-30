@@ -7,9 +7,12 @@ public with sharing class CookieUtils {
      * @param days Number of days until expiration (optional)
      */
     public static void setCookie(String name, String value, Integer days) {
-        PageReference pageRef = ApexPages.currentPage();
-        // Set cookie with secure and sameSite attributes
-        pageRef.setCookie(name, value, days, true, 'Strict');
+        // days to seconds. If null or -1, it's a session cookie
+        Integer maxAge = (days != null && days > 0) ? days * 86400 : -1;
+        Cookie c = new Cookie(name, value, '/', maxAge, true);
+        if (ApexPages.currentPage() != null) {
+            ApexPages.currentPage().setCookies(new Cookie[]{c});
+        }
     }
     
     /**
@@ -18,8 +21,9 @@ public with sharing class CookieUtils {
      * @return The value of the cookie or null if not found
      */
     public static String getCookie(String name) {
-        PageReference pageRef = ApexPages.currentPage();
-        return pageRef.getCookie(name);
+        if (ApexPages.currentPage() == null) return null;
+        Cookie c = ApexPages.currentPage().getCookies().get(name);
+        return c != null ? c.getValue() : null;
     }
     
     /**
@@ -27,7 +31,6 @@ public with sharing class CookieUtils {
      * @param name The name of the cookie to delete
      */
     public static void deleteCookie(String name) {
-        PageReference pageRef = ApexPages.currentPage();
-        pageRef.setCookie(name, '', -1);
+        setCookie(name, '', 0);
     }
 }

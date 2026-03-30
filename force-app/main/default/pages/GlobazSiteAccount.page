@@ -1,86 +1,263 @@
 <apex:page showHeader="false" sidebar="false" standardStylesheets="false"
              docType="html-5.0" applyHtmlTag="false" applyBodyTag="false"
              controller="GlobazSiteAccountController" title="Minha Conta">
-  <html lang="pt">
-  <head>
-      <meta charset="UTF-8"/>
-      <title>Minha Conta — Globaz Tickets</title>
-      <script>
-          // Garante que a página recebe o uid mesmo quando é aberta sem querystring
-          (function ensureUidOnAccountPage() {
-              try {
-                  var params = new URLSearchParams(window.location.search || '');
-                  var uid = params.get('uid');
-                  var stored = localStorage.getItem('globaz_uid');
-                  if (!uid && stored) {
-                      // Recarrega a página acrescentando ?uid=stored
-                      var base = window.location.pathname;
-                      window.location.replace(base + '?uid=' + encodeURIComponent(stored));
-                  }
-              } catch (e) {
-                  // falha silenciosa
-              }
-          })();
-      </script>
-      <style>
-          :root{--bg:#050816;--text:#f8fbff;--muted:rgba(255,255,255,.70);--blue:#5ea2ff;--surface:rgba(255,255,255,.05);--border:rgba(255,255,255,.09);}
-          body{margin:0;font-family:Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#030611,#050816);min-height:100vh;padding:40px 20px;}
-          .card{max-width:700px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:42px 36px;}
-          .eyebrow{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(94,162,255,0.14);color:#dcedff;font-size:12px;font-weight:700;margin-bottom:18px;}
-          .title{font-size:36px;font-weight:900;margin-bottom:8px;}
-          .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
-          .info-box{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:18px;}
-          .info-label{font-size:11px;text-transform:uppercase;color:rgba(255,255,255,.56);font-weight:700;margin-bottom:8px;}
-          .info-value{font-size:16px;color:#fff;font-weight:600;}
-          .actions{display:flex;gap:12px;margin-top:24px;}
-          .btn{padding:16px 24px;border-radius:16px;border:none;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;}
-          .btn-primary{background:linear-gradient(135deg,#5ea2ff,#2563eb);color:#fff;}
-          .btn-ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;}
-      </style>
-  </head>
-  <body>
-      <apex:outputPanel rendered="{!isLoggedIn}">
-          <div class="card">
-              <div class="eyebrow">Área Pessoal</div>
-              <div class="title">Olá, {!account.FirstName}!</div>
-              <div class="info-grid">
-                  <div class="info-box">
-                      <div class="info-label">Nome</div>
-                      <div class="info-value">{!account.FirstName} {!account.LastName}</div>
-                  </div>
-                  <div class="info-box">
-                      <div class="info-label">Email</div>
-                      <div class="info-value">{!account.PersonEmail}</div>
-                  </div>
-                  <div class="info-box">
-                      <div class="info-label">Telemóvel</div>
-                      <div class="info-value">{!IF(ISBLANK(account.Phone), 'Não definido', account.Phone)}</div>
-                  </div>
-              </div>
-              <div class="actions">
-                  <a href="/apex/GlobazSiteLogout" class="btn btn-primary">Terminar Sessão</a>
-                  <a href="/globaztickets" class="btn btn-ghost">Voltar</a>
-              </div>
-          </div>
-      </apex:outputPanel>
-      
-      <apex:outputPanel rendered="{!NOT(isLoggedIn)}">
-          <div class="card" style="text-align:center;">
-              <div class="eyebrow">Acesso Restrito</div>
-              <div class="title">Precisas de fazer login</div>
-              <div class="actions" style="justify-content:center;">
-                  <a href="/apex/SiteLogin" class="btn btn-primary">Entrar</a>
-                  <a href="/apex/SiteRegister" class="btn btn-ghost">Criar Conta</a>
-              </div>
-          </div>
-      </apex:outputPanel>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Minha Conta — Globaz Tickets</title>
+    <script>
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
 
-      <script>
-          // Redirect se não estiver logado
-          if (!localStorage.getItem('globaz_uid')) {
-              // Não faz redirect automático para mostrar mensagem
-          }
-      </script>
-  </body>
-  </html>
-  </apex:page>
+        // Garante que a página recebe o uid mesmo quando é aberta sem querystring
+        (function ensureUidOnAccountPage() {
+            try {
+                var params = new URLSearchParams(window.location.search || '');
+                var uid = params.get('uid');
+                var stored = getCookie('globaz_uid');
+                if (!uid && stored) {
+                    var base = window.location.pathname;
+                    window.location.replace(base + '?uid=' + encodeURIComponent(stored));
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        :root{--bg:#050816;--text:#f8fbff;--muted:rgba(255,255,255,.70);--blue:#5ea2ff;--surface:rgba(255,255,255,.05);--border:rgba(255,255,255,.09);}
+        body{margin:0;font-family:Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#030611,#050816);min-height:100vh;padding:40px 20px;}
+        .card{max-width:800px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:42px 36px;margin-bottom: 30px;}
+        .eyebrow{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(94,162,255,0.14);color:#dcedff;font-size:12px;font-weight:700;margin-bottom:18px;}
+        .title{font-size:36px;font-weight:900;margin-bottom:8px;}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
+        .info-box{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:18px; position:relative; overflow:hidden;}
+        .info-label{font-size:11px;text-transform:uppercase;color:rgba(255,255,255,.56);font-weight:700;margin-bottom:8px;}
+        
+        .info-input { width: 100%; font-size: 16px; font-family: inherit; color: #fff; font-weight: 600; background: transparent; border: none; outline: none; padding: 0; box-sizing: border-box; }
+        .info-input:focus { border-bottom: 1px solid var(--blue); padding-bottom: 1px; }
+        .info-input[disabled] { opacity: 0.7; cursor: not-allowed; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; }
+        .checkbox-input { width: 18px; height: 18px; accent-color: var(--blue); cursor:pointer; }
+        
+        .actions{display:flex;gap:12px;margin-top:24px; justify-content: space-between;}
+        .left-actions { display:flex; gap:12px; }
+        .btn{padding:16px 24px;border-radius:16px;border:none;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;}
+        .btn-primary{background:linear-gradient(135deg,#5ea2ff,#2563eb);color:#fff;}
+        .btn-ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;}
+        .btn-ghost:hover{background:rgba(255,255,255,.1);}
+        
+        .ticket-list { background: rgba(255,255,255,.02); border-radius: 16px; border: 1px solid var(--border); margin-top: 24px; }
+        .ticket-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); }
+        .ticket-row:last-child { border-bottom: none; }
+        .t-left { display: flex; flex-direction: column; gap: 4px; }
+        .t-right { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+        .t-name { font-weight: 800; font-size: 18px; color: #fff; }
+        .t-sub { font-size: 14px; color: var(--muted); }
+        .t-status { font-weight: 700; color: #4ade80; font-size:14px; text-transform:uppercase;}
+        .empty-state { padding: 40px; text-align: center; color: var(--muted); font-weight: 500; }
+    </style>
+</head>
+<body>
+    <apex:outputPanel rendered="{!isLoggedIn}">
+        <!-- DADOS DA CONTA -->
+        <div class="card">
+            <div class="eyebrow">Área Pessoal</div>
+            <div class="title">Olá, {!account.FirstName}!</div>
+            <p style="color:var(--muted); font-size:14px; margin-bottom:20px;">Edita as tuas informações. As tuas credenciais e preferências estão seguras.</p>
+            
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-label">Primeiro Nome</div>
+                    <input type="text" id="FirstName" class="info-input" value="{!account.FirstName}" />
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Apelido</div>
+                    <input type="text" id="LastName" class="info-input" value="{!account.LastName}" />
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Email</div>
+                    <input type="email" id="PersonEmail" class="info-input" value="{!account.PersonEmail}" />
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Telemóvel</div>
+                    <input type="text" id="Phone" class="info-input" value="{!account.Phone}" placeholder="Não definido" />
+                </div>
+                
+                <!-- Campos Customizados -->
+                <div class="info-box">
+                    <div class="info-label">Data de Nascimento</div>
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(account.DataNascimento__c))}">
+                        <input type="date" id="DataNascimento__c" class="info-input" value="{!TEXT(YEAR(account.DataNascimento__c))}-{!LPAD(TEXT(MONTH(account.DataNascimento__c)),2,'0')}-{!LPAD(TEXT(DAY(account.DataNascimento__c)),2,'0')}" />
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!ISBLANK(account.DataNascimento__c)}">
+                        <input type="date" id="DataNascimento__c" class="info-input" value="" />
+                    </apex:outputPanel>
+                </div>
+                <div class="info-box" style="display:flex; align-items:center; gap:16px;">
+                    <div class="info-label" style="display:none;">Idade</div>
+                    <span style="color:var(--muted); font-size:14px; font-weight:600;">Idade atual: 
+                        <span style="color:#fff">{!IF(ISBLANK(account.Idade__c), '-', TEXT(account.Idade__c))} anos</span>
+                    </span>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Categoria Favorita</div>
+                    <input type="text" id="CategoriaFavorita__c" class="info-input" value="{!account.CategoriaFavorita__c}" placeholder="Teatro, Conferências, etc." />
+                </div>
+                <div class="info-box">
+                    <div class="info-label">NIF</div>
+                    <input type="text" id="NIF__c" class="info-input" value="{!account.NIF__c}" placeholder="NIF para faturação" />
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">IBAN</div>
+                    <input type="text" id="IBAN__c" class="info-input" value="{!account.IBAN__c}" placeholder="PT50..." />
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Palavra-Passe (Hash)</div>
+                    <input type="password" id="Password__c" class="info-input" value="{!account.Password__c}" placeholder="Nova palavra-passe" />
+                </div>
+
+                <!-- Checkboxes -->
+                <div class="info-box">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="Marketing__c" class="checkbox-input" />
+                        Aceita Marketing
+                    </label>
+                </div>
+                <div class="info-box">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="RGPD__c" class="checkbox-input" />
+                        Consentimento RGPD
+                    </label>
+                </div>
+                
+                <!-- Read Only Stats -->
+                <div class="info-box">
+                    <div class="info-label">Total Gasto (Histórico)</div>
+                    <input type="text" class="info-input" value="{!IF(ISBLANK(account.ValorTotalGasto__c), '0.00', TEXT(account.ValorTotalGasto__c))} €" disabled="true" />
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Data da Última Compra</div>
+                    <input type="text" class="info-input" value="{!IF(ISBLANK(account.DataUltimaCompra__c), 'Sem compras', TEXT(DAY(account.DataUltimaCompra__c)) + '/' + TEXT(MONTH(account.DataUltimaCompra__c)) + '/' + TEXT(YEAR(account.DataUltimaCompra__c)))}" disabled="true" />
+                </div>
+            </div>
+
+            <div class="actions">
+                <div class="left-actions">
+                    <a href="HomeEventos" class="btn btn-ghost">Voltar ao Site</a>
+                    <a href="javascript:void(0)" class="btn btn-ghost" style="color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="logout();">Sair</a>
+                </div>
+                <button id="btnSalvar" class="btn btn-primary" onclick="salvarConta()">Guardar Alterações</button>
+            </div>
+        </div>
+
+        <!-- BILHETES COMPRADOS -->
+        <div class="card">
+            <div class="eyebrow" style="background:rgba(74,222,128,0.14); color:#bbf7d0;">A Tua Bilheteira</div>
+            <div class="title">Bilhetes Adquiridos</div>
+            <p style="color:var(--muted); font-size:14px;">Aqui podes consultar todo o teu histórico de reservas no Globaz Tickets.</p>
+
+            <div class="ticket-list">
+                <apex:outputPanel rendered="{!bilhetesComprados.size == 0}">
+                    <div class="empty-state">
+                        Ainda não adquiriste nenhum bilhete! Explora os nossos eventos e garante já o teu lugar.
+                    </div>
+                </apex:outputPanel>
+                
+                <apex:repeat value="{!bilhetesComprados}" var="b">
+                    <div class="ticket-row">
+                        <div class="t-left">
+                            <span class="t-name">{!b.Evento__r.Name}</span>
+                            <span class="t-sub">
+                                Ref: {!b.Name} &nbsp;&bull;&nbsp; 
+                                <apex:outputPanel rendered="{!NOT(ISBLANK(b.Fila__c))}">Fila {!b.Fila__c}, Lugar {!b.NumeroLugar__c}</apex:outputPanel>
+                                <apex:outputPanel rendered="{!ISBLANK(b.Fila__c)}">Lugar sem marcação</apex:outputPanel>
+                            </span>
+                        </div>
+                        <div class="t-right">
+                            <span class="t-status">{!b.EstadoBilhete__c}</span>
+                            <span class="t-sub">{!DAY(DATEVALUE(b.CreatedDate))}/{!MONTH(DATEVALUE(b.CreatedDate))}/{!YEAR(DATEVALUE(b.CreatedDate))}</span>
+                        </div>
+                    </div>
+                </apex:repeat>
+            </div>
+        </div>
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!NOT(isLoggedIn)}">
+        <div class="card" style="text-align:center;">
+            <div class="eyebrow">Acesso Restrito</div>
+            <div class="title">Precisas de fazer login</div>
+            <div class="actions" style="justify-content:center;">
+                <a href="SiteLogin" class="btn btn-primary">Entrar</a>
+                <a href="SiteRegister" class="btn btn-ghost">Criar Conta</a>
+                <a href="HomeEventos" class="btn btn-ghost">Voltar ao Início</a>
+            </div>
+        </div>
+    </apex:outputPanel>
+
+    <script>
+        // Init checkboxes (Visualforce booleans render as true/false text in bind variables usually, but easiest via JS init)
+        document.addEventListener('DOMContentLoaded', function() {
+            if('{!account.Marketing__c}' === 'true') document.getElementById('Marketing__c').checked = true;
+            if('{!account.RGPD__c}' !== '') document.getElementById('RGPD__c').checked = true;
+        });
+
+        function logout() {
+            document.cookie = 'globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            window.location.href = 'HomeEventos';
+        }
+
+        function salvarConta() {
+            var btn = document.getElementById('btnSalvar');
+            btn.innerHTML = 'A guardar...';
+            btn.disabled = true;
+
+            var dados = {
+                Id: '{!account.Id}',
+                FirstName: document.getElementById('FirstName').value,
+                LastName: document.getElementById('LastName').value,
+                PersonEmail: document.getElementById('PersonEmail').value,
+                Phone: document.getElementById('Phone').value,
+                DataNascimento__c: document.getElementById('DataNascimento__c').value,
+                CategoriaFavorita__c: document.getElementById('CategoriaFavorita__c').value,
+                IBAN__c: document.getElementById('IBAN__c').value,
+                NIF__c: document.getElementById('NIF__c').value,
+                Password__c: document.getElementById('Password__c').value,
+                Marketing__c: document.getElementById('Marketing__c').checked ? 'true' : 'false',
+                RGPD__c: document.getElementById('RGPD__c').checked ? 'true' : 'false'
+            };
+
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.GlobazSiteAccountController.guardarConta}',
+                dados,
+                function(result, event) {
+                    btn.innerHTML = 'Guardar Alterações';
+                    btn.disabled = false;
+                    if (event.status && result === 'SUCESSO') {
+                        // Faz uma pequena animação de sucesso no botão
+                        btn.innerHTML = 'Guardado!';
+                        btn.style.background = '#10b981';
+                        setTimeout(() => { 
+                            btn.innerHTML = 'Guardar Alterações'; 
+                            btn.style.background = '';
+                        }, 2500);
+                    } else {
+                        alert('Erro ao guardar: ' + result + '\n\nCertifica-te que respeitas as regras de validação.');
+                    }
+                },
+                {escape: true}
+            );
+        }
+    </script>
+</body>
+</html>
+</apex:page>

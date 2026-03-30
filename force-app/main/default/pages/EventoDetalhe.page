@@ -11,6 +11,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Detalhe do Evento</title>
+  <script>
+      function getCookie(name) {
+          var nameEQ = name + "=";
+          var ca = document.cookie.split(';');
+          for (var i = 0; i < ca.length; i++) {
+              var c = ca[i];
+              while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+              if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+          }
+          return null;
+      }
+  </script>
 
   <style>
     :root {
@@ -23,7 +35,7 @@
       --muted: rgba(255,255,255,0.70);
       --blue: #5ea2ff;
       --blue-2: #2563eb;
-      --glow: 0 20px 60px rgba(37,99,235,0.25);
+      --glow: 0 20px 60px rgba(30, 50, 95, 0.25);
       --radius-xl: 30px;
       --radius-lg: 22px;
       --shadow: 0 20px 50px rgba(0,0,0,0.28);
@@ -489,9 +501,11 @@
       </div>
 
       <div class="nav-actions">
-        <a href="/globaztickets" class="ghost-btn">Voltar</a>
-        <a href="/apex/SiteLogin" class="ghost-btn">Entrar</a>
-        <a href="/apex/SiteRegister" class="primary-btn">Criar conta</a>
+        <a href="HomeEventos" class="ghost-btn">Voltar</a>
+        <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
+        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
+        <a href="SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
+        <a href="SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
       </div>
     </div>
   </header>
@@ -527,8 +541,8 @@
           </div>
 
           <div class="cta-row">
-            <a href="/EscolherLugar?idEvento={!evento.Id}" class="primary-btn">Comprar bilhete</a>
-            <a href="/HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
+            <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
+            <a href="HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
           </div>
 
           <div class="hero-bottom">
@@ -586,11 +600,11 @@
         <div class="buy-stack">
           <div class="stat-box">
             <small>Preço desde</small>
-            <strong>25€</strong>
+            <strong><apex:outputText value="{0, number, #,##0.00} €"><apex:param value="{!precoDesde}" /></apex:outputText></strong>
           </div>
 
-          <a href="/EscolherLugar?idEvento={!evento.Id}" class="primary-btn">Comprar bilhete</a>
-          <a href="/HomeEventos#eventos" class="ghost-btn">Continuar a explorar</a>
+          <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
+          <a href="HomeEventos#eventos" class="ghost-btn">Continuar a explorar</a>
 
           <div class="note-box">
             Depois podes substituir este valor fixo pelo preço real do evento ou pelo pricebook que estiver associado.
@@ -629,6 +643,31 @@
       <span>Visual alinhado com a homepage</span>
     </div>
   </footer>
+
+  <script>
+      setTimeout(function() {
+          var uid = getCookie('globaz_uid');
+          if (uid) {
+              var loginBtn = document.getElementById('navLogin');
+              var regBtn = document.getElementById('navRegister');
+              var accBtn = document.getElementById('navAccount');
+              var outBtn = document.getElementById('navLogout');
+              
+              if(loginBtn) loginBtn.style.display = 'none';
+              if(regBtn) regBtn.style.display = 'none';
+              if(accBtn) accBtn.style.display = 'inline-flex';
+              if(outBtn) outBtn.style.display = 'inline-flex';
+
+              var buyBtns = document.querySelectorAll('.js-buy-btn');
+              for (var i = 0; i < buyBtns.length; i++) {
+                  var url = buyBtns[i].getAttribute('href');
+                  if (url && url.indexOf('accId=') === -1) {
+                      buyBtns[i].setAttribute('href', url + '&accId=' + encodeURIComponent(uid));
+                  }
+              }
+          }
+      }, 100);
+  </script>
 </body>
 </html>
 </apex:page>
