@@ -3,11 +3,10 @@
     <allowInternalUserLogin>false</allowInternalUserLogin>
     <allowMembersToFlag>false</allowMembersToFlag>
     <changePasswordTemplate>unfiled$public/CommunityChangePasswordEmailTemplate</changePasswordTemplate>
-    <communityRoles />
+    <communityRoles/>
     <disableReputationRecordConversations>true</disableReputationRecordConversations>
     <emailSenderAddress>miguelcosta@loba.com</emailSenderAddress>
     <emailSenderName>Bilheteira GLOBAZ</emailSenderName>
-    <embeddedLoginEnabled>false</embeddedLoginEnabled>
     <enableApexCDNCaching>true</enableApexCDNCaching>
     <enableCustomVFErrorPageOverrides>false</enableCustomVFErrorPageOverrides>
     <enableDirectMessages>true</enableDirectMessages>
@@ -36,10 +35,8 @@
     <headlessRegistrationTemplate>unfiled$public/CommunityHeadlessRegistrationTemplate</headlessRegistrationTemplate>
     <networkAuthApiSettings>
         <doesForgotPasswordRequireAuth>false</doesForgotPasswordRequireAuth>
-        <doesPasswordLoginRequireAuth>true</doesPasswordLoginRequireAuth>
         <doesPwdlessLoginRequireAuth>false</doesPwdlessLoginRequireAuth>
         <doesRegistrationRequireAuth>false</doesRegistrationRequireAuth>
-        <isFirstPartyAppsAllowed>false</isFirstPartyAppsAllowed>
         <isForgotPwdAllowed>false</isForgotPwdAllowed>
         <isForgotPwdEmailTemplateAllowlistingEnabled>false</isForgotPwdEmailTemplateAllowlistingEnabled>
         <isHeadlessUserRegistrationAllowed>false</isHeadlessUserRegistrationAllowed>
@@ -48,23 +45,22 @@
         <isRecaptchaRequiredPwdlessLogin>false</isRecaptchaRequiredPwdlessLogin>
         <isRecaptchaRequiredRgstr>false</isRecaptchaRequiredRgstr>
         <isUniversalClientRgstrAllowed>false</isUniversalClientRgstrAllowed>
-        <isUserDisambiguationAllowedForgotPwd>false</isUserDisambiguationAllowedForgotPwd>
-        <isUserDisambiguationAllowedUsernamePwd>false</isUserDisambiguationAllowedUsernamePwd>
         <maxPasswordResetAttempts>5</maxPasswordResetAttempts>
         <recaptchaScoreThreshold>0.0</recaptchaScoreThreshold>
     </networkAuthApiSettings>
     <networkMemberGroups>
         <profile>Admin</profile>
-        <profile>customer community user</profile>
+        <profile>Customer Community User</profile>
     </networkMemberGroups>
     <networkPageOverrides>
         <changePasswordPageOverrideSetting>Standard</changePasswordPageOverrideSetting>
         <forgotPasswordPageOverrideSetting>Standard</forgotPasswordPageOverrideSetting>
         <homePageOverrideSetting>VisualForce</homePageOverrideSetting>
         <loginPageOverrideSetting>Standard</loginPageOverrideSetting>
-        <selfRegProfilePageOverrideSetting>Standard</selfRegProfilePageOverrideSetting>
+        <selfRegProfilePageOverrideSetting>VisualForce</selfRegProfilePageOverrideSetting>
     </networkPageOverrides>
     <picassoSite>Bilheteira_GLOBAZ1</picassoSite>
+    <selfRegProfile>Customer Community User</selfRegProfile>
     <selfRegistration>true</selfRegistration>
     <sendWelcomeEmail>true</sendWelcomeEmail>
     <site>Bilheteira_GLOBAZ</site>

@@ -1,4 +1,4 @@
-  <apex:page id="Registration"
+<apex:page id="Registration"
              showHeader="false"
              sidebar="false"
              standardStylesheets="false"

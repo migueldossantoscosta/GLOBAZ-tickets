@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Description__c</fullName>
     <deprecated>false</deprecated>
+    <externalId>false</externalId>
     <label>Description</label>
     <length>500</length>
     <trackFeedHistory>false</trackFeedHistory>

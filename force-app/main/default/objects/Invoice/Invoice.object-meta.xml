@@ -43,20 +43,6 @@
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
-        <actionName>GenerateInvoiceDocument</actionName>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>GenerateInvoiceDocument</actionName>
-        <formFactor>Large</formFactor>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>GenerateInvoiceDocument</actionName>
-        <formFactor>Small</formFactor>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
         <actionName>List</actionName>
         <type>Default</type>
     </actionOverrides>

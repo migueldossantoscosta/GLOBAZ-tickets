@@ -51,9 +51,6 @@ public without sharing class GlobazSiteRegisterController {
                   'Conta criada com sucesso! Podes fazer login.'
               ));
 
-              // Set user account ID in cookie after registration
-              CookieUtils.setCookie('globaz_uid', pa.Id, 7);
-
               PageReference loginPage = new PageReference('/apex/SiteLogin');
               loginPage.setRedirect(true);
               return loginPage;

@@ -1,15 +1,12 @@
 public without sharing class GlobazSiteLogoutController {
 
       public PageReference logout() {
-          // Remove cookie
-          CookieUtils.deleteCookie('globaz_uid');
-
           ApexPages.addMessage(new ApexPages.Message(
               ApexPages.Severity.INFO,
               'Sessão terminada com sucesso.'
           ));
 
-          PageReference home = new PageReference('/globaztickets');
+          PageReference home = new PageReference('/apex/HomeEventos');
           home.setRedirect(true);
           return home;
       }

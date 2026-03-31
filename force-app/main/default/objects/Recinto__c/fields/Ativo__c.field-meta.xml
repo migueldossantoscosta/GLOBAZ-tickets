@@ -3,6 +3,7 @@
     <fullName>Ativo__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Define se o recinto pode ser usado para novos eventos (Ativo = True, pode ser usado)</description>
+    <externalId>false</externalId>
     <label>Ativo</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

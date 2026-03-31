@@ -1,4 +1,4 @@
- <apex:page showHeader="false" sidebar="false" standardStylesheets="false"
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false"
              docType="html-5.0" applyHtmlTag="false" applyBodyTag="false"
              controller="GlobazSiteLoginController" title="Login">
   <html lang="pt">
@@ -59,12 +59,11 @@
           </apex:form>
       </div>
       <script>
-          // Check for UID in URL and set cookie
+          // Guarda UID no localStorage
           var urlParams = new URLSearchParams(window.location.search);
           var uid = urlParams.get('uid');
           if (uid) {
-              // Set cookie instead of localStorage
-              document.cookie = 'globaz_uid=' + uid + '; path=/; secure; samesite=strict';
+              localStorage.setItem('globaz_uid', uid);
               window.history.replaceState({}, '', window.location.pathname);
               setTimeout(function() { window.location.href = '/apex/HomeEventos'; }, 300);
           }

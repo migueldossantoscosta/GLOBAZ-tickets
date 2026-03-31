@@ -8,6 +8,7 @@
     <columns>NumeroLugar__c</columns>
     <columns>LugarCompleto__c</columns>
     <columns>ChaveUnicaSeguranca__c</columns>
+    <columns>CREATED_DATE</columns>
     <filterScope>Everything</filterScope>
     <label>All</label>
 </ListView>

@@ -12,14 +12,12 @@
         </connector>
         <flowTransactionModel>Automatic</flowTransactionModel>
         <nameSegment>AleatorioGatewayID</nameSegment>
-        <offset>0</offset>
         <outputParameters>
             <assignToReference>Variavel_ID</assignToReference>
             <name>output</name>
         </outputParameters>
     </actionCalls>
     <apiVersion>66.0</apiVersion>
-    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <environments>Default</environments>
     <interviewLabel>Order_GerarGatewayID {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Order_GerarGatewayID</label>

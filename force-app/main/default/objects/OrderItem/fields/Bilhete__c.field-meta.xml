@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Bilhete__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>Bilhete</label>
     <referenceTo>Bilhete__c</referenceTo>
     <relationshipLabel>Order Products</relationshipLabel>

@@ -3,6 +3,7 @@
     <fullName>ContratoAtivo__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Se a empresa pode criar eventos</description>
+    <externalId>false</externalId>
     <label>ContratoAtivo</label>
     <trackFeedHistory>false</trackFeedHistory>
     <type>Checkbox</type>

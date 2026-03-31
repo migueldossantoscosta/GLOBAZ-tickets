@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Permissões para utilizadores que gerem contas empresariais e criam eventos.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Business Account Manager</label>
+</PermissionSet>

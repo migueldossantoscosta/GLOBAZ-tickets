@@ -42,11 +42,8 @@ public without sharing class GlobazSiteLoginController {
                   'Login bem-sucedido! Bem-vindo, ' + acc.FirstName + '.'
               ));
 
-              // Set user account ID in cookie instead of localStorage
-              CookieUtils.setCookie('globaz_uid', acc.Id, 7);
-
-              // Redirect to HomeEventos page
-              PageReference home = new PageReference('/apex/HomeEventos');
+              // Redirect com UID na URL
+              PageReference home = new PageReference('/apex/HomeEventos?uid=' + acc.Id);
               home.setRedirect(true);
               return home;
 
