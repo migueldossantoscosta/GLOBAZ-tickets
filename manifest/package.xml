@@ -156,5 +156,33 @@
         <members>*</members>
         <name>CustomPageWebLink</name>
     </types>
-    <version>60.0</version>
+    <types>
+        <members>*</members>
+        <name>Bot</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>BotVersion</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlannerBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlugin</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiFunction</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPromptTemplate</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>AiAuthoringBundle</name>
+    </types>
+    <version>61.0</version>
 </Package>

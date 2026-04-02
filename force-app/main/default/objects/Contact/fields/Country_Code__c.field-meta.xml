@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Country_Code__c</fullName>
     <description>O código de país do numero de telemóvel da pessoa</description>
-    <externalId>false</externalId>
     <label>Country Code</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>

@@ -12,6 +12,7 @@
         </connector>
         <flowTransactionModel>Automatic</flowTransactionModel>
         <nameSegment>AleatorioGatewayID</nameSegment>
+        <offset>0</offset>
         <outputParameters>
             <assignToReference>Variavel_ID</assignToReference>
             <name>output</name>

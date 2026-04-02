@@ -3,7 +3,6 @@
     <fullName>Location__c</fullName>
     <deprecated>false</deprecated>
     <displayLocationInDecimal>true</displayLocationInDecimal>
-    <externalId>false</externalId>
     <label>Location</label>
     <required>false</required>
     <scale>7</scale>

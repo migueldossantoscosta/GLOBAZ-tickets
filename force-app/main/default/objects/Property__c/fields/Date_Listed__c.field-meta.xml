@@ -3,7 +3,6 @@
     <fullName>Date_Listed__c</fullName>
     <defaultValue>TODAY() - 10</defaultValue>
     <deprecated>false</deprecated>
-    <externalId>false</externalId>
     <label>Date Listed</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>

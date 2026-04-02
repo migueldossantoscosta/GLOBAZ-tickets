@@ -3,7 +3,6 @@
     <fullName>CoordenadasGPS__c</fullName>
     <description>Latitude e longitude para mapa/localização</description>
     <displayLocationInDecimal>true</displayLocationInDecimal>
-    <externalId>false</externalId>
     <label>Coordenadas GPS</label>
     <required>true</required>
     <scale>6</scale>

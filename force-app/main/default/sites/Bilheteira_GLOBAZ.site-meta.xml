@@ -23,8 +23,8 @@
     <redirectToCustomDomain>false</redirectToCustomDomain>
     <referrerPolicyOriginWhenCrossOrigin>true</referrerPolicyOriginWhenCrossOrigin>
     <selfRegPage>SiteRegister</selfRegPage>
-    <siteAdmin></siteAdmin>
-    <siteGuestRecordDefaultOwner></siteGuestRecordDefaultOwner>
+    <siteAdmin>miguelcosta@mindful-koala-w7cnyh.com</siteAdmin>
+    <siteGuestRecordDefaultOwner>miguelcosta@mindful-koala-w7cnyh.com</siteGuestRecordDefaultOwner>
     <siteType>ChatterNetwork</siteType>
     <urlPathPrefix>globaztickets</urlPathPrefix>
 </CustomSite>

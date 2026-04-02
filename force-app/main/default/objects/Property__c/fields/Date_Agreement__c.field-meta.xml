@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Date_Agreement__c</fullName>
     <deprecated>false</deprecated>
-    <externalId>false</externalId>
     <label>Date Agreement</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>

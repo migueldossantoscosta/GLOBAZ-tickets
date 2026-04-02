@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Price_Sold__c</fullName>
     <deprecated>false</deprecated>
-    <externalId>false</externalId>
     <label>Price Sold</label>
     <precision>8</precision>
     <required>false</required>

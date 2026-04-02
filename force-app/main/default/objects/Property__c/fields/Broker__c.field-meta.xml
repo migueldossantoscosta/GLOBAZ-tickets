@@ -3,7 +3,6 @@
     <fullName>Broker__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <deprecated>false</deprecated>
-    <externalId>false</externalId>
     <label>Broker</label>
     <referenceTo>Broker__c</referenceTo>
     <relationshipLabel>Properties</relationshipLabel>

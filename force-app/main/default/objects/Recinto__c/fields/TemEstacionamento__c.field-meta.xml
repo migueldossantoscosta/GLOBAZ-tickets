@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>TemEstacionamento__c</fullName>
     <defaultValue>false</defaultValue>
-    <externalId>false</externalId>
     <label>Tem Estacionamento</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
