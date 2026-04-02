@@ -34,13 +34,13 @@ public with sharing class AgentDetalheEvento {
         public String extrasJson;
 
         @InvocableVariable(label='Lugares vendidos')
-        public Integer lugaresVendidos;
+        public Decimal lugaresVendidos; // De Integer para Decimal
 
         @InvocableVariable(label='Capacidade máxima')
-        public Integer capacidadeMaxima;
+        public Decimal capacidadeMaxima; // De Integer para Decimal
 
         @InvocableVariable(label='Lugares disponíveis')
-        public Integer lugaresDisponiveis;
+        public Decimal lugaresDisponiveis; // De Integer para Decimal
 
         @InvocableVariable(label='Mensagem formatada para o chat')
         public String mensagemChat;

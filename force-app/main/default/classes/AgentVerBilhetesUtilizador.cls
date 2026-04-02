@@ -10,7 +10,7 @@ public with sharing class AgentVerBilhetesUtilizador {
         public Boolean temBilhetes;
 
         @InvocableVariable(label='Total de bilhetes')
-        public Integer totalBilhetes;
+        public Decimal totalBilhetes;
 
         @InvocableVariable(label='Bilhetes (JSON)')
         public String bilhetesJson;

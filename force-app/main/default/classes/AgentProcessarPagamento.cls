@@ -22,7 +22,7 @@ public without sharing class AgentProcessarPagamento {
         public String mensagemChat;
 
         @InvocableVariable(label='Número de bilhetes criados')
-        public Integer totalBilhetes;
+        public Decimal totalBilhetes;
 
         @InvocableVariable(label='Erro')
         public String erroMsg;
