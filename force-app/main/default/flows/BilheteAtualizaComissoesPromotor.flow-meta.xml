@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>66.0</apiVersion>
-    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <decisions>
         <name>Decision_1</name>
         <label>Decision 2</label>
@@ -43,7 +42,7 @@
     <formulas>
         <name>SomarBValor</name>
         <dataType>Currency</dataType>
-        <expression>(BLANKVALUE({!GetB.ComissoesAcumuladas__c}, 0) + ( (BLANKVALUE({!$Record.Evento__r.PrecoBilhete__c}, 0) * (BLANKVALUE({!GetB.TaxaComissao__c}, 0) / 100))</expression>
+        <expression>BLANKVALUE({!GetB.ComissoesAcumuladas__c}, 0) + (BLANKVALUE({!$Record.Evento__r.PrecoBilhete__c}, 0) * (BLANKVALUE({!GetB.TaxaComissao__c}, 0) / 100))</expression>
         <scale>2</scale>
     </formulas>
     <formulas>
@@ -150,5 +149,5 @@
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>InvalidDraft</status>
+    <status>Obsolete</status>
 </Flow>

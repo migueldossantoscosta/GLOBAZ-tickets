@@ -1,102 +1,1833 @@
-<apex:page standardController="Order" extensions="BilheteiraController" docType="html-5.0">
+<apex:page standardController="Order" extensions="BilheteiraController" docType="html-5.0" showHeader="false" sidebar="false" standardStylesheets="false">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&amp;display=swap" rel="stylesheet"/>
     <style>
-        .container { max-width: 650px; margin: 30px auto; font-family: sans-serif; }
-        .card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .bilhete-row { display: flex; align-items: flex-end; gap: 15px; margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; animation: fadeIn 0.3s; }
-        .btn-add { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        .btn-remove { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
-        .btn-finalizar { width: 100%; padding: 18px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; }
-        .label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #444; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        .success-area { text-align: center; display: none; padding: 40px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        *,*::before,*::after{box-sizing:border-box;}
+        :root {
+            --bg: #050816;
+            --bg-2: #091125;
+            --surface: rgba(255,255,255,0.06);
+            --surface-2: rgba(255,255,255,0.08);
+            --border: rgba(255,255,255,0.10);
+            --text: #f8fbff;
+            --muted: rgba(255,255,255,0.70);
+            --blue: #5ea2ff;
+            --blue-2: #2563eb;
+            --glow: 0 20px 60px rgba(37,99,235,0.25);
+            --radius-xl: 30px;
+            --radius-lg: 22px;
+            --shadow: 0 20px 50px rgba(0,0,0,0.28);
+        }
+
+        body{
+            font-family:'Inter',sans-serif;
+            color:var(--text);
+            background:
+                radial-gradient(circle at 10% 0%, rgba(50,120,255,.24), transparent 28%),
+                radial-gradient(circle at 100% 10%, rgba(168,85,247,.14), transparent 24%),
+                linear-gradient(180deg, #030611 0%, #081121 40%, #050816 100%);
+            margin:0;
+            min-height:100vh;
+            transition:background .4s;
+            overflow-x:hidden;
+        }
+
+        .container{
+            width:min(1440px, calc(100vw - 40px));
+            margin:0 auto;
+            padding:28px 0 40px;
+            position:relative;
+            z-index:1;
+        }
+
+        .noise{
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            opacity:.08;
+            background-image:
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size:4px 4px;
+            mix-blend-mode:soft-light;
+            z-index:0;
+        }
+
+        .brand-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:24px;
+            margin-bottom:24px;
+            padding:18px 0;
+            border-bottom:1px solid rgba(255,255,255,.08);
+        }
+
+        .brand-left{
+            display:flex;
+            align-items:center;
+            gap:16px;
+        }
+
+        .brand-mark{
+            width:44px;
+            height:44px;
+            border-radius:14px;
+            background:linear-gradient(135deg, rgba(94,162,255,.95), rgba(37,99,235,.80));
+            box-shadow:var(--glow);
+            position:relative;
+            overflow:hidden;
+            flex-shrink:0;
+        }
+
+        .brand-mark::before,
+        .brand-mark::after{
+            content:"";
+            position:absolute;
+            background:rgba(255,255,255,.9);
+            border-radius:999px;
+        }
+
+        .brand-mark::before{width:24px;height:5px;left:10px;top:13px;}
+        .brand-mark::after{width:16px;height:5px;left:10px;top:24px;}
+
+        .brand-text{
+            display:flex;
+            flex-direction:column;
+            line-height:1;
+        }
+
+        .brand-logo{
+            font-weight:900;
+            font-size:20px;
+            letter-spacing:.8px;
+            color:#fff;
+            text-transform:uppercase;
+        }
+
+        .brand-logo span{
+            color:#fff;
+            font-weight:900;
+        }
+
+        .brand-subtitle{
+            font-size:11px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:1.3px;
+            margin-top:4px;
+            font-weight:700;
+        }
+
+        .top-back{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:46px;
+            padding:0 18px;
+            border-radius:14px;
+            font-weight:800;
+            color:#fff;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.12);
+            text-decoration:none;
+            transition:transform .25s ease;
+        }
+        .top-back:hover{transform:translateY(-2px);}
+
+        body.t-mbway .brand-header{background:#e30613;border-radius:20px;padding:18px 24px;}
+        body.t-mbway .brand-logo{color:#fff;}
+        body.t-mbway .brand-logo span{color:rgba(255,255,255,.6);}
+        body.t-mbway .brand-subtitle{color:rgba(255,255,255,.75);}
+        body.t-mbway .btn-main{background:#e30613;}
+        body.t-mbway .btn-pay{background:#e30613;}
+        body.t-mbway .receipt-value.total{color:#e30613;}
+        body.t-mbway .success-icon{background:#e30613;}
+        body.t-mbway .method-opt.active{border-color:#e30613;background:#fff0f0;}
+
+        body.t-mb .brand-header{background:#003d7a;border-radius:20px;padding:18px 24px;}
+        body.t-mb .brand-logo{color:#fff;font-size:22px;letter-spacing:2px;}
+        body.t-mb .brand-logo span{color:#7ec8f0;font-weight:800;}
+        body.t-mb .brand-subtitle{color:rgba(255,255,255,.7);}
+        body.t-mb .btn-main{background:#005ea6;}
+        body.t-mb .btn-pay{background:#005ea6;}
+        body.t-mb .receipt-value.total{color:#005ea6;}
+        body.t-mb .success-icon{background:#005ea6;}
+        body.t-mb .method-opt.active{border-color:#005ea6;background:#e8f4fd;}
+
+        body.t-card .brand-header{background:#14532d;border-radius:20px;padding:18px 24px;}
+        body.t-card .brand-logo{color:#fff;}
+        body.t-card .brand-logo span{color:rgba(255,255,255,.55);}
+        body.t-card .brand-subtitle{color:rgba(255,255,255,.7);}
+        body.t-card .btn-main{background:#16a34a;}
+        body.t-card .btn-pay{background:#16a34a;}
+        body.t-card .receipt-value.total{color:#16a34a;}
+        body.t-card .success-icon{background:#16a34a;}
+        body.t-card .method-opt.active{border-color:#16a34a;background:#f0fdf4;}
+
+        .card{
+            background:rgba(255,255,255,.05);
+            border:1px solid rgba(255,255,255,.09);
+            border-radius:var(--radius-lg);
+            box-shadow:var(--shadow);
+            backdrop-filter:blur(16px);
+            padding:28px;
+        }
+
+        h2.step-title{
+            text-align:center;
+            font-size:30px;
+            line-height:1;
+            font-weight:950;
+            letter-spacing:-.8px;
+            margin-bottom:20px;
+            color:#fff;
+        }
+
+        .step-subtitle{
+            text-align:center;
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.6;
+            margin:-6px 0 20px;
+        }
+
+        .arena-meo-wrap{
+        width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+        .meo-title-top{
+            position:absolute;
+            top:4px;
+            left:50%;
+            transform:translateX(-50%);
+            text-align:center;
+            z-index:10;
+            letter-spacing:1px;
+            pointer-events:none;
+        }
+
+        .meo-title-top .pt{
+            font-size:24px;
+            color:rgba(255,255,255,.22);
+            margin-bottom:8px;
+        }
+
+        .meo-title-top .en{
+            font-size:28px;
+            font-weight:300;
+            color:rgba(255,255,255,.9);
+        }
+
+        .meo-hint{
+            position:absolute;
+            left:50%;
+            top:88px;
+            transform:translateX(-50%);
+            color:rgba(255,255,255,.55);
+            font-size:12px;
+            letter-spacing:.4px;
+            z-index:11;
+            pointer-events:none;
+        }
+
+        .arena-meo-svg{
+            width:100%;
+            height:auto;
+            display:block;
+        }
+
+        .meo-outline{
+            fill:none;
+            stroke:#7f7f7f;
+            stroke-width:4;
+            opacity:.95;
+        }
+
+        .meo-outline-thin{
+            fill:none;
+            stroke:#7f7f7f;
+            stroke-width:3;
+            opacity:.8;
+        }
+
+        .meo-ring-fill{
+            fill:#f1f1f1;
+            stroke:none;
+        }
+
+        .meo-ring-gap{
+            fill:none;
+            stroke:#f1f1f1;
+            stroke-width:10;
+            opacity:.96;
+        }
+
+        .meo-inner-floor{
+            fill:#b9d0d0;
+            stroke:#6e6e6e;
+            stroke-width:4;
+        }
+
+        .meo-lateral-box{
+            fill:#ededed;
+            stroke:#6e6e6e;
+            stroke-width:3;
+        }
+
+        .meo-stage{
+            fill:#55bdb0;
+            stroke:none;
+        }
+
+        .meo-vomitory{
+            fill:#a9bfc0;
+            stroke:#6e6e6e;
+            stroke-width:2;
+        }
+
+        .meo-aisle{
+            stroke:#111;
+            stroke-width:8;
+            stroke-linecap:square;
+        }
+
+        /* MEO Arena Premium Colors */
+        .seat.z-ring    { fill: #38bdf8; filter: drop-shadow(0 2px 4px rgba(56,189,248,0.25)); }
+        .seat.z-floor   { fill: #34d399; filter: drop-shadow(0 2px 4px rgba(52,211,153,0.25)); }
+        .seat.z-lateral { fill: #c084fc; filter: drop-shadow(0 2px 4px rgba(192,132,252,0.25)); }
+        .seat.z-topo    { fill: #fb923c; filter: drop-shadow(0 2px 4px rgba(251,146,60,0.25)); }
+
+        .arena-wrap{overflow-x:auto;padding:4px 0;}
+        .arena{min-width:580px;}
+        
+        svg .seat {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        svg .seat:hover {
+            opacity: 0.85;
+            transform-origin: center;
+            transform: scale(1.1);
+        }
+        svg .seat.selecionado {
+            fill: #fbbf24 !important;
+            stroke: #fff;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 12px rgba(251,191,36,0.6));
+        }
+
+        .arena-meo-wrap{
+            position:relative;
+            width:100%;
+            max-width:860px;
+            margin:20px auto;
+            background: linear-gradient(135deg, #050816 0%, #111827 100%);
+            border-radius:32px;
+            overflow:hidden;
+            padding:20px;
+            box-shadow: 0 0 80px rgba(0,0,0,0.5), inset 0 0 40px rgba(94,162,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .meo-title-top .pt{
+            font-size:14px;
+            font-weight: 800;
+            color: #5ea2ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+
+        .meo-title-top .en{
+            font-size:32px;
+            font-weight:950;
+            color:#fff;
+            letter-spacing: -1px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        .map-divider{height:1px;background:#e5e7eb;margin:14px auto;width:90%;}
+        .bot{display:flex;flex-direction:column;gap:4px;align-items:center;}
+
+        .map-legend{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+        .leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+        .ldot{width:10px;height:9px;border-radius:2px;flex-shrink:0;}
+
+        .map-stats{
+            display:flex;
+            justify-content:center;
+            margin-top:14px;
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:16px;
+            overflow:hidden;
+            background:rgba(255,255,255,.04);
+        }
+        .mstat{
+            flex:1;
+            padding:12px 10px;
+            text-align:center;
+            border-right:1px solid rgba(255,255,255,.08);
+        }
+
+        .mstat:last-child{border-right:none;}
+        .mstat-val{font-weight:800;font-size:18px;color:#fff;}
+        .mstat-lbl{color:rgba(255,255,255,.56);font-size:10px;margin-top:2px;text-transform:uppercase;letter-spacing:.6px;}
+
+        .method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+        .method-opt{
+            border:1.5px solid rgba(255,255,255,.10);
+            border-radius:16px;
+            padding:14px 10px;
+            text-align:center;
+            cursor:pointer;
+            transition:all .2s;
+            background:rgba(255,255,255,.04);
+            color:#fff;
+        }
+        .method-opt:hover{border-color:rgba(255,255,255,.20);}
+        .method-opt.active{
+            border-color:rgba(94,162,255,.45);
+            background:rgba(94,162,255,.12);
+        }
+        .method-icon{font-size:20px;display:block;margin-bottom:5px;}
+        .method-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:.3px;}
+
+        .mb-ref-box{display:none;background:#e8f4fd;border:1.5px solid #b3d9f5;border-radius:16px;padding:16px 20px;margin:14px 0;text-align:center;}
+        .mb-ref-entity{font-size:11px;color:#005ea6;font-weight:700;letter-spacing:2px;margin-bottom:4px;}
+        .mb-ref-num{font-size:26px;font-weight:800;color:#003d7a;letter-spacing:4px;margin-bottom:4px;}
+        .mb-ref-val{font-size:13px;color:#005ea6;font-weight:600;}
+        .receipt-table{
+            margin:16px 0;
+            border-top:1px solid rgba(255,255,255,.08);
+        }
+        .receipt-row{
+    display:flex;
+            justify-content:space-between;
+            padding:12px 0;
+            border-bottom:1px solid rgba(255,255,255,.06);
+            font-size:14px;
+            gap:16px;
+        }
+        .receipt-label{color:rgba(255,255,255,0.7);}
+        .receipt-label.total{color:rgba(255,255,255,0.6); font-weight:700;}
+        .receipt-value{font-weight:700;color:#fff;}
+        .receipt-value.total{font-size:32px;font-weight:950; color:#fff;}
+        .receipt-value.mono{font-size:11px;color:rgba(255,255,255,.55);font-weight:500;font-family:monospace;}
+
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);z-index:200;align-items:flex-end;justify-content:center;}
+        .modal-overlay.open{display:flex;}
+        .modal-sheet{
+            background:#0d1425;
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:28px 28px 0 0;
+            padding:28px 28px 44px;
+            width:100%;
+            max-width:1460px;
+            animation:slideUp .38s cubic-bezier(.22,1,.36,1);
+            color:#fff;
+        }
+
+        @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+        .modal-handle{width:40px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;margin:0 auto 20px;}
+        .modal-title{font-size:20px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;color:#fff;}
+        .modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+        .seats-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;max-height:90px;overflow-y:auto;}
+        .chip{
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:20px;
+            padding:5px 12px;
+            font-size:11px;
+            font-weight:700;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            gap:5px;
+        }
+        .chip-dot{width:7px;height:7px;background:#ffc107;border-radius:50%;flex-shrink:0;}
+
+        .btn-main{
+            width:100%;
+            padding:18px;
+            border:none;
+            border-radius:16px;
+            font-weight:800;
+            font-size:16px;
+            cursor:pointer;
+            margin-top:12px;
+            transition:all .25s;
+            background:linear-gradient(135deg, var(--blue), var(--blue-2));
+            color:#fff;
+            box-shadow:var(--glow);
+        }
+
+        .btn-main:hover{transform:translateY(-2px);}
+
+        .btn-ghost{
+            padding:16px;
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,.12);
+            background:rgba(255,255,255,.06);
+            font-size:14px;
+            font-weight:700;
+            cursor:pointer;
+            transition:.2s;
+            color:#fff;
+            width:100%;
+            margin-top:10px;
+        }
+
+        .btn-ghost:hover{transform:translateY(-2px);}
+
+        .btn-cancel{
+            padding:16px;
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,.12);
+            background:rgba(255,255,255,.06);
+            font-size:14px;
+            font-weight:700;
+            cursor:pointer;
+            color:#fff;
+            transition:.2s;
+        }
+
+        .btn-cancel:hover{transform:translateY(-2px);}
+
+        .btn-pay{
+            padding:16px;
+            border-radius:16px;
+            border:none;
+            background:linear-gradient(135deg, var(--blue), var(--blue-2));
+            color:#fff;
+            font-size:15px;
+            font-weight:800;
+            cursor:pointer;
+            transition:all .25s;
+            box-shadow:var(--glow);
+        }
+
+        .btn-pay:hover{transform:translateY(-2px);}
+
+        .success-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;background:#000;color:#fff;}
+        .step{display:none;}
+        .active{display:block;animation:fadeIn .4s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
     </style>
 
     <div class="container">
-        <div id="form-area" class="card">
-            <h2 style="color: #333; margin-top: 0;">🎫 Escolha de Assentos</h2>
-            <p style="color: #666;">Preencha os lugares para a Encomenda: <b>{!Order.OrderNumber}</b></p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-            
-            <div id="bilhetes-list">
-                <div class="bilhete-row" id="row-1">
-                    <div><span class="label">Fila</span><input type="text" placeholder="Ex: A" style="width: 60px;" /></div>
-                    <div><span class="label">Lugar</span><input type="number" value="1" style="width: 80px;" /></div>
-                    <div style="width: 40px;"></div>
-                </div>
+    <div id="main-header" class="brand-header">
+        <div class="brand-left">
+            <div class="brand-mark"></div>
+            <div class="brand-text">
+                <div id="logo-text" class="brand-logo">GLOBAZ TICKETS</div>
+                <div id="subtitle-text" class="brand-subtitle">premium ticketing experience</div>
             </div>
-
-            <button type="button" class="btn-add" onclick="addRow()">+ Adicionar Lugar</button>
-            <button type="button" class="btn-finalizar" onclick="finalizar()">Finalizar Compra</button>
         </div>
 
-        <div id="success-area" class="card success-area">
-            <div style="font-size: 60px;">✅</div>
-            <h1 style="color: #28a745; margin: 10px 0;">Compra Concluída!</h1>
-            <p style="font-size: 16px; color: #555;">Os teus bilhetes foram gerados e enviados por email.</p>
-            <button onclick="window.location.href='/{!Order.Id}'" style="margin-top: 25px; padding: 12px 25px; cursor: pointer; border-radius: 5px; border: 1px solid #ccc;">Ver Detalhes da Order</button>
+        <a href="/globaztickets" class="top-back">Voltar</a>
+    </div>
+
+        <!-- STEP 1: MAPA -->
+        <div id="step1" class="card step active">
+            <p class="step-subtitle">Escolhe os lugares disponíveis e avança para o pagamento com a mesma experiência premium do resto do site.</p>
+            <div class="arena-wrap">
+                <div class="arena">
+                    <div class="stage-bar">PALCO</div>
+                    <div class="stage-foot"></div>
+                    <div class="hall" id="mapa-frente"></div>
+                    <div class="map-divider"></div>
+                    <div class="bot" id="mapa-tras"></div>
+                </div>
+            </div>
+            <div class="map-legend">
+                <div class="leg"><div class="ldot" style="background:#2563eb"></div>Lateral A</div>
+                <div class="leg"><div class="ldot" style="background:#7c3aed"></div>Lateral B</div>
+                <div class="leg"><div class="ldot" style="background:#d97706"></div>Lateral C</div>
+                <div class="leg"><div class="ldot" style="background:#16a34a"></div>Central</div>
+                <div class="leg"><div class="ldot" style="background:#1e3a8a"></div>Traseira</div>
+                <div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>
+                <div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>
+            </div>
+            <div class="map-stats">
+                <div class="mstat"><div class="mstat-val" id="msTotal">—</div><div class="mstat-lbl">total lugares</div></div>
+                <div class="mstat"><div class="mstat-val" id="msSel" style="color:#d97706;">0</div><div class="mstat-lbl">selecionados</div></div>
+                <div class="mstat"><div class="mstat-val" id="msDisp">—</div><div class="mstat-lbl">disponíveis</div></div>
+            </div>
+            <button class="btn-main" onclick="irParaStep2()">
+                Reservar <span id="count">0</span> Bilhete<span id="plural"></span>
+            </button>
+        </div>
+
+        <!-- STEP 2: MÉTODO -->
+        <div id="step2" class="card step">
+            <p class="step-subtitle">Seleciona a forma de pagamento para concluir a tua reserva.</p>
+            <div class="method-grid">
+                <div class="method-opt active" onclick="selectMetodo('MBWay',this)"><span class="method-icon">📱</span><span class="method-label">MB WAY</span></div>
+                <div class="method-opt"        onclick="selectMetodo('Multibanco',this)"><span class="method-icon">🏧</span><span class="method-label">MULTIBANCO</span></div>
+                <div class="method-opt"        onclick="selectMetodo('Cartão',this)"><span class="method-icon">💳</span><span class="method-label">CARTÃO</span></div>
+            </div>
+
+            <!-- Bloco condicional: logado vs anónimo -->
+            <div id="blocoConta" style="display:none;padding:16px 20px;border-radius:16px;background:rgba(94,162,255,0.10);border:1px solid rgba(94,162,255,0.22);margin-bottom:16px;">
+                <div style="font-size:13px;color:#93c5fd;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Sessão iniciada</div>
+                <div style="font-size:15px;font-weight:800;color:#fff;">👤 <span id="nomeContaLogada"></span></div>
+                <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:4px;">A compra será associada à tua conta automaticamente.</div>
+            </div>
+            <div id="blocoAnonimo" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <input id="checkoutNome" type="text" placeholder="Nome completo"
+                    style="height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;" />
+
+                <input id="checkoutEmail" type="email" placeholder="Email"
+                    style="height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;padding:0 14px;" />
+            </div>
+
+            <button class="btn-main" onclick="abrirModal()">Rever e Confirmar →</button>
+            <button class="btn-ghost" onclick="switchStep('step2','step1')">← Voltar</button>
+        </div>
+
+        <!-- STEP 3: COMPROVATIVO -->
+        <div id="step3" class="card step">
+            <h2 class="step-title" style="text-align:left;">Confirmar Operação</h2>
+            <p class="step-subtitle" style="text-align:left;margin-top:-8px;">Verifique os detalhes antes de validar.</p>
+            <div class="mb-ref-box" id="mbRefBox">
+                <div class="mb-ref-entity">ENTIDADE · 21 147</div>
+                <div class="mb-ref-num" id="mbRefNum">--- --- ---</div>
+                <div class="mb-ref-val" id="mbRefVal">0,00 €</div>
+            </div>
+            <div class="receipt-table">
+                <div class="receipt-row"><span class="receipt-label">Comerciante</span><span class="receipt-value">GLOBAZ TICKETS</span></div>
+                <div class="receipt-row"><span class="receipt-label">Lugares</span><span class="receipt-value" id="receipt-lugares">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Método</span><span class="receipt-value" id="receipt-metodo">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Valor</span><span class="receipt-value total" id="total-display">—</span></div>
+                <div class="receipt-row" style="border:none;"><span class="receipt-label">ID Transação</span><span class="receipt-value mono" id="trans-id">—</span></div>
+            </div>
+            <button class="btn-main" id="btnFinal" onclick="finalizarTudo()">VALIDAR PAGAMENTO</button>
+        </div>
+
+        <!-- SUCCESS -->
+        <div id="step-success" class="card step" style="text-align:center;padding:48px 28px;">
+            <div class="success-icon">✓</div>
+            <h2 style="font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px;">Pago com Sucesso!</h2>
+            <p style="color:#888;font-size:14px;margin-bottom:28px;">Os teus bilhetes foram emitidos com sucesso.</p>
+            <button class="btn-main" onclick="window.open('/apex/BilhetePDF?id='+orderIdAtiva,'_blank')">⬇ Download Bilhete (PDF)</button>
+            <button class="btn-main" style="background:#f5f5f7;color:#000;margin-top:10px;" onclick="window.location.reload()">Nova Reserva</button>
         </div>
     </div>
 
-    <script>
-        let rowCount = 1;
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalDetalhes">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-title">Resumo da Encomenda</div>
+            <div class="modal-sub">Confirme os detalhes antes de prosseguir.</div>
+            <div class="seats-chips" id="modalChips"></div>
+            <div class="receipt-table">
+                <div class="receipt-row"><span class="receipt-label">Nº de bilhetes</span><span class="receipt-value" id="mQtd">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Preço unitário</span><span class="receipt-value" id="mPrecoUnit">—</span></div>
+                <div class="receipt-row"><span class="receipt-label">Método</span><span class="receipt-value" id="mMetodo">—</span></div>
+                <div class="receipt-row" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:14px; align-items: baseline;">
+                    <span class="receipt-label total">Total</span>
+                    <span class="receipt-value total" id="mTotal">—</span>
+                </div>
+            </div>
+            <div id="extras-container" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                <div style="font-weight:700; font-size:13px; color:rgba(255,255,255,0.6); margin-bottom:8px;">Serviços Adicionais</div>
+                <div id="extras-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+            <div class="btn-pair">
+                <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-pay" id="btnModalPagar" onclick="confirmarECriar()">Pagar Agora</button>
+            </div>
+        </div>
+    </div>
 
-        function addRow() {
-            rowCount++;
-            const container = document.getElementById('bilhetes-list');
-            const newRow = document.createElement('div');
-            newRow.className = 'bilhete-row';
-            newRow.id = 'row-' + rowCount;
-            newRow.innerHTML = `
-                <div><span class="label">Fila</span><input type="text" style="width: 60px;" /></div>
-                <div><span class="label">Lugar</span><input type="number" style="width: 80px;" /></div>
-                <button type="button" class="btn-remove" onclick="removeRow(${rowCount})">🗑️</button>
-            `;
-            container.appendChild(newRow);
+    <script type="text/javascript">
+    //<![CDATA[
+    function decodeHtml(str){
+        const txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+    }
+    let ROWS_FRENTE  = [];
+    let ROWS_TRAS    = [];
+    let FRONT_BLOCKS = [];
+    let COLS_TRAS    = 0;
+    let ZONA_TRAS    = '';
+    let PRECO        = 25.00;
+    let PRECO_MAP    = {'BLT-Geral': 25.00};
+    let TIPO_MAPA    = 'sba';
+    let STANDS_AA    = [];
+    let STANDS_TEATRO = [];
+    let SERVICOS_EXTRA = [];
+    let EXTRAS_SELECCIONADOS = {}; // {pbeId: qty}
+
+    let ocupadosCount = 0;
+    let selecionados  = [];
+    let metodoAtual   = 'MBWay';
+    let orderIdAtiva  = '';
+    let totalSeats    = 0;
+
+    const evtId = '{!idDoEvento}';
+    const accId = '{!idDaAccount}';
+    
+    const ZONE_PREFIXES = {
+        'samsung': 'SA-', 'portimao': 'PA-', 'standing': 'ST-', 'sagres-top': 'STP-',
+        'solverde': 'SOL-', 'sagres-bot': 'SBT-', 'lagos': 'LAG-', 'meo': 'ME-',
+        'millennium': 'MIL-', 'topo': 'TP-', 'laterais': 'LT-', 'plateia_central': 'PC-',
+        'plateia_verde': 'PV-', 'plateia_azul': 'PAZ-', 'camarote': 'CAM-', 'fila_frontal': 'FF-'
+    };
+    function getPrefixedFila(fila, zoneId){
+        const prefix = (zoneId && ZONE_PREFIXES[zoneId.toLowerCase()]) || '';
+        return prefix + fila;
+    }
+
+    function getTipoBilhete(zona) {
+        if (!zona) return 'BLT-Geral';
+        const z = zona.toLowerCase();
+        // Mapeamento: Sagres = CAMAROTE (Portimão)
+        if (z.includes('sagres')) return 'BLT-CAMAROTE';
+        // MEO Arena: Laterais (roxo) = VIP, Topo (laranja) = Camarote
+        if (z === 'lat')  return 'BLT-VIP';
+        if (z === 'topo') return 'BLT-CAMAROTE';
+        // Mapeamento genérico: Central/Verde/Green = VIP, Camarote/Box = Camarote, resto = Geral
+        if (z.includes('central') || z.includes('verde') || z.includes('front') || z.includes('green')) return 'BLT-VIP';
+        if (z.includes('camarote') || z.includes('box') || z.includes('sagres')) return 'BLT-CAMAROTE';
+        return 'BLT-Geral';
+    }
+
+    // Detectar se utilizador está logado pelo accId
+    const utilizadorLogado = (accId && accId !== 'null' && accId.length > 0);
+
+    // Quando a página carrega, mostrar bloco correto e preencher nome se disponível
+    document.addEventListener('DOMContentLoaded', function() {
+        if (utilizadorLogado) {
+            var blocoAnonimo = document.getElementById('blocoAnonimo');
+            var blocoConta   = document.getElementById('blocoConta');
+            var nomeConta    = document.getElementById('nomeContaLogada');
+            if (blocoAnonimo) blocoAnonimo.style.display = 'none';
+            if (blocoConta)   blocoConta.style.display   = 'block';
+            if (nomeConta)    nomeConta.innerText         = 'A carregar…';
+
+            // Buscar o nome real da conta via RemoteAction
+            BilheteiraController.getNomeAccount(accId, function(result, event) {
+                if (event.status && result) {
+                    if (nomeConta) nomeConta.innerText = result;
+                } else {
+                    if (nomeConta) nomeConta.innerText = 'Utilizador registado';
+                }
+            }, { escape: false });
         }
+    });
 
-        function removeRow(id) { document.getElementById('row-' + id).remove(); }
-        
-        function iniciarVenda(evtId, accId) {
-    Visualforce.remoting.Manager.invokeAction(
-        '{!$RemoteAction.BilheteiraController.iniciarCompra}',
-        evtId, accId,
-        function(result, event) {
-            if (event.status && !result.startsWith('ERRO:')) {
-                // SUCESSO: O resultado é um ID real (ex: 801...)
-                window.location.href = '/apex/EscolherLugar?id=' + result;
+    const TEMAS = {
+        'MBWay':      {cls:'t-mbway', logo:'MB <span>WAY</span>',     sub:'COMPROVATIVO DIGITAL',    btn:'VALIDAR PAGAMENTO', btnColor:'#e30613'},
+        'Multibanco': {cls:'t-mb',    logo:'MULTI<span>BANCO</span>', sub:'REFERÊNCIA DE PAGAMENTO', btn:'GERAR REFERÊNCIA',  btnColor:'#005ea6'},
+        'Cartão':     {cls:'t-card',  logo:'globa<span>z</span>',      sub:'PAGAMENTO POR CARTÃO',    btn:'VALIDAR PAGAMENTO', btnColor:'#16a34a'},
+    };
+
+    function aplicarTema(m){
+        document.body.classList.remove('t-mbway','t-mb','t-card');
+        const t = TEMAS[m]; if(!t) return;
+        document.body.classList.add(t.cls);
+        document.getElementById('logo-text').innerHTML     = t.logo;
+        document.getElementById('subtitle-text').innerText = t.sub;
+        document.getElementById('btnFinal').innerText      = t.btn;
+    }
+
+    function selectMetodo(m, el){
+        metodoAtual = m;
+        document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+        aplicarTema(m);
+    }
+
+    function makeForumSeat(group, x, y, w, h, fila, lugar, zona, ocupado){
+    totalSeats++;
+
+    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
+
+    const seat = makeSvgEl('rect', {
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+        rx: 2,
+        ry: 2
+    });
+
+    let fill = '#cccccc';
+    if(zona === 'plateia_verde') fill = '#72c53d';
+    if(zona === 'plateia_azul') fill = '#0ea5a8';
+    if(zona === 'camarote') fill = '#b06ac9';
+    if(zona === 'fila_frontal') fill = '#c7d72d';
+
+    seat.setAttribute('fill', fill);
+    seat.setAttribute('stroke', 'rgba(0,0,0,.18)');
+    seat.setAttribute('stroke-width', '0.6');
+    seat.dataset.k = k;
+
+    if (ocupado) {
+        seat.setAttribute('opacity', '0.28');
+        seat.style.cursor = 'not-allowed';
+    } else {
+        seat.style.cursor = 'pointer';
+        seat.onclick = function(){
+            const idx = selecionados.findIndex(s => s.k === k);
+            if(idx > -1){
+                selecionados.splice(idx, 1);
+                seat.setAttribute('stroke', 'rgba(0,0,0,.18)');
+                seat.setAttribute('stroke-width', '0.6');
             } else {
-                // FALHA: Mostra o erro em vez de tentar abrir a página
-                alert('Não foi possível criar a encomenda: ' + result);
-                console.error('Erro detalhado:', result);
+                const prefixedFila = getPrefixedFila(fila, zona);
+                const tipo = getTipoBilhete(zona);
+                selecionados.push({
+                    k: k,
+                    fila: prefixedFila,
+                    lugar: lugar,
+                    stand: zona,
+                    tipo: tipo
+                });
+                seat.setAttribute('stroke', '#fbbf24');
+                seat.setAttribute('stroke-width', '2');
+            }
+
+            document.getElementById('count').innerText  = selecionados.length;
+            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+            document.getElementById('msSel').innerText  = selecionados.length;
+            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+        };
+    }
+
+    group.appendChild(seat);
+    }
+
+    function buildForumQuadBlock(g, bloco, ocupadosSet, seatW, seatH){
+        const path = makeSvgEl('polygon', {
+            points: [
+                bloco.x + ',' + bloco.y,
+                (bloco.x + bloco.w) + ',' + (bloco.y + 12),
+                (bloco.x + bloco.w - bloco.skew) + ',' + (bloco.y + bloco.h),
+                (bloco.x - bloco.skew) + ',' + (bloco.y + bloco.h - 10)
+            ].join(' '),
+            fill: bloco.zona === 'plateia_verde' ? '#72c53d' : '#0ea5a8',
+            stroke: 'none'
+        });
+        g.appendChild(path);
+
+        const innerPaddingX = 18;
+        const innerPaddingY = 18;
+        const cols = bloco.colunas;
+        const rows = bloco.filas.length;
+        const gapX = Math.max(3, (bloco.w - (innerPaddingX * 2) - (cols * seatW)) / Math.max(1, cols - 1));
+        const gapY = Math.max(4, (bloco.h - (innerPaddingY * 2) - (rows * seatH)) / Math.max(1, rows - 1));
+
+        for(let r = 0; r < rows; r++){
+            const fila = bloco.filas[r];
+            for(let c = 0; c < cols; c++){
+                const lugar = c + 1;
+                const ocupado = ocupadosSet.has(fila + '-' + lugar);
+
+                makeForumSeat(
+                    g,
+                    bloco.x + innerPaddingX + (c * (seatW + gapX)),
+                    bloco.y + innerPaddingY + (r * (seatH + gapY)),
+                    seatW,
+                    seatH,
+                    fila,
+                    lugar,
+                    bloco.zona,
+                    ocupado
+                );
             }
         }
-    );
-}
-        
-        function finalizar() {
-            const rows = document.querySelectorAll('.bilhete-row');
-            let dados = [];
-            rows.forEach(r => {
-                let f = r.querySelector('input[type="text"]').value;
-                let l = r.querySelector('input[type="number"]').value;
-                if(f && l) dados.push({ fila: f, lugar: parseInt(l) });
-            });
+    }
 
-            if(dados.length === 0) { alert('Escolha pelo menos um lugar!'); return; }
+    function buildForumRowBlock(g, bloco, ocupadosSet, seatW, seatH){
+        const fila = bloco.fila || 'AK';
 
-            Visualforce.remoting.Manager.invokeAction(
-                '{!$RemoteAction.BilheteiraController.finalizarCompra}',
-                '{!Order.Id}', JSON.stringify(dados),
-                function(result, event) {
-                    if (result === 'OK') {
-                        document.getElementById('form-area').style.display = 'none';
-                        document.getElementById('success-area').style.display = 'block';
-                    } else {
-                        alert(result);
-                    }
-                }
+        for(let i = 0; i < bloco.lugares.length; i++){
+            const lugar = bloco.lugares[i];
+            const ocupado = ocupadosSet.has(fila + '-' + lugar);
+
+            makeForumSeat(
+                g,
+                bloco.x + (i * (seatW + 6)),
+                bloco.y,
+                seatW,
+                seatH,
+                fila,
+                lugar,
+                bloco.zona,
+                ocupado
             );
+
+            const txt = makeSvgEl('text', {
+                x: bloco.x + (i * (seatW + 6)) + (seatW / 2),
+                y: bloco.y + seatH + 12,
+                'text-anchor': 'middle',
+                'font-size': '9',
+                fill: '#111'
+            });
+            txt.textContent = lugar;
+            g.appendChild(txt);
         }
+    }
+
+    function buildForumBoxBlock(g, bloco, ocupadosSet, seatW, seatH){
+        const box = makeSvgEl('rect', {
+            x: bloco.x,
+            y: bloco.y,
+            width: 36,
+            height: 68,
+            rx: 2,
+            fill: '#b06ac9'
+        });
+        g.appendChild(box);
+
+        for(let r = 0; r < bloco.rows; r++){
+            const fila = bloco.filas[r];
+            for(let c = 0; c < bloco.cols; c++){
+                const lugar = c + 1;
+                const ocupado = ocupadosSet.has(fila + '-' + lugar);
+
+                makeForumSeat(
+                    g,
+                    bloco.x + 6 + (c * (seatW + 4)),
+                    bloco.y + 6 + (r * (seatH + 3)),
+                    seatW,
+                    seatH,
+                    fila,
+                    lugar,
+                    bloco.zona,
+                    ocupado
+                );
+            }
+        }
+    }
+
+    function construirMapaForumBraga(mapa, ocupados){
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+        totalSeats = 0;
+
+        const arena = document.querySelector('.arena');
+        arena.innerHTML = `
+            <div style="display:flex;justify-content:center;margin-bottom:10px;">
+                <div style="background:#bfc3c7;color:#fff;font-weight:800;font-size:24px;padding:10px 34px;border-radius:2px;">
+                    ${mapa.palco || 'PALCO'}
+                </div>
+            </div>
+            <svg id="forum-braga-svg" viewBox="0 0 620 820" style="width:100%;height:auto;display:block;background:#efefef;border-radius:20px;"></svg>
+        `;
+
+        const svg = document.getElementById('forum-braga-svg');
+        const g = makeSvgEl('g', {});
+
+        mapa.blocos.forEach(bloco => {
+            if (bloco.shape === 'quad') {
+                buildForumQuadBlock(g, bloco, oc, mapa.seat_w, mapa.seat_h);
+            } else if (bloco.shape === 'row') {
+                buildForumRowBlock(g, bloco, oc, mapa.seat_w, mapa.seat_h);
+            } else if (bloco.shape === 'box') {
+                buildForumBoxBlock(g, bloco, oc, 9, 8);
+            }
+        });
+
+        svg.appendChild(g);
+
+        document.getElementById('msTotal').innerText = totalSeats;
+        document.getElementById('msDisp').innerText  = totalSeats - ocupadosCount;
+
+        const legEl = document.querySelector('.map-legend');
+        if (legEl) {
+            legEl.innerHTML = `
+                <div class="leg"><div class="ldot" style="background:#72c53d"></div>Plateia Verde</div>
+                <div class="leg"><div class="ldot" style="background:#0ea5a8"></div>Plateia Azul</div>
+                <div class="leg"><div class="ldot" style="background:#b06ac9"></div>Camarotes</div>
+                <div class="leg"><div class="ldot" style="background:#c7d72d"></div>Fila Frontal</div>
+                <div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>
+                <div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>
+            `;
+        }
+    }
+
+    // ── MAPA SBA ──────────────────────────────────────────────
+
+    function makeSeatEl(row, num, zone, ocupado){
+        totalSeats++;
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:1px;';
+        const sn = document.createElement('div');
+        sn.style.cssText = 'font-size:6px;color:#bbb;line-height:1;text-align:center;height:7px;font-family:Inter,sans-serif;';
+        sn.textContent = num;
+        const d = document.createElement('div');
+        d.className = 'seat ' + zone + (ocupado ? ' ocupado' : '');
+        const k = getPrefixedFila(row, zone) + '-' + num + '-' + zone;
+        d.dataset.k = k;
+        d.title = 'Fila ' + row + ' · Lugar ' + num;
+        if(!ocupado){
+            d.onclick = () => {
+                const idx = selecionados.findIndex(s => s.k === k);
+                const prefixedFila = getPrefixedFila(row, zone);
+                if(idx > -1){
+                    selecionados.splice(idx,1);
+                    d.classList.remove('selecionado');
+                } else {
+                    const tipo = getTipoBilhete(zone);
+                    selecionados.push({k, fila:prefixedFila, lugar:num, stand:zone, tipo: tipo});
+                    d.classList.add('selecionado');
+                }
+                document.getElementById('count').innerText  = selecionados.length;
+                document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+                document.getElementById('msSel').innerText  = selecionados.length;
+                document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+            };
+        }
+        wrap.appendChild(sn);
+        wrap.appendChild(d);
+        return wrap;
+    }
+
+    function buildFrontRow(parent, row, ocupadosSet){
+        const line = document.createElement('div');
+        line.className = 'row-line';
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
+        lbl.textContent = row;
+        line.appendChild(lbl);
+        const bg = document.createElement('div');
+        bg.style.cssText = 'display:flex;align-items:flex-end;';
+        FRONT_BLOCKS.forEach(item => {
+            if(item === 'sm'){ const a=document.createElement('div'); a.style.width='12px'; a.style.flexShrink='0'; bg.appendChild(a); }
+            else if(item === 'lg'){ const a=document.createElement('div'); a.style.width='28px'; a.style.flexShrink='0'; bg.appendChild(a); }
+            else {
+                const blk = document.createElement('div');
+                blk.style.cssText = 'display:flex;gap:3px;';
+                for(let i=0; i<item.cols; i++){
+                    const num = item.start + i;
+                    const oc  = ocupadosSet.has(row + '-' + num);
+                    blk.appendChild(makeSeatEl(row, num, item.z, oc));
+                }
+                bg.appendChild(blk);
+            }
+        });
+        line.appendChild(bg);
+        parent.appendChild(line);
+    }
+
+    function buildBackRow(parent, row, ocupadosSet){
+        const line = document.createElement('div');
+        line.className = 'row-line';
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'width:16px;font-size:8px;font-weight:600;color:#bbb;text-align:right;padding-right:5px;flex-shrink:0;padding-bottom:2px;';
+        lbl.textContent = row;
+        line.appendChild(lbl);
+        const blk = document.createElement('div');
+        blk.style.cssText = 'display:flex;gap:3px;';
+        // FIX 3 — usa COLS_TRAS e ZONA_TRAS do JSON em vez de hardcoded
+        for(let n=1; n<=COLS_TRAS; n++){
+            const oc = ocupadosSet.has(row + '-' + n);
+            blk.appendChild(makeSeatEl(row, n, ZONA_TRAS, oc));
+        }
+        line.appendChild(blk);
+        parent.appendChild(line);
+    }
+
+    function construirMapa(ocupados){
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+        const frente = document.getElementById('mapa-frente');
+        const tras   = document.getElementById('mapa-tras');
+        ROWS_FRENTE.forEach(r => buildFrontRow(frente, r, oc));
+        ROWS_TRAS.forEach((r, ri) => {
+            if(ri > 0 && ri % 5 === 0){
+                const sp = document.createElement('div'); sp.style.height='10px'; tras.appendChild(sp);
+            }
+            buildBackRow(tras, r, oc);
+        });
+        document.getElementById('msTotal').innerText = totalSeats;
+        document.getElementById('msDisp').innerText  = totalSeats - ocupadosCount;
+    }
+
+    // ── MAPA AUTÓDROMO ────────────────────────────────────────
+
+    function construirMapaAutodromo(stands, ocupados){
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+
+        // Esconde a estrutura SBA e mostra o SVG da pista
+        document.querySelector('.arena').innerHTML = `
+        <div style="font-size:11px;color:#999;text-align:center;margin-bottom:8px;">Clica num stand para ver os lugares</div>
+        <svg id="track-svg" width="100%" viewBox="0 0 680 360" style="display:block;">
+          <path d="M 60,310 L 580,310 Q 630,310 630,265 Q 630,235 600,230 L 530,228 Q 510,228 510,210 Q 510,192 530,190 L 600,188 Q 640,185 640,150 Q 640,110 600,108 L 490,108 Q 460,108 445,128 L 420,158 Q 405,175 385,165 L 355,148 Q 335,138 335,118 Q 335,95 355,85 L 415,60 Q 440,48 440,28 Q 440,10 415,8 L 310,8 Q 285,8 270,25 L 240,58 Q 225,75 200,75 L 155,75 Q 120,75 105,100 Q 88,128 105,155 L 135,190 Q 148,208 135,225 L 105,258 Q 88,278 95,305 Q 98,310 110,312" fill="none" stroke="#d1d5db" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 60,310 L 580,310 Q 630,310 630,265 Q 630,235 600,230 L 530,228 Q 510,228 510,210 Q 510,192 530,190 L 600,188 Q 640,185 640,150 Q 640,110 600,108 L 490,108 Q 460,108 445,128 L 420,158 Q 405,175 385,165 L 355,148 Q 335,138 335,118 Q 335,95 355,85 L 415,60 Q 440,48 440,28 Q 440,10 415,8 L 310,8 Q 285,8 270,25 L 240,58 Q 225,75 200,75 L 155,75 Q 120,75 105,100 Q 88,128 105,155 L 135,190 Q 148,208 135,225 L 105,258 Q 88,278 95,305 Q 98,310 110,312" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 60,310 L 580,310 Q 630,310 630,265 Q 630,235 600,230 L 530,228 Q 510,228 510,210 Q 510,192 530,190 L 600,188 Q 640,185 640,150 Q 640,110 600,108 L 490,108 Q 460,108 445,128 L 420,158 Q 405,175 385,165 L 355,148 Q 335,138 335,118 Q 335,95 355,85 L 415,60 Q 440,48 440,28 Q 440,10 415,8 L 310,8 Q 285,8 270,25 L 240,58 Q 225,75 200,75 L 155,75 Q 120,75 105,100 Q 88,128 105,155 L 135,190 Q 148,208 135,225 L 105,258 Q 88,278 95,305 Q 98,310 110,312" fill="none" stroke="#9ca3af" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="200" y1="326" x2="500" y2="326" stroke="#9ca3af" stroke-width="6"/>
+          <rect x="388" y="302" width="5" height="30" fill="#111827"/>
+          ${gerarStandsSVG(stands, oc)}
+        </svg>
+        <div id="stand-seats-panel" style="display:none;margin-top:12px;border-top:1px solid #e5e7eb;padding-top:12px;"></div>`;
+
+        // Calcula total de lugares
+        let total = 0;
+        stands.forEach(s => { total += s.filas.length * s.colunas; });
+        document.getElementById('msTotal').innerText = total;
+        document.getElementById('msDisp').innerText  = total - ocupadosCount;
+        totalSeats = total;
+    }
+
+    const STAND_POSITIONS = {
+        'samsung':    {x:218, y:18,  w:72,  h:14, vertical:false},
+        'portimao':   {x:328, y:36,  w:82,  h:14, vertical:false},
+        'standing':   {x:452, y:32,  w:80,  h:14, vertical:false},
+        'sagres-top': {x:648, y:100, w:13,  h:68, vertical:true},
+        'solverde':   {x:648, y:180, w:13,  h:60, vertical:true},
+        'sagres-bot': {x:648, y:252, w:13,  h:60, vertical:true},
+        'lagos':      {x:60,  y:118, w:13,  h:58, vertical:true, flip:true},
+        'meo':        {x:60,  y:200, w:13,  h:72, vertical:true, flip:true},
+        'millennium': {x:170, y:340, w:190, h:14, vertical:false},
+    };
+
+    function gerarStandsSVG(stands, oc){
+        return stands.map(s => {
+            const p = STAND_POSITIONS[s.id];
+            if(!p) return '';
+            const ocupadosStand = [...oc].filter(k => k.startsWith(s.id+':')).length;
+            const total = s.filas.length * s.colunas;
+            const cx = p.x + p.w/2;
+            const cy = p.y + p.h/2;
+            const labelRotate = p.vertical ? (p.flip ? `rotate(-90,${cx-14},${cy})` : `rotate(90,${cx+14},${cy})`) : '';
+            const labelX = p.vertical ? (p.flip ? cx-14 : cx+14) : cx;
+            const labelY = p.vertical ? cy : cy;
+            const shortLabel = s.label.replace('Stand ','').replace(' Area','');
+            return `
+            <g style="cursor:pointer;" onclick="abrirStand('${s.id}')">
+              <rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" fill="${s.cor}" fill-opacity="0.9" stroke-width="0.5"/>
+              <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="central" transform="${labelRotate}" style="font-size:7px;fill:white;font-weight:700;pointer-events:none;">${shortLabel}</text>
+            </g>`;
+        }).join('');
+    }
+
+    let standAtual = null;
+
+    function abrirStand(standId){
+        standAtual = standId;
+        const stand = STANDS_AA.find(s => s.id === standId);
+        if(!stand) return;
+
+        const panel = document.getElementById('stand-seats-panel');
+        panel.style.display = 'block';
+
+        let html = `<div style="font-size:13px;font-weight:700;color:${stand.cor};margin-bottom:10px;">${stand.label}</div>`;
+
+        stand.filas.forEach(fila => {
+            html += `<div style="font-size:10px;color:#999;margin:6px 0 3px;">Fila ${fila}</div><div style="display:flex;gap:3px;flex-wrap:wrap;">`;
+            for(let n=1; n<=stand.colunas; n++){
+                const k = standId + ':' + fila + '-' + n;
+                const isOc = ocupadosGlobal.has(fila + '-' + n + '-' + standId);
+                const isSel = selecionados.findIndex(s => s.k === k) > -1;
+                const bg = isSel ? stand.cor : isOc ? '#e5e7eb' : '#fff';
+                const color = isSel ? '#fff' : isOc ? '#bbb' : '#666';
+                const cursor = isOc ? 'not-allowed' : 'pointer';
+                const opacity = isOc ? '0.3' : '1';
+                html += `<div onclick="${isOc ? '' : `toggleStandSeat('${standId}','${fila}',${n},'${stand.cor}')`}"
+                    style="width:20px;height:18px;border-radius:3px;border:1px solid #e2e2e7;
+                    background:${bg};color:${color};cursor:${cursor};opacity:${opacity};
+                    display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500;">
+                    ${n}</div>`;
+            }
+            html += '</div>';
+        });
+
+        panel.innerHTML = html;
+        updateStatsAA();
+    }
+
+    function makeSvgEl(tag, attrs){
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for(const k in attrs){
+        el.setAttribute(k, attrs[k]);
+    }
+    return el;
+}
+
+function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
+    totalSeats++;
+    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
+    const ocupado = ocupadosSet.has(k);
+
+    const seat = makeSvgEl('rect', {
+        x: x, y: y, width: w, height: h, rx: 1.5, ry: 1.5,
+        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
+    });
+
+    seat.dataset.k = k;
+    seat.dataset.fila = fila;
+    seat.dataset.lugar = lugar;
+    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
+
+    if(!ocupado){
+        seat.onclick = function(){
+            const idx = selecionados.findIndex(s => s.k === k);
+            if(idx > -1){
+                selecionados.splice(idx,1);
+                seat.classList.remove('selecionado');
+            } else {
+                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
+                seat.classList.add('selecionado');
+            }
+            document.getElementById('count').innerText  = selecionados.length;
+            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+            document.getElementById('msSel').innerText  = selecionados.length;
+            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+        };
+    }
+
+    group.appendChild(seat);
+}
+
+function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona, ocupadosSet){
+    totalSeats++;
+    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
+    const ocupado = ocupadosSet.has(k);
+
+    const rad = angleDeg * Math.PI / 180;
+    const x = cx + Math.cos(rad) * radius - w / 2;
+    const y = cy + Math.sin(rad) * radius - h / 2;
+
+    const seat = makeSvgEl('rect', {
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+        rx: 1.5,
+        ry: 1.5,
+        transform: 'rotate(' + (angleDeg + 90) + ' ' + (x + w/2) + ' ' + (y + h/2) + ')',
+        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
+    });
+
+    seat.dataset.k = k;
+    seat.dataset.fila = fila;
+    seat.dataset.lugar = lugar;
+    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
+
+    if(!ocupado){
+        seat.onclick = function(){
+            const idx = selecionados.findIndex(s => s.k === k);
+            if(idx > -1){
+                selecionados.splice(idx,1);
+                seat.classList.remove('selecionado');
+            } else {
+                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
+                seat.classList.add('selecionado');
+            }
+            document.getElementById('count').innerText  = selecionados.length;
+            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+            document.getElementById('msSel').innerText  = selecionados.length;
+            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
+        };
+    }
+
+    group.appendChild(seat);
+}
+
+        function construirMapaMeoArena(mapa, ocupados){
+            const NS2 = 'http://www.w3.org/2000/svg';
+            const COLORS2 = { topo:'#fb923c', ring:'#38bdf8', plateia:'#34d399', lat:'#c084fc' };
+            const oc = new Set(ocupados);
+            ocupadosCount = oc.size;
+            totalSeats = 0;
+
+            const arena = document.querySelector('.arena');
+            arena.innerHTML = '';
+            arena.style.cssText = 'background:none;border:none;padding:0;';
+
+            // Build the SVG arena
+            const svgWrap = document.createElement('div');
+            svgWrap.style.cssText = 'width:100%;max-width:860px;margin:0 auto;';
+
+            const svg = document.createElementNS(NS2,'svg');
+            svg.setAttribute('width','100%');
+            svg.setAttribute('viewBox','0 0 680 780');
+            svg.setAttribute('id','meoArenaSvg');
+            svg.style.display='block';
+
+            // Arena shell
+            const shell1 = document.createElementNS(NS2,'ellipse');
+            shell1.setAttribute('cx','340'); shell1.setAttribute('cy','370');
+            shell1.setAttribute('rx','303'); shell1.setAttribute('ry','353');
+            shell1.setAttribute('fill','#0d1424');
+            shell1.setAttribute('stroke','rgba(255,255,255,0.12)');
+            shell1.setAttribute('stroke-width','1.5');
+            svg.appendChild(shell1);
+
+            const shell2 = document.createElementNS(NS2,'ellipse');
+            shell2.setAttribute('cx','340'); shell2.setAttribute('cy','370');
+            shell2.setAttribute('rx','295'); shell2.setAttribute('ry','345');
+            shell2.setAttribute('fill','#111827');
+            svg.appendChild(shell2);
+
+            // Stage
+            const stageG = document.createElementNS(NS2,'g');
+            const stageRect = document.createElementNS(NS2,'rect');
+            stageRect.setAttribute('x','278'); stageRect.setAttribute('y','648');
+            stageRect.setAttribute('width','124'); stageRect.setAttribute('height','52');
+            stageRect.setAttribute('rx','8');
+            stageRect.setAttribute('fill','#1e293b');
+            stageRect.setAttribute('stroke','#60a5fa');
+            stageRect.setAttribute('stroke-width','1.5');
+            stageG.appendChild(stageRect);
+            const stageTxt = document.createElementNS(NS2,'text');
+            stageTxt.setAttribute('x','340'); stageTxt.setAttribute('y','679');
+            stageTxt.setAttribute('text-anchor','middle');
+            stageTxt.setAttribute('font-size','12');
+            stageTxt.setAttribute('font-weight','600');
+            stageTxt.setAttribute('fill','#93c5fd');
+            stageTxt.setAttribute('letter-spacing','3');
+            stageTxt.textContent = 'PALCO';
+            stageG.appendChild(stageTxt);
+            svg.appendChild(stageG);
+
+            // Seat groups
+            const gTopo    = document.createElementNS(NS2,'g'); gTopo.id    = 'g-topo-meo';
+            const gRing    = document.createElementNS(NS2,'g'); gRing.id    = 'g-ring-meo';
+            const gPlateia = document.createElementNS(NS2,'g'); gPlateia.id = 'g-plateia-meo';
+            const gLatL    = document.createElementNS(NS2,'g'); gLatL.id    = 'g-lat-l-meo';
+            const gLatR    = document.createElementNS(NS2,'g'); gLatR.id    = 'g-lat-r-meo';
+            svg.appendChild(gTopo);
+            svg.appendChild(gRing);
+            svg.appendChild(gPlateia);
+            svg.appendChild(gLatL);
+            svg.appendChild(gLatR);
+            svgWrap.appendChild(svg);
+            arena.appendChild(svgWrap);
+
+            function addMeoSeat(parent, cx, cy, w, h, zone, key, angleDeg){
+                totalSeats++;
+                const isOc = oc.has(key);
+                if(isOc) ocupadosCount = oc.size; // already counted
+
+                const r2 = document.createElementNS(NS2,'rect');
+                r2.setAttribute('x', cx - w/2);
+                r2.setAttribute('y', cy - h/2);
+                r2.setAttribute('width', w);
+                r2.setAttribute('height', h);
+                r2.setAttribute('rx', 1.5);
+
+                if(isOc){
+                    r2.setAttribute('fill','#ff3b7f');
+                    r2.setAttribute('opacity','0.35');
+                    r2.style.cursor='not-allowed';
+                } else {
+                    r2.setAttribute('fill', COLORS2[zone]);
+                    r2.setAttribute('stroke','rgba(0,0,0,0.3)');
+                    r2.setAttribute('stroke-width','0.4');
+                    r2.style.cursor='pointer';
+                    r2.style.transition='opacity 0.15s';
+                    r2.onmouseenter = function(){ r2.setAttribute('opacity','0.75'); };
+                    r2.onmouseleave = function(){ if(!selecionados.find(s=>s.k===key)) r2.setAttribute('opacity','1'); };
+                    r2.onclick = function(){
+                        const idx = selecionados.findIndex(s => s.k === key);
+                        const tipo = getTipoBilhete(zone);
+                        if(idx > -1){
+                            selecionados.splice(idx,1);
+                            r2.setAttribute('fill', COLORS2[zone]);
+                            r2.setAttribute('stroke','rgba(0,0,0,0.3)');
+                            r2.setAttribute('stroke-width','0.4');
+                            r2.setAttribute('opacity','1');
+                        } else {
+                            selecionados.push({k:key, fila:zone+'-seat', lugar:key, stand:zone, tipo:tipo});
+                            r2.setAttribute('fill','#fbbf24');
+                            r2.setAttribute('stroke','#fff');
+                            r2.setAttribute('stroke-width','1.5');
+                            r2.setAttribute('opacity','1');
+                        }
+                        document.getElementById('count').innerText  = selecionados.length;
+                        document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+                        document.getElementById('msSel').innerText  = selecionados.length;
+                        document.getElementById('msDisp').innerText = totalSeats - oc.size - selecionados.length;
+                    };
+                }
+
+                if(angleDeg && angleDeg !== 0){
+                    r2.setAttribute('transform','rotate('+angleDeg+' '+cx+' '+cy+')');
+                }
+                r2.dataset.k = key;
+                parent.appendChild(r2);
+            }
+
+            // ── TOPO ───────────────────────────────────────
+            (function(){
+                const SW=8, SH=6, GX=2, GY=4;
+                const filas = [
+                    {fila:'A', cols:20, y:80},
+                    {fila:'B', cols:24, y:80+SH+GY},
+                    {fila:'C', cols:28, y:80+2*(SH+GY)},
+                    {fila:'D', cols:30, y:80+3*(SH+GY)},
+                    {fila:'E', cols:32, y:80+4*(SH+GY)},
+                ];
+                filas.forEach(function(f){
+                    const totalW = f.cols*(SW+GX) - GX;
+                    const startX = 340 - totalW/2;
+                    for(let c=0; c<f.cols; c++){
+                        addMeoSeat(gTopo, startX+c*(SW+GX)+SW/2, f.y+SH/2, SW, SH, 'topo', 'meo-topo-'+f.fila+'-'+(c+1), 0);
+                    }
+                });
+            })();
+
+            // ── ANEL / RING ────────────────────────────────
+            (function(){
+                const CX=340, CY=370;
+                const SW=7, SH=13;
+                const rings2 = [
+                    {R:160, fila:'R1'},
+                    {R:175, fila:'R2'},
+                    {R:190, fila:'R3'},
+                ];
+                rings2.forEach(function(ring){
+                    const startDeg=150, endDeg=390;
+                    const nSeats = Math.round((endDeg-startDeg)/360 * 2*Math.PI*ring.R / 14);
+                    const step = (endDeg-startDeg)/nSeats;
+                    let idx=0;
+                    for(let i=0; i<=nSeats; i++){
+                        const deg = startDeg + i*step;
+                        const norm = ((deg%360)+360)%360;
+                        if(norm>50  && norm<130) continue;
+                        if(norm>255 && norm<285) continue;
+                        const rad = deg*Math.PI/180;
+                        const x = CX + Math.cos(rad)*ring.R;
+                        const y = CY + Math.sin(rad)*ring.R;
+                        addMeoSeat(gRing, x, y, SW, SH, 'ring', 'meo-ring-'+ring.fila+'-'+(++idx), deg+90);
+                    }
+                });
+            })();
+
+            // ── PLATEIA CENTRAL ────────────────────────────
+            (function(){
+                const SW=9, SH=8, GX=2, GY=3;
+                const filas = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
+                const colsPerRow = [14,16,18,20,22,22,22,22,22,22,20,18,16,14];
+                filas.forEach(function(fila, ri){
+                    const cols = colsPerRow[ri];
+                    const totalW = cols*(SW+GX) - GX;
+                    const startX = 340 - totalW/2;
+                    const y = 318 + ri*(SH+GY) + SH/2;
+                    for(let c=0; c<cols; c++){
+                        addMeoSeat(gPlateia, startX+c*(SW+GX)+SW/2, y, SW, SH, 'plateia', 'meo-plateia-'+fila+'-'+(c+1), 0);
+                    }
+                });
+            })();
+
+            // ── LATERAL ESQUERDA ───────────────────────────
+            (function(){
+                const SW=8, SH=8, GX=4, GY=2;
+                const filas = ['A','B','C','D','E','F','G','H'];
+                const seatsPerFila = [10,12,14,15,16,16,15,13];
+                filas.forEach(function(fila, fi){
+                    const n = seatsPerFila[fi];
+                    const cx = 52 + fi*(SW+GX) + SW/2;
+                    const totalH = n*(SH+GY) - GY;
+                    const startY = 370 - totalH/2;
+                    for(let s=0; s<n; s++){
+                        addMeoSeat(gLatL, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-l-'+fila+'-'+(s+1), 0);
+                    }
+                });
+            })();
+
+            // ── LATERAL DIREITA ────────────────────────────
+            (function(){
+                const SW=8, SH=8, GX=4, GY=2;
+                const filas = ['A','B','C','D','E','F','G','H'];
+                const seatsPerFila = [10,12,14,15,16,16,15,13];
+                filas.forEach(function(fila, fi){
+                    const n = seatsPerFila[fi];
+                    const cx = 628 - fi*(SW+GX) - SW/2;
+                    const totalH = n*(SH+GY) - GY;
+                    const startY = 370 - totalH/2;
+                    for(let s=0; s<n; s++){
+                        addMeoSeat(gLatR, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-r-'+fila+'-'+(s+1), 0);
+                    }
+                });
+            })();
+
+            // Update legend
+            const legEl = document.querySelector('.map-legend');
+            if(legEl){
+                legEl.innerHTML = `
+                    <div class="leg"><div class="ldot" style="background:#38bdf8"></div>Anel</div>
+                    <div class="leg"><div class="ldot" style="background:#34d399"></div>Plateia Central</div>
+                    <div class="leg"><div class="ldot" style="background:#c084fc"></div>Laterais</div>
+                    <div class="leg"><div class="ldot" style="background:#fb923c"></div>Topo</div>
+                    <div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>
+                    <div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>
+                `;
+            }
+
+            document.getElementById('msTotal').innerText = totalSeats;
+            document.getElementById('msDisp').innerText  = totalSeats - oc.size;
+        }
+
+    let ocupadosGlobal = new Set();
+
+    function toggleStandSeat(standId, fila, num, cor){
+        const k = getPrefixedFila(fila, standId) + '-' + num + '-' + standId;
+        const idx = selecionados.findIndex(s => s.k === k);
+        const prefixedFila = getPrefixedFila(fila, standId);
+        if(idx > -1){
+            selecionados.splice(idx,1);
+        } else {
+            const tipo = getTipoBilhete(standId);
+            selecionados.push({k, fila:prefixedFila, lugar:num, stand:standId, tipo: tipo});
+        }
+        document.getElementById('count').innerText  = selecionados.length;
+        document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+        updateStatsAA();
+        if(standAtual) abrirStand(standAtual);
+    }
+
+    function updateStatsAA(){
+        const total = parseInt(document.getElementById('msTotal').innerText) || 0;
+        document.getElementById('msSel').innerText  = selecionados.length;
+        document.getElementById('msDisp').innerText = total - ocupadosCount - selecionados.length;
+    }
+
+    // ── WINDOW.ONLOAD DINÂMICO ────────────────────────────────
+
+    window.onload = function(){
+        // CHAMADA NOVA: Buscar o preço real do Salesforce
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getPrecosBilhetes}', evtId,
+            function(result, event) {
+                if (event.status) {
+                    PRECO_MAP = result;
+                    PRECO = result['BLT-Geral'] || 25.00;
+                    console.log('Preços atualizados do Salesforce:', PRECO_MAP);
+                }
+            }
+        );
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getMapaConfig}', evtId,
+            function(mapaJson){
+                console.log('RAW:', mapaJson);
+                if(mapaJson.startsWith('ERRO')){ alert(mapaJson); return; }
+
+                const mapa = JSON.parse(decodeHtml(mapaJson));
+
+                TIPO_MAPA = mapa.tipo;
+
+                // Atualiza o label do palco
+                const stageBar = document.querySelector('.stage-bar');
+                if(stageBar) stageBar.innerText = mapa.palco;
+
+                if(mapa.tipo === 'sba'){
+                    // Super Bock Arena — grelha normal
+                    ROWS_FRENTE  = mapa.filas_frente;
+                    ROWS_TRAS    = mapa.filas_tras;
+                    FRONT_BLOCKS = [];
+                    mapa.blocos_frente.forEach((b, i) => {
+                        FRONT_BLOCKS.push({z: b.zona, start: b.inicio, cols: b.colunas});
+                        // adiciona aisles entre blocos
+                        if(i === 1 || i === 3) FRONT_BLOCKS.push('lg');
+                        else if(i < mapa.blocos_frente.length - 1) FRONT_BLOCKS.push('sm');
+                    });
+                    COLS_TRAS = mapa.colunas_tras;
+                    ZONA_TRAS = mapa.zona_tras;
+
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){ construirMapa(ocupados || []); }
+                    );
+
+                } else if(mapa.tipo === 'aa'){
+                    // Autódromo do Algarve — mapa de pista com stands
+                    STANDS_AA = mapa.stands;
+
+                    // Atualiza legenda dinamicamente
+                    const legEl = document.querySelector('.map-legend');
+                    if(legEl){
+                        legEl.innerHTML = mapa.stands.map(s =>
+                            `<div class="leg"><div class="ldot" style="background:${s.cor}"></div>${s.label.replace('Stand ','')}</div>`
+                        ).join('') + '<div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>';
+                    }
+
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){
+                            ocupadosGlobal = new Set(ocupados || []);
+                            construirMapaAutodromo(mapa.stands, ocupados || []);
+                        }
+                    );
+                }else if(mapa.tipo === 'meoarena'){
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){
+                            construirMapaMeoArena(mapa, ocupados || []);
+                        }
+                    );
+                }else if(mapa.tipo === 'teatro'){
+                    // Fórum Braga — mapa de teatro em grid
+                    STANDS_TEATRO = mapa.zonas;
+
+                    // Atualiza legenda dinamicamente
+                    const legEl = document.querySelector('.map-legend');
+                    if(legEl){
+                        const seen = new Set();
+                        legEl.innerHTML = mapa.zonas.map(z => {
+                            if(seen.has(z.cor)) return '';
+                            seen.add(z.cor);
+                            return `<div class="leg"><div class="ldot" style="background:${z.cor}"></div>${z.label}</div>`;
+                        }).join('') + '<div class="leg"><div class="ldot" style="background:#fbbf24;outline:1.5px solid #e5a000;outline-offset:1px;"></div>Selecionado</div>'
+                        + '<div class="leg"><div class="ldot" style="background:#ff3b7f;opacity:.35"></div>Ocupado</div>';
+                    }
+
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
+                        function(ocupados){
+                            ocupadosGlobal = new Set(ocupados || []);
+                            construirMapaTeatro(mapa.zonas, ocupados || []);
+                        }
+                    );
+                }
+            }
+        );
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getServicosExtras}', evtId,
+            function(result, event) {
+                if (event.status) {
+                    SERVICOS_EXTRA = result;
+                }
+            }
+        );
+    };
+
+    function renderExtras() {
+        const list = document.getElementById('extras-list');
+        if (!list) return;
+        if (SERVICOS_EXTRA.length === 0) {
+            list.innerHTML = '<div style="font-size:11px; color:rgba(255,255,255,0.4);">Nenhum serviço adicional disponível para este evento.</div>';
+            return;
+        }
+        list.innerHTML = SERVICOS_EXTRA.map(s => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:8px 12px; border-radius:8px;">
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-size:12px; font-weight:700; color:#fff;">${s.name}</span>
+                    <span style="font-size:11px; color:#5ea2ff;">+${s.price.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button onclick="changeExtraQty('${s.id}', -1)" style="width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#fff; cursor:pointer;">-</button>
+                    <span id="qty-${s.id}" style="font-size:12px; font-weight:700; min-width:15px; text-align:center; color:#fff;">${EXTRAS_SELECCIONADOS[s.id] || 0}</span>
+                    <button onclick="changeExtraQty('${s.id}', 1)" style="width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#fff; cursor:pointer;">+</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function changeExtraQty(pbeId, delta) {
+        const current = EXTRAS_SELECCIONADOS[pbeId] || 0;
+        const newVal = Math.max(0, current + delta);
+        if (newVal === 0) delete EXTRAS_SELECCIONADOS[pbeId];
+        else EXTRAS_SELECCIONADOS[pbeId] = newVal;
+        
+        const el = document.getElementById('qty-' + pbeId);
+        if (el) el.innerText = newVal;
+        atualizarTotalModal();
+    }
+
+    function calcularTotalComExtras() {
+        let baseTotal = 0;
+        selecionados.forEach(s => {
+            const p = PRECO_MAP[s.tipo] || PRECO_MAP['BLT-Geral'] || 25.00;
+            baseTotal += p;
+        });
+
+        let extrasTotal = 0;
+        SERVICOS_EXTRA.forEach(s => {
+            if (EXTRAS_SELECCIONADOS[s.id]) extrasTotal += EXTRAS_SELECCIONADOS[s.id] * s.price;
+        });
+        return baseTotal + extrasTotal;
+    }
+
+    function atualizarTotalModal() {
+        const finalTotal = calcularTotalComExtras();
+        document.getElementById('mTotal').innerText = finalTotal.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+    }
+
+    // ── STEPS E MODAL ─────────────────────────────────────────
+
+    function switchStep(from, to){
+        document.getElementById(from).classList.remove('active');
+        document.getElementById(to).classList.add('active');
+    }
+
+    function irParaStep2(){
+        if(selecionados.length === 0){ alert('Selecione pelo menos um lugar!'); return; }
+        switchStep('step1','step2');
+    }
+
+    function abrirModal(){
+        EXTRAS_SELECCIONADOS = {}; // Reset extras ao abrir modal
+        renderExtras();
+        
+        document.getElementById('modalChips').innerHTML = selecionados.map(s => {
+            const label = s.stand
+                ? `${s.stand.replace('-',' ')} · Fila ${s.fila} · Lugar ${s.lugar}`
+                : `Fila ${s.fila} · Lugar ${s.lugar}`;
+            return `<div class="chip"><div class="chip-dot"></div>${label}</div>`;
+        }).join('');
+        
+        document.getElementById('mQtd').innerText = selecionados.length;
+        
+        const totalBase = selecionados.reduce((acc, s) => acc + (PRECO_MAP[s.tipo] || PRECO_MAP['BLT-Geral'] || 25.0), 0);
+        const hasVarious = new Set(selecionados.map(s => s.tipo)).size > 1;
+
+        document.getElementById('mPrecoUnit').innerText = hasVarious ? 'Vários' : (totalBase/selecionados.length).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+        document.getElementById('mMetodo').innerText    = metodoAtual;
+        
+        atualizarTotalModal(); 
+
+        document.getElementById('btnModalPagar').style.background = TEMAS[metodoAtual].btnColor;
+        document.getElementById('modalDetalhes').classList.add('open');
+    }
+
+    function fecharModal(){
+        document.getElementById('modalDetalhes').classList.remove('open');
+    }
+
+    function confirmarECriar(){
+    const btn = document.getElementById('btnModalPagar');
+    btn.innerText = 'A processar...';
+    btn.disabled = true;
+
+    let nome  = '';
+    let email = '';
+
+    if (!utilizadorLogado) {
+        const nomeEl  = document.getElementById('checkoutNome');
+        const emailEl = document.getElementById('checkoutEmail');
+        nome  = nomeEl  ? nomeEl.value.trim()  : '';
+        email = emailEl ? emailEl.value.trim() : '';
+
+        if (!nome) {
+            alert('Introduza o nome.');
+            btn.innerText = 'Pagar Agora';
+            btn.disabled = false;
+            return;
+        }
+        if (!email) {
+            alert('Introduza o email.');
+            btn.innerText = 'Pagar Agora';
+            btn.disabled = false;
+            return;
+        }
+    }
+
+    Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.BilheteiraController.criarReserva}',
+        evtId,
+        accId || null,
+        metodoAtual,
+        nome,
+        email,
+        function(result, event){
+            btn.innerText = 'Pagar Agora';
+            btn.disabled = false;
+
+            console.log('criarReserva result:', result);
+            console.log('criarReserva event:', event);
+
+            if(!event.status){
+                alert('Erro de comunicação: ' + (event.message || 'sem detalhe'));
+                return;
+            }
+
+            if(result === 'CLIENTE_INVALIDO'){
+                fecharModal();
+                alert('Cliente inválido.');
+                return;
+            }
+
+            if(result === 'PAGAMENTO_RECUSADO'){
+                fecharModal();
+                alert('Pagamento recusado. Contacte o suporte para mais informações.');
+                return;
+            }
+
+            if(result && result.indexOf('ERRO:') === 0){
+                alert(result);
+                return;
+            }
+
+            orderIdAtiva = result;
+            fecharModal();
+            aplicarTema(metodoAtual);
+
+            const totalNum = calcularTotalComExtras();
+            const totalFmt = totalNum.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+            
+            document.getElementById('receipt-lugares').innerText = selecionados.map(s =>
+                s.stand ? `${s.stand} ${s.fila}${s.lugar}` : `${s.fila}${s.lugar}`
+            ).join(', ');
+            document.getElementById('receipt-metodo').innerText  = metodoAtual;
+            document.getElementById('total-display').innerText   = totalFmt;
+            document.getElementById('trans-id').innerText        = result;
+
+            if(metodoAtual === 'Multibanco'){
+                const ref = Math.floor(Math.random()*900000000+100000000).toString();
+                document.getElementById('mbRefNum').innerText = ref.slice(0,3)+' '+ref.slice(3,6)+' '+ref.slice(6);
+                document.getElementById('mbRefVal').innerText = totalFmt;
+                document.getElementById('mbRefBox').style.display = 'block';
+            } else {
+                document.getElementById('mbRefBox').style.display = 'none';
+            }
+
+            switchStep('step2','step3');
+                    },
+                    { escape: false }
+                );
+            }
+
+    function finalizarTudo(){
+        const btn = document.getElementById('btnFinal');
+        btn.innerText = 'A PROCESSAR…'; btn.disabled = true;
+
+        const payload = JSON.stringify(selecionados.map(s => ({
+            fila:  s.fila,
+            lugar: s.lugar,
+            stand: s.stand || null,
+            tipo:  s.tipo || 'BLT-Geral'
+        })));
+
+        const listExtras = [];
+        for (let pId in EXTRAS_SELECCIONADOS) {
+            listExtras.push({ pbeId: pId, qty: EXTRAS_SELECCIONADOS[pId] });
+        }
+        const jsonExtras = JSON.stringify(listExtras);
+
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.processarPagamentoMock}',
+            orderIdAtiva, evtId, payload, jsonExtras,
+            function(res, event){
+                btn.innerText = TEMAS[metodoAtual].btn; btn.disabled = false;
+                if(!event.status){ alert('Erro de comunicação.'); return; }
+                if(res === 'PAGAMENTO_RECUSADO'){
+                    alert('Pagamento recusado. Contacte o suporte para mais informações.');
+                    return;
+                }
+                if(res !== 'PAGAMENTO_OK'){ alert('Erro: ' + res); return; }
+
+                // Success
+                switchStep('step3','step-success');
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#2563eb', '#1d4ed8', '#fbbf24', '#ffffff']
+                });
+            },
+            {escape:false}
+        );
+    }
+//]]>
     </script>
 </apex:page>

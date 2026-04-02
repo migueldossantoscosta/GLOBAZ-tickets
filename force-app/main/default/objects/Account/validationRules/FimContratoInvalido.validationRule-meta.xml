@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FimContratoInvalido</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+  ContratoAtivo__c = TRUE,
+  NOT(ISBLANK(FimContrato__c)),
+  FimContrato__c &lt; TODAY()
+)</errorConditionFormula>
+    <errorMessage>O contrato está marcado como ativo mas a data de fim já passou. Atualiza a data ou desativa o contrato</errorMessage>
+</ValidationRule>

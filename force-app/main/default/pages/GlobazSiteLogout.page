@@ -1,0 +1,16 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false">
+    <html>
+
+    <head>
+        <title>Sair — Globaz Tickets</title>
+    </head>
+
+    <body>
+        <script>
+            localStorage.removeItem('globaz_uid');
+            window.location.href = '/globaztickets';
+        </script>
+    </body>
+
+    </html>
+</apex:page>

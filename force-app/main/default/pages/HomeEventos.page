@@ -1,0 +1,1513 @@
+<apex:page controller="SiteHomeController"
+           showHeader="false"
+           sidebar="false"
+           standardStylesheets="false"
+           docType="html-5.0"
+           applyHtmlTag="false"
+           applyBodyTag="false">
+
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Globaz Tickets — Homepage</title>
+  <script>
+      // Helpers de Cookie
+      function setCookie(name, value, days) {
+          var expires = "";
+          if (days) {
+              var date = new Date();
+              date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+              expires = "; expires=" + date.toUTCString();
+          }
+          document.cookie = name + "=" + (value || "") + expires + "; path=/; secure; samesite=strict";
+      }
+      function getCookie(name) {
+          var nameEQ = name + "=";
+          var ca = document.cookie.split(';');
+          for (var i = 0; i < ca.length; i++) {
+              var c = ca[i];
+              while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+              if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+          }
+          return null;
+      }
+      function eraseCookie(name) { setCookie(name, "", -1); }
+
+      // Guarda UID se vier na URL (cookie)
+      var urlParams = new URLSearchParams(window.location.search);
+      var uid = urlParams.get('uid');
+      if (uid) {
+          setCookie('globaz_uid', uid, 7);
+          window.history.replaceState({}, '', window.location.pathname);
+      }
+
+      // Funções globais (usam apenas cookies)
+      window.isLoggedInGlobaz = function() {
+          return !!getCookie('globaz_uid');
+      };
+      window.getUserAccountId = function() {
+          return getCookie('globaz_uid');
+      };
+  </script>
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-2: #091125;
+      --surface: rgba(255,255,255,0.06);
+      --surface-2: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.10);
+      --text: #f8fbff;
+      --muted: rgba(255,255,255,0.70);
+      --blue: #5ea2ff;
+      --blue-2: #2563eb;
+      --glow: 0 20px 60px rgba(37,99,235,0.25);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --shadow: 0 20px 50px rgba(0,0,0,0.28);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(50, 120, 255, 0.24), transparent 28%),
+        radial-gradient(circle at 100% 10%, rgba(168, 85, 247, 0.14), transparent 24%),
+        linear-gradient(180deg, #030611 0%, #081121 40%, #050816 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 4px 4px;
+      mix-blend-mode: soft-light;
+      z-index: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(18px);
+      background: rgba(7, 10, 18, 0.74);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .topbar-inner,
+    .hero,
+    .section,
+    .footer,
+    .search-wrap {
+      width: min(1440px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      gap: 24px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(94,162,255,0.95), rgba(37,99,235,0.80));
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      background: rgba(255,255,255,0.9);
+      border-radius: 999px;
+    }
+
+    .brand-mark::before { width: 24px; height: 5px; left: 10px; top: 13px; }
+    .brand-mark::after { width: 16px; height: 5px; left: 10px; top: 24px; }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .brand strong {
+      font-size: 20px;
+      letter-spacing: 0.8px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+      margin-top: 4px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 26px;
+      align-items: center;
+      color: rgba(255,255,255,0.84);
+      font-size: 14px;
+    }
+
+    .nav a { position: relative; }
+    .nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -7px;
+      width: 0;
+      height: 2px;
+      background: var(--blue);
+      transition: width .25s ease;
+    }
+    .nav a:hover::after { width: 100%; }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ghost-btn,
+    .primary-btn,
+    .chip-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      min-height: 46px;
+      padding: 0 18px;
+      font-weight: 800;
+      transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+
+    .ghost-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--blue), var(--blue-2));
+      box-shadow: var(--glow);
+    }
+
+    .ghost-btn:hover,
+    .primary-btn:hover,
+    .chip-btn:hover { transform: translateY(-2px); }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding-top: 28px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.55fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .hero-shell {
+      position: relative;
+      min-height: 850px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+      background: #111827;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity .9s ease, transform .9s ease;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(.55);
+      transform: scale(1.08);
+    }
+
+    .slide-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(3,6,17,0.96) 0%, rgba(3,6,17,0.74) 38%, rgba(3,6,17,0.18) 100%),
+        linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.35) 100%);
+    }
+
+    .hero-ribbon {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(8,17,37,0.78);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(16px);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+
+    .pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 0 0 rgba(59,130,246,0.6);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
+      70% { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    }
+
+    .slide-content {
+      position: relative;
+      z-index: 3;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 78px 68px;
+      max-width: 760px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(94,162,255,0.14);
+      border: 1px solid rgba(94,162,255,0.28);
+      color: #dcedff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .slide h1 {
+      font-size: clamp(40px, 5vw, 74px);
+      line-height: 0.96;
+      font-weight: 950;
+      max-width: 690px;
+      margin-bottom: 18px;
+    }
+
+    .slide p {
+      font-size: 16px;
+      line-height: 1.65;
+      max-width: 580px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 15px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      font-size: 14px;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .hero-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      align-items: center;
+      color: rgba(255,255,255,0.74);
+      font-size: 14px;
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 24px;
+      color: #fff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .dots {
+      position: absolute;
+      left: 68px;
+      bottom: 36px;
+      z-index: 5;
+      display: flex;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: all .25s ease;
+    }
+
+    .dot.active {
+      width: 34px;
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 18px;
+    }
+
+    .floating-card,
+    .mini-panel,
+    .glass-panel,
+    .newsletter,
+    .category-box,
+    .feature-card,
+    .event-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .floating-card {
+      padding: 22px;
+      min-height: 220px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .floating-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -30px -40px auto;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(94,162,255,0.24), transparent 68%);
+      pointer-events: none;
+    }
+
+    .floating-card small,
+    .panel-label,
+    .section-kicker {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.56);
+      margin-bottom: 12px;
+    }
+
+    .floating-card h3,
+    .newsletter h3,
+    .feature-card h3 {
+      font-size: 24px;
+      line-height: 1.12;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .floating-card p,
+    .newsletter p,
+    .feature-card p,
+    .section-text {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .mini-panel {
+      padding: 20px;
+    }
+
+    .live-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      gap: 16px;
+    }
+
+    .live-row:first-of-type { border-top: 0; }
+
+    .live-row strong {
+      font-size: 15px;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .live-row span {
+      font-size: 12px;
+      color: rgba(255,255,255,0.58);
+    }
+
+    .pill-status {
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(37,99,235,0.18);
+      border: 1px solid rgba(94,162,255,0.30);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      z-index: 5;
+      margin-top: 42px;
+    }
+
+    .search-box {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr auto;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 24px;
+      background: rgba(9,17,37,0.92);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 26px 70px rgba(0,0,0,0.38);
+      backdrop-filter: blur(18px);
+    }
+
+    .search-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-item label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.58);
+    }
+
+    .search-item input,
+    .search-item select {
+      height: 56px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      padding: 0 16px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .section {
+      position: relative;
+      z-index: 1;
+      padding: 84px 0 0;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: clamp(30px, 3vw, 44px);
+      line-height: 1;
+      font-weight: 950;
+      margin-bottom: 8px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip-btn {
+      min-height: 42px;
+      padding: 0 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.86);
+      font-size: 13px;
+    }
+
+    .chip-btn.active {
+      background: rgba(94,162,255,0.14);
+      border-color: rgba(94,162,255,0.30);
+      color: #fff;
+    }
+
+    .event-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 22px;
+    }
+
+    .event-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 460px;
+      transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease;
+    }
+
+    .event-card.large { grid-column: span 6; }
+    .event-card.medium { grid-column: span 3; }
+
+    .event-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(94,162,255,0.28);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.34);
+    }
+
+    .event-card .bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(.68);
+      transform: scale(1.03);
+      transition: transform .4s ease;
+    }
+
+    .event-card:hover .bg { transform: scale(1.08); }
+
+    .event-card .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.88) 100%);
+    }
+
+    .event-content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.10);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+
+    .tag.featured {
+      background: rgba(37,99,235,0.18);
+      border-color: rgba(94,162,255,0.32);
+      color: #dcecff;
+    }
+
+    .event-card h3 {
+      font-size: 30px;
+      line-height: 1.05;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .event-card.medium h3 { font-size: 24px; }
+
+    .event-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: rgba(255,255,255,0.76);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .event-link {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 0.9fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .glass-panel {
+      padding: 28px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .feature-card {
+      padding: 20px;
+      min-height: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::after {
+      content: "";
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      right: -40px;
+      bottom: -40px;
+      background: radial-gradient(circle, rgba(94,162,255,0.16), transparent 68%);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .stat-box {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 28px;
+      font-weight: 950;
+      margin-bottom: 6px;
+    }
+
+    .stat-box span {
+      font-size: 13px;
+      color: rgba(255,255,255,0.66);
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 18px;
+    }
+
+    .category-box {
+      min-height: 240px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s ease, border-color .25s ease;
+    }
+
+    .category-box:hover {
+      transform: translateY(-5px);
+      border-color: rgba(94,162,255,0.28);
+    }
+
+    .category-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      margin-bottom: 18px;
+      background: rgba(94,162,255,0.12);
+      border: 1px solid rgba(94,162,255,0.22);
+      box-shadow: var(--glow);
+    }
+
+    .category-box h3 {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .category-box p {
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .category-count {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ddebff;
+    }
+
+    .newsletter {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      padding: 32px;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .newsletter::before {
+      content: "";
+      position: absolute;
+      inset: auto -60px -60px auto;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(94,162,255,0.16), transparent 70%);
+      pointer-events: none;
+    }
+
+    .newsletter-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-top: 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .newsletter-form input {
+      height: 56px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      padding: 0 16px;
+      outline: none;
+    }
+
+    .art-stack {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .art-stack .poster {
+      aspect-ratio: 0.8;
+      border-radius: 20px;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: var(--shadow);
+    }
+
+    .footer {
+      padding: 80px 0 34px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.54);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1250px) {
+      .hero-grid,
+      .two-col,
+      .newsletter {
+        grid-template-columns: 1fr;
+      }
+      .search-box { grid-template-columns: 1fr 1fr; }
+      .event-card.large { grid-column: span 12; }
+      .event-card.medium { grid-column: span 6; }
+      .categories { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    @media (max-width: 900px) {
+      .nav { display: none; }
+      .topbar-inner { padding: 16px 0; }
+      .hero-shell { min-height: 600px; }
+      .slide-content { padding: 54px 30px; }
+      .dots { left: 30px; }
+      .search-wrap { margin-top: 20px; }
+      .search-box { grid-template-columns: 1fr; }
+      .event-card.medium { grid-column: span 12; }
+      .feature-grid,
+      .stats-grid,
+      .newsletter-form,
+      .art-stack { grid-template-columns: 1fr; }
+      .categories { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner,
+      .hero,
+      .section,
+      .footer,
+      .search-wrap { width: min(1440px, calc(100vw - 24px)); }
+      .brand strong { font-size: 18px; }
+      .hero-shell { min-height: 560px; border-radius: 22px; }
+      .slide-content { padding: 32px 20px; }
+      .hero-ribbon { top: 16px; right: 16px; }
+      .dots { left: 20px; bottom: 20px; }
+      .floating-card,
+      .mini-panel,
+      .glass-panel,
+      .newsletter,
+      .category-box,
+      .feature-card,
+      .event-content { padding-left: 18px; padding-right: 18px; }
+      .event-card { min-height: 400px; }
+    }
+
+    .event-card.is-hidden {
+      display: none !important;
+    }
+
+    .category-box {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-wrap">
+        <div class="brand-mark"></div>
+        <div class="brand">
+          <strong>GLOBAZ TICKETS</strong>
+          <span>premium ticketing experience</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#destaques">Destaques</a>
+        <a href="#eventos">Eventos</a>
+        <a href="#vantagens">Vantagens</a>
+        <a href="#categorias">Categorias</a>
+        <a href="#newsletter">Newsletter</a>
+      </nav>
+
+       <div class="nav-actions">
+          <a href="#eventos" class="ghost-btn">Agenda</a>
+
+          <a href="/apex/SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
+          <a href="/apex/SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
+
+          <a href="/GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;align-items:center;gap:8px;" onclick="event.preventDefault(); var uid = (function(){ try { var c = (function(name){ var n=name+'='; var parts=document.cookie.split(';'); for(var i=0;i<parts.length;i++){ var p=parts[i]; while(p.charAt(0)===' ') p=p.substring(1); if(p.indexOf(n)===0) return p.substring(n.length,p.length);} return null; })('globaz_uid'); if(c) return c; } catch(e) {} return null; })(); window.location.href = '/apex/GlobazSiteAccount' + (uid ? ('?uid=' + encodeURIComponent(uid)) : '');">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+              Conta
+          </a>
+          <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
+      </div>
+
+      <script>
+          // Toggle nav baseado no cookie
+          setTimeout(function() {
+              var uid = getCookie('globaz_uid');
+              document.getElementById('navLogin').style.display = uid ? 'none' : 'inline-flex';
+              document.getElementById('navRegister').style.display = uid ? 'none' : 'inline-flex';
+              document.getElementById('navAccount').style.display = uid ? 'inline-flex' : 'none';
+              document.getElementById('navLogout').style.display = uid ? 'inline-flex' : 'none';
+          }, 100);
+      </script>
+    </div>
+  </header>
+
+  <section class="hero" id="destaques">
+    <div class="hero-grid">
+      <div class="hero-shell">
+        <div class="hero-ribbon"><span class="pulse"></span> Em destaque agora</div>
+
+        <apex:outputPanel rendered="{!hasFeaturedEvents}">
+          <apex:repeat value="{!featuredEvents}" var="ev">
+            <div class="slide">
+              <div class="slide-bg"
+                   style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80', ev.URLImagem__c)}');">
+              </div>
+              <div class="slide-overlay"></div>
+
+              <div class="slide-content">
+                <div class="eyebrow">Evento premium</div>
+                <h1>{!ev.Name}</h1>
+
+                <div class="meta">
+                  <span class="meta-pill">{!TEXT(ev.DataEvento__c)}</span>
+                  <span class="meta-pill">{!ev.LocalizacaoEvento__c}</span>
+                  <span class="meta-pill">{!ev.CategoriaPrincipal__c}</span>
+                </div>
+
+                <p>
+                  Descobre os eventos em destaque da plataforma e entra logo numa homepage com visual premium e foco total na compra.
+                </p>
+
+                <div class="cta-row">
+                  <a href="EventoDetalhe?id={!ev.Id}" class="primary-btn">Comprar bilhetes</a>
+                  <a href="#eventos" class="ghost-btn">Ver conceito</a>
+                </div>
+
+                <div class="hero-bottom">
+                  <div class="hero-stat"><strong>Destaque</strong> evento selecionado</div>
+                  <div class="hero-stat"><strong>Hoje+</strong> agenda futura</div>
+                  <div class="hero-stat"><strong>Premium</strong> identidade visual</div>
+                </div>
+              </div>
+            </div>
+          </apex:repeat>
+        </apex:outputPanel>
+
+        <apex:outputPanel rendered="{!NOT(hasFeaturedEvents)}">
+          <div class="slide active">
+            <div class="slide-bg"
+                 style="background-image:url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80');">
+            </div>
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+              <div class="eyebrow">Sem destaques</div>
+              <h1>Brevemente novos eventos em destaque</h1>
+              <p>De momento ainda não existem eventos marcados como destaque.</p>
+            </div>
+          </div>
+        </apex:outputPanel>
+
+        <div class="dots" id="carouselDots"></div>
+      </div>
+
+      <div class="hero-side">
+        <div class="floating-card">
+          <small>Experiência</small>
+          <h3>Homepage desenhada para vender bilhetes</h3>
+          <p>Em vez de uma homepage normal, aqui a lógica é impacto visual, hierarquia forte, descoberta rápida e sensação de marca premium logo na entrada.</p>
+        </div>
+
+        <div class="mini-panel">
+          <div class="panel-label">A acontecer</div>
+
+          <apex:repeat value="{!nextEvents}" var="ev" rows="4">
+            <div class="live-row">
+              <div>
+                <strong>{!ev.Name}</strong>
+                <span>{!TEXT(ev.DataEvento__c)} · {!ev.LocalizacaoEvento__c}</span>
+              </div>
+              <div class="pill-status">
+                <apex:outputText value="{!IF(ev.Destaque__c, 'Destaque', 'Agenda')}" />
+              </div>
+            </div>
+          </apex:repeat>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="search-wrap">
+    <div class="search-box">
+      <div class="search-item">
+        <label>Pesquisar evento</label>
+        <input id="searchInput" type="text" placeholder="Nome do evento, artista ou cidade" />
+      </div>
+      <div class="search-item">
+        <label>Categoria</label>
+        <select id="searchCategory">
+          <option value="">Selecionar categoria</option>
+          <option value="Congressos">Congressos</option>
+          <option value="Conferências">Conferências</option>
+          <option value="Seminários">Seminários</option>
+          <option value="Workshops/Oficinas">Workshops/Oficinas</option>
+          <option value="Feiras">Feiras</option>
+          <option value="Festivais">Festivais</option>
+          <option value="Exposições/Mostras">Exposições/Mostras</option>
+          <option value="Festivais">Festivais</option>
+          <option value="Palestras">Palestras</option>
+          <option value="Simpósios">Simpósios</option>
+          <option value="Rodadas de Negócios">Rodadas de Negócios</option>
+          <option value="Lançamento de Produtos">Lançamento de Produtos</option>
+          <option value="Happy Hour/Coquetel">Happy Hour/Coquetel</option>
+          <option value="Casamentos/Batizados">Casamentos/Batizados</option>
+          <option value="Aniversários/Festas">Aniversários/Festas</option>
+          <option value="Concertos/Shows">Concertos/Shows</option>
+          <option value="Teatro/Performance">Teatro/Performance</option>
+          <option value="Eventos Desportivos">Eventos Desportivos</option>
+          <option value="Convenções">Convenções</option>
+          <option value="Formações/Treinamentos">Formações/Treinamentos</option>
+          <option value="Recriações Históricas/Romarias">Recriações Históricas/Romarias</option>
+        </select>
+      </div>
+      <div class="search-item">
+      <label>Localização</label>
+      <input id="searchLocation" type="text" placeholder="Ex: Braga, Lisboa, Porto..." />
+    </div>
+
+    <button type="button" class="primary-btn search-action" id="searchBtn">Pesquisar eventos</button>
+  </div>
+</section>
+
+  <section class="section" id="eventos">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Agenda em destaque</div>
+        <h2 class="section-title">Próximos eventos</h2>
+        <p class="section-text">Os eventos destacados aparecem logo primeiro e o layout mistura blocos grandes com cards mais compactos para a homepage não parecer repetitiva.</p>
+      </div>
+      <div class="chip-row" id="eventCategoryFilters">
+        <a href="javascript:void(0)" class="chip-btn active" data-category="">Todos</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="concert">Concertos</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="festival">Festivais</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="teatro">Teatro</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="desport">Desporto</a>
+      </div>
+    </div>
+
+    <apex:outputPanel rendered="{!hasNextEvents}">
+      <div id="noResultsMessage" class="glass-panel" style="display:none;margin-bottom:20px;">
+        <p class="section-text">Não foram encontrados eventos com esses filtros.</p>
+      </div>
+
+      <div class="event-grid" id="eventGrid">
+        <apex:repeat value="{!nextEvents}" var="ev">
+          <a class="event-card medium event-filter-card" href="EventoDetalhe?id={!ev.Id}">
+            <div class="bg"
+                style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1400&q=80', ev.URLImagem__c)}');">
+            </div>
+
+            <div class="overlay"></div>
+
+            <div class="event-content">
+              <div class="badge-row">
+                <apex:outputPanel rendered="{!ev.Destaque__c}">
+                  <span class="tag featured">Destaque</span>
+                </apex:outputPanel>
+                <span class="tag js-event-category">{!ev.CategoriaPrincipal__c}</span>
+              </div>
+
+              <h3 class="js-event-name">{!ev.Name}</h3>
+
+              <div class="event-meta">
+                <span>{!TEXT(ev.DataEvento__c)}</span>
+                <span class="js-event-location">{!ev.Recinto__r.Cidade__c}</span>
+              </div>
+
+              <span class="event-link">Ver detalhes</span>
+            </div>
+          </a>
+        </apex:repeat>
+      </div>
+    </apex:outputPanel>
+  </section>
+
+  <section class="section" id="vantagens">
+    <div class="two-col">
+      <div class="glass-panel">
+        <div class="section-kicker">Conceito</div>
+        <h2 class="section-title">Homepage com vibe de plataforma grande</h2>
+        <p class="section-text">A homepage foi pensada para dar uma imagem forte logo quando o utilizador entra no site, com destaque visual para os eventos mais importantes.</p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <small>01</small>
+            <h3>Hero forte</h3>
+            <p>Carrossel premium com destaque visual e chamadas para ação bem colocadas.</p>
+          </div>
+          <div class="feature-card">
+            <small>02</small>
+            <h3>Cards ricos</h3>
+            <p>Eventos com blocos grandes, variação de proporções e aspeto mais editorial.</p>
+          </div>
+          <div class="feature-card">
+            <small>03</small>
+            <h3>Pesquisa visível</h3>
+            <p>Barra de pesquisa logo após o hero para reforçar utilidade e navegação rápida.</p>
+          </div>
+          <div class="feature-card">
+            <small>04</small>
+            <h3>Secções de marca</h3>
+            <p>Categorias, estatísticas, vantagens e newsletter para enriquecer a homepage.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <div class="section-kicker">Números</div>
+        <h2 class="section-title">Visualmente mais caro</h2>
+        <p class="section-text">A sensação de qualidade vem da profundidade visual, das superfícies glass e da forma como o conteúdo respira.</p>
+
+        <div class="stats-grid">
+          <div class="stat-box"><strong>5s</strong><span>intervalo do carrossel</span></div>
+          <div class="stat-box"><strong>{!nextEvents.size}</strong><span>eventos carregados</span></div>
+          <div class="stat-box"><strong>{!featuredEvents.size}</strong><span>eventos em destaque</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="categorias">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Descoberta</div>
+        <h2 class="section-title">Explora por categoria</h2>
+        <p class="section-text">Mais tarde isto pode vir do Salesforce com dados reais.</p>
+      </div>
+    </div>
+
+    <div class="categories">
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="concert">
+        <div class="category-icon">🎤</div>
+        <h3>Concertos</h3>
+        <p>Artistas nacionais e internacionais, tours, showcases e atuações especiais.</p>
+        <div class="category-count">Categoria visual</div>
+      </a>
+
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="festival">
+        <div class="category-icon">🎪</div>
+        <h3>Festivais</h3>
+        <p>Grandes produções ao ar livre, cartazes premium e experiências imersivas.</p>
+        <div class="category-count">Categoria visual</div>
+      </a>
+
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="teatro">
+        <div class="category-icon">🎭</div>
+        <h3>Teatro</h3>
+        <p>Peças, comédia, musicais e programas culturais para vários públicos.</p>
+        <div class="category-count">Categoria visual</div>
+      </a>
+
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="desport">
+        <div class="category-icon">🏟️</div>
+        <h3>Desporto</h3>
+        <p>Jogos, torneios, exibições e experiências pensadas para adeptos.</p>
+        <div class="category-count">Categoria visual</div>
+      </a>
+    </div>
+  </section>
+
+  <section class="section" id="newsletter">
+    <div class="newsletter">
+      <div>
+        <div class="section-kicker">Fica a par</div>
+        <h2 class="section-title">Recebe alertas de novos eventos</h2>
+        <p>Uma secção destas ajuda a homepage a parecer mais completa e também pode ser útil quando quiseres captar leads.</p>
+        <div class="newsletter-form">
+          <input type="email" placeholder="O teu email" />
+          <button class="primary-btn">Subscrever</button>
+        </div>
+      </div>
+      <div class="art-stack">
+        <div class="poster" style="background-image:url('https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=80');"></div>
+        <div class="poster" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80');"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-bar">
+      <span>© 2026 Globaz Tickets. Premium homepage.</span>
+      <span>Visualforce + Apex</span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var slides = document.querySelectorAll('.slide');
+      var dotsWrap = document.getElementById('carouselDots');
+      var current = 0;
+      var interval = null;
+
+      if (slides.length) {
+        function buildDots() {
+          for (var i = 0; i < slides.length; i++) {
+            var dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.setAttribute('data-index', i);
+            dot.onclick = function () {
+              var index = parseInt(this.getAttribute('data-index'), 10);
+              showSlide(index);
+              restartAuto();
+            };
+            dotsWrap.appendChild(dot);
+          }
+        }
+
+        function showSlide(index) {
+          var dots = document.querySelectorAll('.dot');
+          for (var i = 0; i < slides.length; i++) {
+            slides[i].classList.remove('active');
+            if (dots[i]) dots[i].classList.remove('active');
+          }
+          slides[index].classList.add('active');
+          if (dots[index]) dots[index].classList.add('active');
+          current = index;
+        }
+
+        function nextSlide() {
+          var next = current + 1;
+          if (next >= slides.length) next = 0;
+          showSlide(next);
+        }
+
+        function startAuto() {
+          interval = setInterval(nextSlide, 5000);
+        }
+
+        function restartAuto() {
+          clearInterval(interval);
+          startAuto();
+        }
+
+        buildDots();
+        showSlide(0);
+        startAuto();
+      }
+
+      var searchInput = document.getElementById('searchInput');
+      var searchCategory = document.getElementById('searchCategory');
+      var searchLocation = document.getElementById('searchLocation');
+      var searchBtn = document.getElementById('searchBtn');
+      var cards = document.querySelectorAll('.event-filter-card');
+      var chipBtns = document.querySelectorAll('#eventCategoryFilters .chip-btn');
+      var categoryBoxes = document.querySelectorAll('.category-filter-box');
+      var noResultsMessage = document.getElementById('noResultsMessage');
+
+      function normalize(value) {
+        return (value || '').toString().toLowerCase().trim();
+      }
+
+      function setActiveChip(category) {
+        for (var i = 0; i < chipBtns.length; i++) {
+          var btnCategory = chipBtns[i].getAttribute('data-category') || '';
+          if (btnCategory === category) {
+            chipBtns[i].classList.add('active');
+          } else {
+            chipBtns[i].classList.remove('active');
+          }
+        }
+      }
+
+      function showAllCards() {
+        for (var i = 0; i < cards.length; i++) {
+          cards[i].classList.remove('is-hidden');
+        }
+        if (noResultsMessage) {
+          noResultsMessage.style.display = 'none';
+        }
+      }
+
+      function applyFilters() {
+        var text = normalize(searchInput ? searchInput.value : '');
+        var category = normalize(searchCategory ? searchCategory.value : '');
+        var location = normalize(searchLocation ? searchLocation.value : '');
+        var visibleCount = 0;
+
+        if (!text && !category && !location) {
+          showAllCards();
+          setActiveChip('');
+          return;
+        }
+
+        for (var i = 0; i < cards.length; i++) {
+          var card = cards[i];
+
+          var nameEl = card.querySelector('.js-event-name');
+          var categoryEl = card.querySelector('.js-event-category');
+          var locationEl = card.querySelector('.js-event-location');
+
+          var eventName = normalize(nameEl ? nameEl.textContent : '');
+          var eventCategory = normalize(categoryEl ? categoryEl.textContent : '');
+          var eventLocation = normalize(locationEl ? locationEl.textContent : '');
+
+          var matchesText =
+            !text ||
+            eventName.indexOf(text) !== -1 ||
+            eventCategory.indexOf(text) !== -1 ||
+            eventLocation.indexOf(text) !== -1;
+
+          var matchesCategory =
+            !category ||
+            eventCategory.indexOf(category) !== -1;
+
+          var matchesLocation =
+            !location ||
+            eventLocation.indexOf(location) !== -1;
+
+          if (matchesText && matchesCategory && matchesLocation) {
+            card.classList.remove('is-hidden');
+            visibleCount++;
+          } else {
+            card.classList.add('is-hidden');
+          }
+        }
+
+        if (noResultsMessage) {
+          noResultsMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+      }
+
+      if (searchBtn) {
+        searchBtn.addEventListener('click', function () {
+          applyFilters();
+          var eventos = document.getElementById('eventos');
+          if (eventos) {
+            eventos.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      if (searchCategory) {
+        searchCategory.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      if (searchLocation) {
+        searchLocation.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+
+      for (var i = 0; i < chipBtns.length; i++) {
+        chipBtns[i].addEventListener('click', function () {
+          var category = this.getAttribute('data-category') || '';
+          if (searchCategory) {
+            searchCategory.value = category;
+          }
+          setActiveChip(category);
+          applyFilters();
+        });
+      }
+
+      for (var j = 0; j < categoryBoxes.length; j++) {
+        categoryBoxes[j].addEventListener('click', function () {
+          var category = this.getAttribute('data-category') || '';
+          if (searchCategory) {
+            searchCategory.value = category;
+          }
+          setActiveChip(category);
+          applyFilters();
+
+          var eventos = document.getElementById('eventos');
+          if (eventos) {
+            eventos.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      showAllCards();
+    })();
+  </script>
+</body>
+</html>
+</apex:page>

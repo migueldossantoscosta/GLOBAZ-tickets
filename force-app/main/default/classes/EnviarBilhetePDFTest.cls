@@ -4,6 +4,10 @@ public class EnviarBilhetePDFTest {
     @isTest
     static void testEnviarEmailFlow() {
         
+        // =========================================================
+        // 1. CRIAR DADOS DE TESTE (Simular a base de dados)
+        // =========================================================
+        
         Recinto__c recinto = new Recinto__c(
             Name = 'Super Bock Arena',
             Cidade__c = 'Porto',

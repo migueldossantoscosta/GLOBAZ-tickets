@@ -19,7 +19,6 @@
         </outputParameters>
     </actionCalls>
     <apiVersion>66.0</apiVersion>
-    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <environments>Default</environments>
     <interviewLabel>Order_GerarGatewayID {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Order_GerarGatewayID</label>

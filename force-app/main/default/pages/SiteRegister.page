@@ -1,0 +1,364 @@
+<apex:page id="Registration"
+             showHeader="false"
+             sidebar="false"
+             standardStylesheets="false"
+             docType="html-5.0"
+             applyHtmlTag="false"
+             applyBodyTag="false"
+             controller="GlobazSiteRegisterController"
+             title="Criar conta">
+
+  <html lang="pt">
+  <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Criar conta — Globaz Tickets</title>
+
+      <style>
+          :root{
+              --bg:#050816;
+              --bg2:#091125;
+              --surface:rgba(255,255,255,.05);
+              --surface2:rgba(255,255,255,.08);
+              --border:rgba(255,255,255,.10);
+              --text:#f8fbff;
+              --muted:rgba(255,255,255,.70);
+              --blue:#5ea2ff;
+              --blue2:#2563eb;
+              --glow:0 20px 60px rgba(37,99,235,0.25);
+              --radius:24px;
+          }
+
+          body{
+              margin:0;
+              font-family:Arial, Helvetica, sans-serif;
+              color:var(--text);
+              background:
+                  radial-gradient(circle at 10% 0%, rgba(50,120,255,.24), transparent 28%),
+                  radial-gradient(circle at 100% 10%, rgba(168,85,247,.14), transparent 24%),
+                  linear-gradient(180deg, #030611 0%, #081121 40%, #050816 100%);
+              min-height:100vh;
+          }
+
+          .wrap{
+              min-height:100vh;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              padding:40px 20px;
+          }
+
+          .card{
+              width:100%;
+              max-width:980px;
+              background:rgba(255,255,255,.05);
+              border:1px solid rgba(255,255,255,.09);
+              border-radius:24px;
+              box-shadow:0 20px 50px rgba(0,0,0,.28);
+              backdrop-filter:blur(16px);
+              overflow:hidden;
+          }
+
+          .grid{
+              display:grid;
+              grid-template-columns:1fr 1.05fr;
+              min-height:640px;
+          }
+
+          .side{
+              padding:42px 36px;
+              background:
+                  linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+              border-right:1px solid rgba(255,255,255,.08);
+          }
+
+          .form-side{
+              padding:42px 36px;
+          }
+
+          .brand{
+              display:flex;
+              align-items:center;
+              gap:14px;
+              margin-bottom:30px;
+          }
+
+          .brand-mark{
+              width:42px;
+              height:42px;
+              border-radius:14px;
+              background:linear-gradient(135deg, rgba(94,162,255,.95), rgba(37,99,235,.80));
+              position:relative;
+              box-shadow:var(--glow);
+          }
+
+          .brand-mark:before,
+          .brand-mark:after{
+              content:"";
+              position:absolute;
+              background:rgba(255,255,255,.92);
+              border-radius:999px;
+          }
+
+          .brand-mark:before{width:24px;height:5px;left:10px;top:13px;}
+          .brand-mark:after{width:16px;height:5px;left:10px;top:24px;}
+
+          .brand-text strong{
+              display:block;
+              font-size:20px;
+              letter-spacing:.8px;
+          }
+
+          .brand-text span{
+              font-size:11px;
+              color:var(--muted);
+              text-transform:uppercase;
+              letter-spacing:1.2px;
+          }
+
+          .eyebrow{
+              display:inline-block;
+              padding:8px 14px;
+              border-radius:999px;
+              background:rgba(94,162,255,0.14);
+              border:1px solid rgba(94,162,255,0.28);
+              color:#dcedff;
+              font-size:12px;
+              text-transform:uppercase;
+              letter-spacing:.9px;
+              font-weight:700;
+              margin-bottom:18px;
+          }
+
+          .title{
+              font-size:42px;
+              line-height:1;
+              font-weight:900;
+              margin-bottom:16px;
+          }
+
+          .copy{
+              font-size:15px;
+              line-height:1.7;
+              color:var(--muted);
+              max-width:420px;
+          }
+
+          .bullets{
+              margin-top:30px;
+          }
+
+          .bullet{
+              margin-bottom:14px;
+              color:rgba(255,255,255,.82);
+              font-size:14px;
+          }
+
+          .form-title{
+              font-size:30px;
+              font-weight:900;
+              margin-bottom:8px;
+          }
+
+          .form-sub{
+              color:var(--muted);
+              font-size:14px;
+              margin-bottom:24px;
+          }
+
+          .vf-errors{
+              margin-bottom:18px;
+          }
+
+          .form-grid{
+              display:grid;
+              grid-template-columns:1fr 1fr;
+              gap:14px;
+          }
+
+          .field{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+          }
+
+          .field.full{
+              grid-column:1 / -1;
+          }
+
+          .field label{
+              font-size:12px;
+              text-transform:uppercase;
+              letter-spacing:.8px;
+              font-weight:700;
+              color:rgba(255,255,255,.62);
+          }
+
+          .input,
+          .field input,
+          .field select,
+          input[type="text"],
+          input[type="password"],
+          textarea{
+              width:100%;
+              height:52px;
+              border-radius:16px;
+              border:1px solid rgba(255,255,255,.10);
+              background:rgba(255,255,255,.06);
+              color:#fff;
+              padding:0 14px;
+              outline:none;
+              box-sizing:border-box;
+          }
+
+          .checkbox-row{
+              display:flex;
+              align-items:flex-start;
+              gap:10px;
+              color:var(--muted);
+              font-size:13px;
+              line-height:1.5;
+              margin-top:4px;
+          }
+
+          .checkbox-row input{
+              margin-top:3px;
+          }
+
+          .btn{
+              width:100%;
+              height:54px;
+              border:none;
+              border-radius:16px;
+              background:linear-gradient(135deg, var(--blue), var(--blue2));
+              color:#fff;
+              font-weight:800;
+              font-size:15px;
+              cursor:pointer;
+              box-shadow:var(--glow);
+              margin-top:8px;
+          }
+
+          .links{
+              margin-top:18px;
+              display:flex;
+              justify-content:space-between;
+              gap:16px;
+              font-size:13px;
+          }
+
+          .links a{
+              color:rgba(255,255,255,.78);
+              text-decoration:none;
+          }
+
+          @media (max-width: 860px){
+              .grid{grid-template-columns:1fr;}
+              .side{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
+              .form-grid{grid-template-columns:1fr;}
+          }
+      </style>
+  </head>
+
+  <body>
+      <div class="wrap">
+          <div class="card">
+              <div class="grid">
+                  <div class="side">
+                      <div class="brand">
+                          <div class="brand-mark"></div>
+                          <div class="brand-text">
+                              <strong>GLOBAZ TICKETS</strong>
+                              <span>premium ticketing experience</span>
+                          </div>
+                      </div>
+
+                      <div class="eyebrow">Criar conta</div>
+                      <div class="title">Entra no teu universo Globaz</div>
+                      <div class="copy">
+                          Cria a tua conta para acompanhares compras, veres o histórico de bilhetes e gerir os teus dados pessoais.
+                      </div>
+
+                      <div class="bullets">
+                          <div class="bullet">• Histórico de encomendas e bilhetes</div>
+                          <div class="bullet">• Área pessoal associada à tua conta</div>
+                          <div class="bullet">• Experiência mais rápida em futuras compras</div>
+                      </div>
+                  </div>
+
+                  <div class="form-side">
+                      <div class="form-title">Registar nova conta</div>
+                      <div class="form-sub">Esta ação cria a Person Account e permite login no site.</div>
+
+                      <apex:form id="theForm" forceSSL="true">
+                          <div class="vf-errors">
+                              <apex:pageMessages id="msgs"/>
+                          </div>
+
+                          <div class="form-grid">
+                              <div class="field">
+                                  <label for="firstName">Primeiro nome</label>
+                                  <apex:inputText id="firstName" value="{!firstName}" required="true" styleClass="input"/>
+                              </div>
+
+                              <div class="field">
+                                  <label for="lastName">Último nome</label>
+                                  <apex:inputText id="lastName" value="{!lastName}" required="true" styleClass="input"/>
+                              </div>
+
+                              <div class="field full">
+                                  <label for="email">Email</label>
+                                  <apex:inputText id="email" value="{!email}" required="true" styleClass="input"/>
+                              </div>
+
+                              <div class="field">
+                                  <label for="phone">Telemóvel</label>
+                                  <apex:inputText id="phone" value="{!phone}" styleClass="input"/>
+                              </div>
+
+                              <div class="field">
+                                  <label for="birthdate">Data de nascimento</label>
+                                  <apex:inputText id="birthdate" value="{!birthdateText}" html-placeholder="DD/MM/AAAA" styleClass="input"/>
+                              </div>
+
+                              <div class="field">
+                                  <label for="password">Password</label>
+                                  <apex:inputSecret id="password" value="{!password}" required="true" styleClass="input"/>
+                              </div>
+
+                              <div class="field">
+                                  <label for="confirmPassword">Confirmar password</label>
+                                  <apex:inputSecret id="confirmPassword" value="{!confirmPassword}" required="true" styleClass="input"/>
+                              </div>
+
+                              <div class="field full">
+                                  <div class="checkbox-row">
+                                      <apex:inputCheckbox id="marketing" value="{!marketingOptIn}"/>
+                                      <span>Aceito receber comunicações de marketing.</span>
+                                  </div>
+                              </div>
+
+                              <div class="field full">
+                                  <div class="checkbox-row">
+                                      <apex:inputCheckbox id="rgpd" value="{!rgpdAccepted}"/>
+                                      <span>Li e aceito a política de privacidade e o tratamento de dados pessoais.</span>
+                                  </div>
+                              </div>
+
+                              <div class="field full">
+                                  <apex:commandButton action="{!registerUser}" value="Criar conta" styleClass="btn"/>
+                              </div>
+                          </div>
+
+                          <div class="links">
+                              <a href="/apex/SiteLogin">Já tenho conta</a>
+                              <a href="/globaztickets">Voltar ao site</a>
+                          </div>
+                      </apex:form>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </body>
+  </html>
+  </apex:page>

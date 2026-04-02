@@ -18,7 +18,6 @@
         <offset>0</offset>
     </actionCalls>
     <apiVersion>66.0</apiVersion>
-    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <environments>Default</environments>
     <interviewLabel>Enviar Bilhete PDF {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Enviar Bilhete PDF</label>

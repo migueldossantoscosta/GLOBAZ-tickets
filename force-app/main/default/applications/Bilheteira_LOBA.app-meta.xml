@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#000000</headerColor>
+        <logo>ChatGPT_Image_9_03_2026_15_04_50</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
+    </brand>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>Bilheteira LOBA</label>
+    <navType>Standard</navType>
+    <tabs>standard-Account</tabs>
+    <tabs>Evento__c</tabs>
+    <tabs>Recinto__c</tabs>
+    <tabs>Bilhete__c</tabs>
+    <tabs>standard-Order</tabs>
+    <tabs>standard-Product2</tabs>
+    <tabs>standard-Pricebook2</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>Bilheteira_LOBA_UtilityBar</utilityBar>
+</CustomApplication>

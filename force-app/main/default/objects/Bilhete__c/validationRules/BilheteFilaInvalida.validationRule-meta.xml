@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BilheteFilaInvalida</fullName>
+    <active>false</active>
+    <errorConditionFormula>NOT(
+    REGEX(Fila__c, &apos;^[A-U]$&apos;)
+)</errorConditionFormula>
+    <errorMessage>A fila tem de ser uma letra entre A e U.</errorMessage>
+</ValidationRule>

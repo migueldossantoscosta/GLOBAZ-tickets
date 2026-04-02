@@ -3,7 +3,7 @@
     <fullName>Fila__c</fullName>
     <externalId>false</externalId>
     <label>Fila</label>
-    <length>3</length>
+    <length>10</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>
