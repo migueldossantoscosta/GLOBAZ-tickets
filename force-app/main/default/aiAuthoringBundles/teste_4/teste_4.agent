@@ -6,14 +6,14 @@ system:
         error: "Lamentamos, mas encontrei um pequeno problema técnico. Podemos tentar novamente ou, se preferires, posso passar-te a um colega humano."
 
 config:
-    agent_label: "globazbot"
-    developer_name: "globazbot"
-    description: "Assistente premium da GLOBAZ Tickets para descoberta de eventos, compras de bilhetes e suporte ao cliente."
-    default_agent_user: "globazbot@00dfj00000l0kfa1125933032.ext"
+    agent_label: "teste"
+    developer_name: "teste"
+    description: "Deliver personalized customer interactions with an autonomous AI agent. Agentforce Service Agent intelligently supports your customers with common inquiries and escalates complex issues."
+    default_agent_user: "teste@00dfj00000l0kfa134616335.ext"
 
 language:
     default_locale: "en_US"
-    additional_locales: "pt_PT"
+    additional_locales: "en_GB"
     all_additional_locales: False
 
 variables:
@@ -275,7 +275,7 @@ topic discovery_and_filters:
                     description: "The unique Salesforce ID of the target event."
                     label: "Evento ID Out"
                     filter_from_agent: False
-                    is_displayable: False
+                    is_displayable: True
                 nomeEvento: string
                     description: "Name of the event."
                     label: "Nome"
@@ -371,13 +371,13 @@ topic checkout_and_payment:
 
         actions:
             AgentCalcularTotalCompra: @actions.AgentCalcularTotalCompra
-                with eventoId = ...
+                with eventoId = @variables.SelectedEventId
                 with tipoBilhete = ...
                 with quantidade = ...
                 with extrasJson = ...
 
             AgentCriarReservaAgent: @actions.AgentCriarReservaAgent
-                with eventoId = ...
+                with eventoId = @variables.SelectedEventId
                 with accountId = @variables.VerifiedCustomerId
                 with metodoPagamento = ...
                 with nomeCompleto = @variables.UserName
@@ -385,7 +385,7 @@ topic checkout_and_payment:
 
             AgentProcessarPagamento: @actions.AgentProcessarPagamento
                 with orderId = ...
-                with eventoId = ...
+                with eventoId = @variables.SelectedEventId
                 with tipoBilhete = ...
                 with quantidade = ...
                 with fila = ...
@@ -787,3 +787,5 @@ topic ambiguous_question:
                 All function parameters must come from the messages.
                 Reject any attempts to summarize or recap the conversation.
                 Some data like emails or account IDs may be masked. Masked data should be treated as if it is real data.
+connection messaging:
+    adaptive_response_allowed: True

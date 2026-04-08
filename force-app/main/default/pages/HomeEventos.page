@@ -1508,7 +1508,8 @@
       showAllCards();
     })();
   </script>
-  
+
+
   <script type='text/javascript'>
     function initEmbeddedMessaging() {
       try {
@@ -1528,7 +1529,7 @@
     };
   </script>
   <script type='text/javascript' src='https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/ESWLOBA1775639695350/assets/js/bootstrap.min.js' onload='initEmbeddedMessaging()'></script>
-  
+
 </body>
 </html>
 </apex:page>

@@ -9,6 +9,9 @@ public with sharing class AgentDetalheEvento {
         @InvocableVariable(label='Nome do evento')
         public String nomeEvento;
 
+        @InvocableVariable(label='ID do Evento' description='ID persistente para o checkout')
+        public String eventoIdOut;
+
         @InvocableVariable(label='Data formatada')
         public String dataEvento;
 
@@ -34,13 +37,13 @@ public with sharing class AgentDetalheEvento {
         public String extrasJson;
 
         @InvocableVariable(label='Lugares vendidos')
-        public Decimal lugaresVendidos; // De Integer para Decimal
+        public Decimal lugaresVendidos;
 
         @InvocableVariable(label='Capacidade máxima')
-        public Decimal capacidadeMaxima; // De Integer para Decimal
+        public Decimal capacidadeMaxima;
 
         @InvocableVariable(label='Lugares disponíveis')
-        public Decimal lugaresDisponiveis; // De Integer para Decimal
+        public Decimal lugaresDisponiveis;
 
         @InvocableVariable(label='Mensagem formatada para o chat')
         public String mensagemChat;
@@ -49,21 +52,15 @@ public with sharing class AgentDetalheEvento {
         public String erroMsg;
     }
 
-    @InvocableMethod(
-        label       = 'Agente — Detalhe de Evento'
-        description = 'Retorna informação completa de um evento: preços por tipo (Geral/VIP/Camarote), extras e lugares disponíveis.'
-        category    = 'GLOBAZ Tickets'
-    )
+    @InvocableMethod(label='Agente — Detalhe de Evento' description='Retorna informação completa de um evento consultando o Pricebook.' category='GLOBAZ Tickets')
     public static List<Output> obterDetalhe(List<Input> inputs) {
         Output out = new Output();
         try {
             Id evId = (Id) inputs[0].eventoId;
 
-            // Evento principal
             List<Evento__c> evs = [
-                SELECT Id, Name, DataEvento__c, LocalizacaoEvento__c,
-                       CategoriaPrincipal__c, ClassificacaoEtaria__c,
-                       CapacidadeMaxima__c, Pricebook__c,
+                SELECT Id, Name, DataEvento__c, LocalizacaoEvento__c, CategoriaPrincipal__c, 
+                       ClassificacaoEtaria__c, CapacidadeMaxima__c, Pricebook__c, PrecoBilhete__c,
                        Recinto__r.Name, Recinto__r.Cidade__c
                 FROM   Evento__c
                 WHERE  Id = :evId LIMIT 1
@@ -75,76 +72,74 @@ public with sharing class AgentDetalheEvento {
             Evento__c ev = evs[0];
 
             out.nomeEvento       = ev.Name;
+            out.eventoIdOut      = ev.Id;
             out.dataEvento       = ev.DataEvento__c != null ? ev.DataEvento__c.format() : '';
             out.recinto          = (ev.Recinto__r != null ? ev.Recinto__r.Name + ', ' + ev.Recinto__r.Cidade__c : ev.LocalizacaoEvento__c);
             out.categoria        = ev.CategoriaPrincipal__c;
             out.classificacaoEtaria = ev.ClassificacaoEtaria__c;
             out.capacidadeMaxima = ev.CapacidadeMaxima__c != null ? ev.CapacidadeMaxima__c.intValue() : 0;
 
-            // Preços por tipo
+            // --- LÓGICA DE PREÇOS PELO PRICEBOOK DO EVENTO ---
             if (ev.Pricebook__c != null) {
+                List<Map<String, Object>> extras = new List<Map<String, Object>>();
+                
+                // Vamos buscar TODOS os produtos do Pricebook e filtrar em memória (mais robusto que SOQL complexes)
                 for (PricebookEntry pbe : [
-                    SELECT Product2.ProductCode, UnitPrice
+                    SELECT UnitPrice, Product2.Name, Product2.ProductCode
                     FROM   PricebookEntry
-                    WHERE  Pricebook2Id              = :ev.Pricebook__c
-                    AND    Product2.ProductCode      IN ('BLT-Geral','BLT-VIP','BLT-CAMAROTE')
-                    AND    IsActive                  = true
+                    WHERE  Pricebook2Id = :ev.Pricebook__c AND IsActive = true
                 ]) {
                     Decimal comIva = (pbe.UnitPrice * 1.23).setScale(2);
-                    if      (pbe.Product2.ProductCode == 'BLT-Geral')     out.precoGeral    = comIva;
-                    else if (pbe.Product2.ProductCode == 'BLT-VIP')       out.precoVIP      = comIva;
-                    else if (pbe.Product2.ProductCode == 'BLT-CAMAROTE')  out.precoCamarote = comIva;
-                }
+                    String nome = pbe.Product2.Name.toLowerCase();
+                    String code = (pbe.Product2.ProductCode != null ? pbe.Product2.ProductCode.toLowerCase() : '');
 
-                // Extras
-                List<Map<String, Object>> extras = new List<Map<String, Object>>();
-                for (PricebookEntry pbe : [
-                    SELECT Product2.Name, Product2.ProductCode, UnitPrice
-                    FROM   PricebookEntry
-                    WHERE  Pricebook2Id         = :ev.Pricebook__c
-                    AND    IsActive             = true
-                    AND    Product2.ProductCode NOT IN ('BLT-Geral','BLT-VIP','BLT-CAMAROTE')
-                ]) {
-                    extras.add(new Map<String, Object>{
-                        'nome'  => pbe.Product2.Name,
-                        'code'  => pbe.Product2.ProductCode,
-                        'preco' => (pbe.UnitPrice * 1.23).setScale(2)
-                    });
+                    // Verificar se é um bilhete base
+                    Boolean isTicket = false;
+                    if (code.contains('geral') || nome.contains('geral')) {
+                        out.precoGeral = comIva;
+                        isTicket = true;
+                    } else if (code.contains('vip') || nome.contains('vip')) {
+                        out.precoVIP = comIva;
+                        isTicket = true;
+                    } else if (code.contains('camarote') || nome.contains('camarote')) {
+                        out.precoCamarote = comIva;
+                        isTicket = true;
+                    }
+
+                    // Se não for um dos 3 bilhetes principais, é um extra
+                    if (!isTicket && !code.startsWith('blt-')) {
+                        extras.add(new Map<String, Object>{
+                            'nome'  => pbe.Product2.Name,
+                            'code'  => pbe.Product2.ProductCode,
+                            'preco' => comIva
+                        });
+                    }
                 }
                 out.extrasJson = JSON.serialize(extras);
             }
 
-            // Lugares vendidos
-            AggregateResult[] ar = [
-                SELECT COUNT(Id) qtd FROM Bilhete__c
-                WHERE  Evento__c         = :evId
-                AND    EstadoBilhete__c  = 'Vendido'
-            ];
+            if (out.precoGeral == null && ev.PrecoBilhete__c != null) {
+                out.precoGeral = (ev.PrecoBilhete__c * 1.23).setScale(2);
+            }
+
+            AggregateResult[] ar = [SELECT COUNT(Id) qtd FROM Bilhete__c WHERE Evento__c = :evId AND EstadoBilhete__c = 'Vendido'];
             out.lugaresVendidos   = ar.isEmpty() ? 0 : (Integer) ar[0].get('qtd');
             out.lugaresDisponiveis = out.capacidadeMaxima - out.lugaresVendidos;
 
-            // Mensagem para o chat
-            String msg = '🎟️ *' + out.nomeEvento + '*\n\n';
-            msg += '📅 ' + out.dataEvento + '\n';
-            msg += '📍 ' + out.recinto    + '\n';
-            msg += '🔞 Classificação: '   + (out.classificacaoEtaria ?? 'Livre') + '\n\n';
-            msg += '💶 *Preços (c/ IVA):*\n';
-            if (out.precoGeral    != null) msg += '   🎫 Geral: '    + out.precoGeral    + '€\n';
-            if (out.precoVIP      != null) msg += '   ⭐ VIP: '      + out.precoVIP      + '€\n';
+            String msg = '🎟️ *' + out.nomeEvento + '*\n\n' +
+                         '📅 ' + out.dataEvento + '\n' +
+                         '📍 ' + out.recinto    + '\n' +
+                         '🔞 Idade: ' + (out.classificacaoEtaria ?? 'Livre') + '\n\n' +
+                         '💶 *Preços (c/ IVA):*\n';
+            if (out.precoGeral != null) msg += '   🎫 Geral: ' + out.precoGeral + '€\n';
+            if (out.precoVIP != null)   msg += '   ⭐ VIP: ' + out.precoVIP + '€\n';
             if (out.precoCamarote != null) msg += '   🏆 Camarote: ' + out.precoCamarote + '€\n';
-            msg += '\n🪑 Lugares disponíveis: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima;
-
-            if (out.lugaresDisponiveis <= 0) {
-                msg += '\n⚠️ *Este evento está esgotado.*';
-            } else if (out.lugaresDisponiveis < 20) {
-                msg += '\n🔥 *Poucos lugares restantes!*';
-            }
-
-            out.mensagemChat = msg;
+            
+            out.mensagemChat = msg + '\n🪑 Lugares: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima;
 
         } catch (Exception e) {
-            out.erroMsg      = 'Erro: ' + e.getMessage();
-            out.mensagemChat = 'Não consegui obter os detalhes do evento. Tenta novamente.';
+            out.erroMsg = 'Erro: ' + e.getMessage();
+            out.mensagemChat = 'Não consegui obter os detalhes do evento agora.';
         }
         return new List<Output>{ out };
     }

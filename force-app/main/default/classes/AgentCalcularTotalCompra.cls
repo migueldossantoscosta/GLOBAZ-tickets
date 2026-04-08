@@ -8,7 +8,7 @@ public with sharing class AgentCalcularTotalCompra {
         public String tipoBilhete;
 
         @InvocableVariable(label='Quantidade de bilhetes' required=true)
-        public Decimal quantidade; // Mantido Decimal para o Agentforce
+        public Decimal quantidade;
 
         @InvocableVariable(label='Extras selecionados (JSON)')
         public String extrasJson;
@@ -27,7 +27,7 @@ public with sharing class AgentCalcularTotalCompra {
 
     @InvocableMethod(
         label       = 'Agente — Calcular Total da Compra'
-        description = 'Calcula o total da compra convertendo nomes amigáveis para códigos de produto.'
+        description = 'Calcula o total da compra consultando o Pricebook do evento para garantir preços atualizados.'
         category    = 'GLOBAZ Tickets'
     )
     public static List<Output> calcularTotal(List<Input> inputs) {
@@ -36,52 +36,68 @@ public with sharing class AgentCalcularTotalCompra {
             Input inp = inputs[0];
             
             // --- TRADUÇÃO DO TIPO DE BILHETE ---
-            // Se o bot mandar "Geral", nós convertemos para "BLT-Geral"
-            String codigoProcurado = inp.tipoBilhete;
-            if (codigoProcurado.equalsIgnoreCase('Geral'))    codigoProcurado = 'BLT-Geral';
-            else if (codigoProcurado.equalsIgnoreCase('VIP'))  codigoProcurado = 'BLT-VIP';
-            else if (codigoProcurado.equalsIgnoreCase('Camarote')) codigoProcurado = 'BLT-CAMAROTE';
-            // Se o bot já mandar o código certo (BLT-...), ele ignora os IFs acima.
+            String nomeBusca = '%' + inp.tipoBilhete + '%';
+            String codigoGeral = 'BLT-Geral';
+            if (inp.tipoBilhete.equalsIgnoreCase('Geral'))    codigoGeral = 'BLT-Geral';
+            else if (inp.tipoBilhete.equalsIgnoreCase('VIP'))  codigoGeral = 'BLT-VIP';
+            else if (inp.tipoBilhete.equalsIgnoreCase('Camarote')) codigoGeral = 'BLT-CAMAROTE';
 
-            List<Evento__c> evs = [SELECT Pricebook__c FROM Evento__c WHERE Id = :inp.eventoId LIMIT 1];
-            if (evs.isEmpty() || evs[0].Pricebook__c == null) {
-                out.erroMsg = 'Evento ou Pricebook não encontrado.';
+            // 1. Buscar o Evento
+            List<Evento__c> evs = [SELECT Id, Pricebook__c, PrecoBilhete__c FROM Evento__c WHERE Id = :inp.eventoId LIMIT 1];
+            if (evs.isEmpty()) {
+                out.erroMsg = 'Evento não encontrado.';
                 return new List<Output>{ out };
             }
+            Evento__c ev = evs[0];
 
-            // Buscar o preço usando o código "traduzido"
-            List<PricebookEntry> pbes = [
-                SELECT UnitPrice, Product2.Name 
-                FROM   PricebookEntry 
-                WHERE  Pricebook2Id = :evs[0].Pricebook__c 
-                AND    (Product2.ProductCode = :codigoProcurado OR Product2.Name = :inp.tipoBilhete)
-                AND    IsActive = true 
-                LIMIT  1
-            ];
+            // 2. Tentar buscar no Pricebook (Prioridade absoluta)
+            Decimal precoUnitario = 0;
+            String nomeProdutoDisplay = inp.tipoBilhete;
+            Boolean encontradoNoPricebook = false;
 
-            if (pbes.isEmpty()) {
-                out.erroMsg = 'Tipo de bilhete não disponível: ' + inp.tipoBilhete;
-                out.resumoChat = 'Desculpa, não encontrei o tipo de bilhete "' + inp.tipoBilhete + '". Queres tentar Geral, VIP ou Camarote?';
-                return new List<Output>{ out };
+            if (ev.Pricebook__c != null) {
+                List<PricebookEntry> pbes = [
+                    SELECT UnitPrice, Product2.Name 
+                    FROM   PricebookEntry 
+                    WHERE  Pricebook2Id = :ev.Pricebook__c 
+                    AND    (Product2.ProductCode = :codigoGeral OR Product2.Name LIKE :nomeBusca)
+                    AND    IsActive = true 
+                    LIMIT  1
+                ];
+                
+                if (!pbes.isEmpty()) {
+                    precoUnitario = pbes[0].UnitPrice;
+                    nomeProdutoDisplay = pbes[0].Product2.Name;
+                    encontradoNoPricebook = true;
+                }
             }
 
-            Decimal precoUnitario = pbes[0].UnitPrice;
-            Decimal subtotalBilhetes = precoUnitario * inp.quantidade;
-            
-            // Cálculo do IVA (23%)
-            out.totalComIva = (subtotalBilhetes * 1.23).setScale(2);
+            // Fallback apenas para bilhete Geral se o Pricebook falhar
+            if (!encontradoNoPricebook) {
+                if (inp.tipoBilhete.equalsIgnoreCase('Geral') && ev.PrecoBilhete__c != null) {
+                    precoUnitario = ev.PrecoBilhete__c;
+                    nomeProdutoDisplay = 'Geral';
+                } else {
+                    out.erroMsg = 'Não foi possível encontrar o preço para "' + inp.tipoBilhete + '" no Pricebook deste evento.';
+                    out.resumoChat = 'Desculpa, não encontrei o preço para o tipo "' + inp.tipoBilhete + '". Confirma se é Geral, VIP ou Camarote?';
+                    return new List<Output>{ out };
+                }
+            }
 
-            // --- MENSAGEM PARA O CHAT ---
-            String msg = '🛒 *Resumo da tua seleção:*\n\n';
-            msg += '🎫 ' + inp.quantidade.setScale(0) + 'x Bilhete ' + pbes[0].Product2.Name + '\n';
-            msg += '💰 *TOTAL (c/ IVA): ' + out.totalComIva + '€*\n\n';
-            msg += 'Posso avançar com a reserva destes lugares?';
+            // 3. Calcular Total (IVA 23%)
+            out.totalComIva = (precoUnitario * 1.23 * inp.quantidade).setScale(2);
+
+            // 4. Mensagem
+            String msg = '🛒 *Resumo da tua seleção:*\n\n' +
+                         '🎫 ' + inp.quantidade.setScale(0) + 'x ' + nomeProdutoDisplay + '\n' +
+                         '💰 *TOTAL (c/ IVA): ' + out.totalComIva + '€*\n\n' +
+                         'Posso avançar com a reserva?';
 
             out.resumoChat = msg;
 
         } catch (Exception e) {
             out.erroMsg = 'Erro: ' + e.getMessage();
-            out.resumoChat = 'Ocorreu um erro ao calcular o preço. Podes tentar novamente?';
+            out.resumoChat = 'Ocorreu um erro no cálculo. Tenta novamente.';
         }
         return new List<Output>{ out };
     }

@@ -33,6 +33,14 @@ variables:
         label: "isLoggedIn"
         description: "Indica se o utilizador tem uma sessao valida e ativa."
         visibility: "Internal"
+    SelectedEventId: mutable string
+        label: "SelectedEventId"
+        description: "Armazena o ID do evento selecionado pelo utilizador durante a descoberta."
+        visibility: "Internal"
+    SelectedEventPrice: mutable number
+        label: "SelectedEventPrice"
+        description: "Armazena o preco base do evento selecionado."
+        visibility: "Internal"
     EndUserId: linked string
         source: @MessagingSession.MessagingEndUserId
         description: "This variable may also be referred to as MessagingEndUser Id"
@@ -62,18 +70,25 @@ start_agent topic_selector:
 
         actions:
             go_to_account_or_guest: @utils.transition to @topic.account_or_guest
+                description: "User wants to login, register or check account status."
 
             go_to_discovery_and_filters: @utils.transition to @topic.discovery_and_filters
+                description: "User wants to search for events, artists or venues."
 
             go_to_checkout_and_payment: @utils.transition to @topic.checkout_and_payment
+                description: "User is ready to buy tickets, calculate total or proceed to payment."
 
             go_to_post_purchase_support: @utils.transition to @topic.post_purchase_support
+                description: "User needs help with existing tickets, resending PDF or opening a support case."
 
             go_to_escalation: @utils.transition to @topic.escalation
+                description: "User specifically asks for a human agent or live support."
 
             go_to_off_topic: @utils.transition to @topic.off_topic
+                description: "User's request is not related to GLOBAZ Tickets or event booking."
 
             go_to_ambiguous_question: @utils.transition to @topic.ambiguous_question
+                description: "User's request is unclear or requires more specific details."
 
 
 topic account_or_guest:
@@ -179,6 +194,8 @@ topic discovery_and_filters:
 
             AgentDetalheEvento: @actions.AgentDetalheEvento
                 with eventoId = ...
+                set @variables.SelectedEventId = @outputs.eventoIdOut
+                set @variables.SelectedEventPrice = @outputs.precoGeral
 
     actions:
         AgentPesquisarEventos:
@@ -223,7 +240,7 @@ topic discovery_and_filters:
                 eventosJson: string
                     description: "Technical JSON structure with found event details."
                     label: "Eventos JSON"
-                    filter_from_agent: True
+                    filter_from_agent: False
                     is_displayable: False
                 totalEventos: number
                     description: "The count of events found matching criteria."
@@ -254,6 +271,11 @@ topic discovery_and_filters:
                     is_required: True
                     is_user_input: True
             outputs:
+                eventoIdOut: string
+                    description: "The unique Salesforce ID of the target event."
+                    label: "Evento ID Out"
+                    filter_from_agent: False
+                    is_displayable: False
                 nomeEvento: string
                     description: "Name of the event."
                     label: "Nome"
@@ -349,13 +371,13 @@ topic checkout_and_payment:
 
         actions:
             AgentCalcularTotalCompra: @actions.AgentCalcularTotalCompra
-                with eventoId = ...
+                with eventoId = @variables.SelectedEventId
                 with tipoBilhete = ...
                 with quantidade = ...
                 with extrasJson = ...
 
             AgentCriarReservaAgent: @actions.AgentCriarReservaAgent
-                with eventoId = ...
+                with eventoId = @variables.SelectedEventId
                 with accountId = @variables.VerifiedCustomerId
                 with metodoPagamento = ...
                 with nomeCompleto = @variables.UserName
@@ -363,7 +385,7 @@ topic checkout_and_payment:
 
             AgentProcessarPagamento: @actions.AgentProcessarPagamento
                 with orderId = ...
-                with eventoId = ...
+                with eventoId = @variables.SelectedEventId
                 with tipoBilhete = ...
                 with quantidade = ...
                 with fila = ...
