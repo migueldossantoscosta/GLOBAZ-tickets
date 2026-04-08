@@ -91,8 +91,8 @@ public with sharing class AgentVerBilhetesUtilizador {
                         'data'       => dataStr,
                         'fila'       => b.Fila__c,
                         'lugar'      => b.NumeroLugar__c,
-                        'orderId'    => b.Order__r?.Name,
-                        'pagamento'  => b.Order__r?.MetodoPagamento__c
+                        'orderId'    => (b.Order__r != null ? b.Order__r.Name : null),
+                        'pagamento'  => (b.Order__r != null ? b.Order__r.MetodoPagamento__c : null)
                     });
                 }
                 msg += '\n';

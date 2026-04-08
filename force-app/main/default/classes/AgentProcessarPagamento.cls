@@ -7,11 +7,17 @@ public without sharing class AgentProcessarPagamento {
         @InvocableVariable(label='ID do Evento' required=true)
         public String eventoId;
 
-        @InvocableVariable(label='Bilhetes (JSON: [{fila, lugar, tipo, stand}])' required=true)
-        public String bilhetesJson;
+        @InvocableVariable(label='Tipo de bilhete' required=true)
+        public String tipoBilhete;
 
-        @InvocableVariable(label='Extras (JSON: [{pbeId, qty}])' required=false)
-        public String extrasJson;
+        @InvocableVariable(label='Quantidade' required=true)
+        public Decimal quantidade;
+
+        @InvocableVariable(label='Fila' required=false)
+        public String fila;
+
+        @InvocableVariable(label='Lugar' required=false)
+        public Decimal lugar;
     }
 
     public class Output {
@@ -36,19 +42,38 @@ public without sharing class AgentProcessarPagamento {
     public static List<Output> processarPagamento(List<Input> inputs) {
         Output out = new Output();
         try {
+            if (inputs == null || inputs.isEmpty()) {
+                out.sucesso = false;
+                out.erroMsg = 'Sem dados de entrada.';
+                return new List<Output>{ out };
+            }
+
             Input inp = inputs[0];
 
             Id ordId = (Id) inp.orderId;
             Id evId  = (Id) inp.eventoId;
 
-            // Bilhetes: se o agente não recebeu fila/lugar específicos
-            // (o utilizador selecionou no mapa), usa um JSON default com lugar automático
-            String bilhetesJsonFinal = String.isNotBlank(inp.bilhetesJson)
-                ? inp.bilhetesJson
-                : '[{"fila":"A","lugar":1,"tipo":"BLT-Geral","stand":null}]';
+            // Construir JSON de bilhetes baseado nos inputs simples (conforme YAML)
+            String codigoBilhete = inp.tipoBilhete;
+            if (codigoBilhete != null) {
+                if (codigoBilhete.equalsIgnoreCase('Geral'))    codigoBilhete = 'BLT-Geral';
+                else if (codigoBilhete.equalsIgnoreCase('VIP'))  codigoBilhete = 'BLT-VIP';
+                else if (codigoBilhete.equalsIgnoreCase('Camarote')) codigoBilhete = 'BLT-CAMAROTE';
+            }
 
-            String extrasJsonFinal = String.isNotBlank(inp.extrasJson)
-                ? inp.extrasJson : '[]';
+            List<Map<String, Object>> bilhetesList = new List<Map<String, Object>>();
+            Integer qtd = (inp.quantidade != null) ? inp.quantidade.intValue() : 1;
+            Integer startLugar = (inp.lugar != null) ? inp.lugar.intValue() : 1;
+
+            for(Integer i=0; i < qtd; i++) {
+                bilhetesList.add(new Map<String, Object>{
+                    'fila'  => (String.isNotBlank(inp.fila) ? inp.fila : 'A'),
+                    'lugar' => startLugar + i,
+                    'tipo'  => codigoBilhete
+                });
+            }
+            String bilhetesJsonFinal = JSON.serialize(bilhetesList);
+            String extrasJsonFinal   = '[]';
 
             // Reutilizar lógica existente
             String resultado = BilheteiraController.processarPagamentoMock(
@@ -60,11 +85,11 @@ public without sharing class AgentProcessarPagamento {
 
             if (resultado == 'PAGAMENTO_OK') {
                 // Contar bilhetes criados
-                Integer qtd = [
+                Integer totalBilhetesCriados = [
                     SELECT COUNT() FROM Bilhete__c WHERE Order__c = :ordId
                 ];
                 out.sucesso       = true;
-                out.totalBilhetes = qtd;
+                out.totalBilhetes = totalBilhetesCriados;
 
                 // Buscar email do cliente para confirmar envio
                 List<Order> ords = [
@@ -77,9 +102,9 @@ public without sharing class AgentProcessarPagamento {
                     ? ords[0].Account.FirstName : 'Cliente';
 
                 out.mensagemChat =
-                    '🎉 *Compra confirmada, ' + nomeCliente + '!*\n\n'
-                    + '🎫 ' + qtd + ' bilhete(s) reservado(s) com sucesso.\n'
-                    + '📧 O teu bilhete PDF vai chegar ao email *' + emailCliente + '* em breve.\n\n'
+                    '🎉 *Compra confirmada, ' + (nomeCliente != null ? nomeCliente : 'Cliente') + '!*\n\n'
+                    + '🎫 ' + totalBilhetesCriados + ' bilhete(s) reservado(s) com sucesso.\n'
+                    + '📧 O teu bilhete PDF vai chegar ao email *' + (emailCliente != null ? emailCliente : '') + '* em breve.\n\n'
                     + '📱 Guarda o email — precisas dele na entrada do evento.\n'
                     + 'Posso ajudar-te com mais alguma coisa? 😊';
 
@@ -93,7 +118,7 @@ public without sharing class AgentProcessarPagamento {
                 out.sucesso      = false;
                 out.erroMsg      = resultado;
                 out.mensagemChat = '⚠️ Erro no processamento: '
-                    + resultado.replace('ERRO: ', '')
+                    + (resultado != null ? resultado.replace('ERRO: ', '') : 'Erro desconhecido')
                     + '\nContacta o suporte se o problema persistir.';
             }
 

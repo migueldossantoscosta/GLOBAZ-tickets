@@ -327,7 +327,16 @@ public class BilheteiraController {
                 update new Order(Id = orderId, Pricebook2Id = evt.Pricebook__c);
                 insert produtosParaCriar;
             }
-            if (!bilhetesParaCriar.isEmpty()) insert bilhetesParaCriar;
+            if (!bilhetesParaCriar.isEmpty()) {
+                insert bilhetesParaCriar;
+                
+                // Enviar bilhetes por email automaticamente após pagamento
+                List<Id> bilheteIds = new List<Id>();
+                for(Bilhete__c b : bilhetesParaCriar) {
+                    bilheteIds.add(b.Id);
+                }
+                EnviarBilhetePDF.enviarEmailFuturo(bilheteIds);
+            }
 
             update new Order(
                 Id = orderId,

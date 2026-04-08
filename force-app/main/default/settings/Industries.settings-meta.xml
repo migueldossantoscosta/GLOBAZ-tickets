@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndustriesSettings xmlns="http://soap.sforce.com/2006/04/metadata">
+    <appointmentDistributionOrgPref>false</appointmentDistributionOrgPref>
+    <enableAccountScoreEnabled>false</enableAccountScoreEnabled>
+    <enableAnyResourceTypeOrgPref>false</enableAnyResourceTypeOrgPref>
+    <enableAppFrmAnywhereOrgPref>false</enableAppFrmAnywhereOrgPref>
+    <enableAppInviteOrgPref>false</enableAppInviteOrgPref>
+    <enableCapacitySchedulingPref>false</enableCapacitySchedulingPref>
+    <enableDepriveSoqlAccessGuestUserOrgPref>true</enableDepriveSoqlAccessGuestUserOrgPref>
+    <enableDepriveSoqlAccessOrgPref>true</enableDepriveSoqlAccessOrgPref>
+    <enableDontSharePartyprofWPortalOrgPref>false</enableDontSharePartyprofWPortalOrgPref>
+    <enableDropInAppointmentsOrgPref>false</enableDropInAppointmentsOrgPref>
+    <enableEventManagementOrgPref>false</enableEventManagementOrgPref>
+    <enableEventWriteOrgPref>false</enableEventWriteOrgPref>
+    <enableMultiResourceOrgPref>false</enableMultiResourceOrgPref>
+    <enableMultipleTopicsForShiftsOrgPref>false</enableMultipleTopicsForShiftsOrgPref>
+    <enableOverbookingOrgPref>false</enableOverbookingOrgPref>
+    <enablePartyProfileParentSharingOrgPref>false</enablePartyProfileParentSharingOrgPref>
+    <enablePartyprofParentMultiSharingOrgPref>false</enablePartyprofParentMultiSharingOrgPref>
+    <enablePreBookedFallbackMechOrgPref>false</enablePreBookedFallbackMechOrgPref>
+    <enableSchedulerPaymentsPref>false</enableSchedulerPaymentsPref>
+    <enableShareSaWithArOrgPref>false</enableShareSaWithArOrgPref>
+    <enableTopicOrTemplate>false</enableTopicOrTemplate>
+    <enableTopicTimeSlot>true</enableTopicTimeSlot>
+    <participantRecordDeactivateUser>PreventDeactivateUserWithParticipantRecords</participantRecordDeactivateUser>
+    <partyProfMultiShrPrtnrsOrgPref>false</partyProfMultiShrPrtnrsOrgPref>
+    <rlaEditIfAccHasEdit>false</rlaEditIfAccHasEdit>
+</IndustriesSettings>

@@ -5,13 +5,13 @@
     <confirmationTokenRequired>false</confirmationTokenRequired>
     <label>Home Eventos</label>
     <packageVersions>
-        <majorNumber>1</majorNumber>
-        <minorNumber>7</minorNumber>
-        <namespace>sf_com_apps</namespace>
+        <majorNumber>3</majorNumber>
+        <minorNumber>21</minorNumber>
+        <namespace>cdpactvstrgptnr</namespace>
     </packageVersions>
     <packageVersions>
-        <majorNumber>2</majorNumber>
-        <minorNumber>5</minorNumber>
-        <namespace>trlhdtips</namespace>
+        <majorNumber>1</majorNumber>
+        <minorNumber>132</minorNumber>
+        <namespace>ssot</namespace>
     </packageVersions>
 </ApexPage>

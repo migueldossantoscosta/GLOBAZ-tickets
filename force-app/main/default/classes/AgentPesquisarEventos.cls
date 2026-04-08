@@ -92,7 +92,7 @@ public with sharing class AgentPesquisarEventos {
             out.totalEventos = (Decimal) eventos.size();
 
             if (eventos.isEmpty()) {
-                out.mensagemChat = 'Infelizmente não encontrei nenhum evento com o nome "' + (inp.nomeEvento ?? '') + '". Queres tentar outro nome ou cidade?';
+                out.mensagemChat = 'Infelizmente não encontrei nenhum evento com o nome "' + (inp.nomeEvento != null ? inp.nomeEvento : '') + '". Queres tentar outro nome ou cidade?';
                 out.eventosJson  = '[]';
                 return new List<Output>{ out };
             }

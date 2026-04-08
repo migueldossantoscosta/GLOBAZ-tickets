@@ -184,5 +184,25 @@
         <members>*</members>
         <name>AiAuthoringBundle</name>
     </types>
-    <version>61.0</version>
+    <types>
+        <members>*</members>
+        <name>MessagingChannel</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>QueueRoutingConfig</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>EmbeddedServiceConfig</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CorsWhitelistOrigin</members>
+    </types>
+    <types>
+        <members>*</members>
+        <name>Settings</name>
+    </types>
+    <version>66.0</version>
 </Package>
