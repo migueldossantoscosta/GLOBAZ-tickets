@@ -148,6 +148,10 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
                 <fieldItem>Record.Pessoa__c</fieldItem>
                 <identifier>RecordPessoa__cField</identifier>
             </fieldInstance>

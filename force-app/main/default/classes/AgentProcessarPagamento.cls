@@ -42,12 +42,6 @@ public without sharing class AgentProcessarPagamento {
     public static List<Output> processarPagamento(List<Input> inputs) {
         Output out = new Output();
         try {
-            if (inputs == null || inputs.isEmpty()) {
-                out.sucesso = false;
-                out.erroMsg = 'Sem dados de entrada.';
-                return new List<Output>{ out };
-            }
-
             Input inp = inputs[0];
 
             Id ordId = (Id) inp.orderId;
@@ -55,11 +49,9 @@ public without sharing class AgentProcessarPagamento {
 
             // Construir JSON de bilhetes baseado nos inputs simples (conforme YAML)
             String codigoBilhete = inp.tipoBilhete;
-            if (codigoBilhete != null) {
-                if (codigoBilhete.equalsIgnoreCase('Geral'))    codigoBilhete = 'BLT-Geral';
-                else if (codigoBilhete.equalsIgnoreCase('VIP'))  codigoBilhete = 'BLT-VIP';
-                else if (codigoBilhete.equalsIgnoreCase('Camarote')) codigoBilhete = 'BLT-CAMAROTE';
-            }
+            if (codigoBilhete.equalsIgnoreCase('Geral'))    codigoBilhete = 'BLT-Geral';
+            else if (codigoBilhete.equalsIgnoreCase('VIP'))  codigoBilhete = 'BLT-VIP';
+            else if (codigoBilhete.equalsIgnoreCase('Camarote')) codigoBilhete = 'BLT-CAMAROTE';
 
             List<Map<String, Object>> bilhetesList = new List<Map<String, Object>>();
             Integer qtd = (inp.quantidade != null) ? inp.quantidade.intValue() : 1;
@@ -102,9 +94,9 @@ public without sharing class AgentProcessarPagamento {
                     ? ords[0].Account.FirstName : 'Cliente';
 
                 out.mensagemChat =
-                    '🎉 *Compra confirmada, ' + (nomeCliente != null ? nomeCliente : 'Cliente') + '!*\n\n'
+                    '🎉 *Compra confirmada, ' + nomeCliente + '!*\n\n'
                     + '🎫 ' + totalBilhetesCriados + ' bilhete(s) reservado(s) com sucesso.\n'
-                    + '📧 O teu bilhete PDF vai chegar ao email *' + (emailCliente != null ? emailCliente : '') + '* em breve.\n\n'
+                    + '📧 O teu bilhete PDF vai chegar ao email *' + emailCliente + '* em breve.\n\n'
                     + '📱 Guarda o email — precisas dele na entrada do evento.\n'
                     + 'Posso ajudar-te com mais alguma coisa? 😊';
 
@@ -118,7 +110,7 @@ public without sharing class AgentProcessarPagamento {
                 out.sucesso      = false;
                 out.erroMsg      = resultado;
                 out.mensagemChat = '⚠️ Erro no processamento: '
-                    + (resultado != null ? resultado.replace('ERRO: ', '') : 'Erro desconhecido')
+                    + resultado.replace('ERRO: ', '')
                     + '\nContacta o suporte se o problema persistir.';
             }
 

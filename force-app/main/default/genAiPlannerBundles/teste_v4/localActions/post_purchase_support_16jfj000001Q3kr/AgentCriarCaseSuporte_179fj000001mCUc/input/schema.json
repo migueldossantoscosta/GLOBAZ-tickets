@@ -1,0 +1,49 @@
+{
+  "required" : [ "email", "assunto", "descricao" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "accountId" : {
+      "title" : "Account ID",
+      "description" : "The associated account ID for the support case.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "assunto" : {
+      "title" : "Assunto",
+      "description" : "Short subject describing the issue.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "descricao" : {
+      "title" : "Descricao",
+      "description" : "Detailed description of the problem provided by the customer.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "email" : {
+      "title" : "Email",
+      "description" : "Customer contact email for follow-up.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "orderId" : {
+      "title" : "Order relacionado",
+      "description" : "Associated order ID if the issue is related to a specific order.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "tipo" : {
+      "title" : "Tipo",
+      "description" : "Case category such as Technical, Billing or General.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

@@ -198,7 +198,7 @@
     </types>
     <types>
         <members>*</members>
-        <name>CorsWhitelistOrigin</members>
+        <name>CorsWhitelistOrigin</name>
     </types>
     <types>
         <members>*</members>

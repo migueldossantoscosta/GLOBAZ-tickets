@@ -3,7 +3,7 @@
     <canAccessCamera>false</canAccessCamera>
     <canAccessMicrophone>false</canAccessMicrophone>
     <context>All</context>
-    <endpointUrl>https://mindful-koala-w7cnyh-dev-ed.trailblaze.my.site.com</endpointUrl>
+    <endpointUrl>https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com</endpointUrl>
     <isActive>true</isActive>
     <isApplicableToConnectSrc>true</isApplicableToConnectSrc>
     <isApplicableToFontSrc>true</isApplicableToFontSrc>

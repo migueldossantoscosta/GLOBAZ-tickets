@@ -35,6 +35,7 @@ public without sharing class AgentCriarReservaAgent {
         label       = 'Agente — Criar Reserva'
         description = 'Cria uma Order Draft para o evento selecionado, após confirmação do utilizador. Faz o callout HTTP ao gateway de pagamento.'
         category    = 'GLOBAZ Tickets'
+        callout     = true
     )
     public static List<Output> criarReserva(List<Input> inputs) {
         Output out = new Output();

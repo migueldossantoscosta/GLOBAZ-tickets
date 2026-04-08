@@ -1152,85 +1152,7 @@
     return el;
 }
 
-function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
-    totalSeats++;
-    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
-    const ocupado = ocupadosSet.has(k);
 
-    const seat = makeSvgEl('rect', {
-        x: x, y: y, width: w, height: h, rx: 1.5, ry: 1.5,
-        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
-    });
-
-    seat.dataset.k = k;
-    seat.dataset.fila = fila;
-    seat.dataset.lugar = lugar;
-    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
-
-    if(!ocupado){
-        seat.onclick = function(){
-            const idx = selecionados.findIndex(s => s.k === k);
-            if(idx > -1){
-                selecionados.splice(idx,1);
-                seat.classList.remove('selecionado');
-            } else {
-                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
-                seat.classList.add('selecionado');
-            }
-            document.getElementById('count').innerText  = selecionados.length;
-            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
-            document.getElementById('msSel').innerText  = selecionados.length;
-            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
-        };
-    }
-
-    group.appendChild(seat);
-}
-
-function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona, ocupadosSet){
-    totalSeats++;
-    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
-    const ocupado = ocupadosSet.has(k);
-
-    const rad = angleDeg * Math.PI / 180;
-    const x = cx + Math.cos(rad) * radius - w / 2;
-    const y = cy + Math.sin(rad) * radius - h / 2;
-
-    const seat = makeSvgEl('rect', {
-        x: x,
-        y: y,
-        width: w,
-        height: h,
-        rx: 1.5,
-        ry: 1.5,
-        transform: 'rotate(' + (angleDeg + 90) + ' ' + (x + w/2) + ' ' + (y + h/2) + ')',
-        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
-    });
-
-    seat.dataset.k = k;
-    seat.dataset.fila = fila;
-    seat.dataset.lugar = lugar;
-    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
-
-    if(!ocupado){
-        seat.onclick = function(){
-            const idx = selecionados.findIndex(s => s.k === k);
-            if(idx > -1){
-                selecionados.splice(idx,1);
-                seat.classList.remove('selecionado');
-            } else {
-                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
-                seat.classList.add('selecionado');
-            }
-            document.getElementById('count').innerText  = selecionados.length;
-            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
-            document.getElementById('msSel').innerText  = selecionados.length;
-            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
-        };
-    }
-
-    group.appendChild(seat);
-}
 
         function construirMapaMeoArena(mapa, ocupados){
             const NS2 = 'http://www.w3.org/2000/svg';
@@ -1303,7 +1225,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             svgWrap.appendChild(svg);
             arena.appendChild(svgWrap);
 
-            function addMeoSeat(parent, cx, cy, w, h, zone, key, angleDeg){
+            function addMeoSeat(parent, cx, cy, w, h, zone, key, angleDeg, fila, lugar){
                 totalSeats++;
                 const isOc = oc.has(key);
                 if(isOc) ocupadosCount = oc.size; // already counted
@@ -1337,7 +1259,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                             r2.setAttribute('stroke-width','0.4');
                             r2.setAttribute('opacity','1');
                         } else {
-                            selecionados.push({k:key, fila:zone+'-seat', lugar:key, stand:zone, tipo:tipo});
+                            selecionados.push({k:key, fila:fila, lugar:lugar, stand:zone, tipo:tipo});
                             r2.setAttribute('fill','#fbbf24');
                             r2.setAttribute('stroke','#fff');
                             r2.setAttribute('stroke-width','1.5');
@@ -1371,7 +1293,8 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                     const totalW = f.cols*(SW+GX) - GX;
                     const startX = 340 - totalW/2;
                     for(let c=0; c<f.cols; c++){
-                        addMeoSeat(gTopo, startX+c*(SW+GX)+SW/2, f.y+SH/2, SW, SH, 'topo', 'meo-topo-'+f.fila+'-'+(c+1), 0);
+                        const lNum = c + 1;
+                        addMeoSeat(gTopo, startX+c*(SW+GX)+SW/2, f.y+SH/2, SW, SH, 'topo', 'meo-topo-'+f.fila+'-'+lNum, 0, f.fila, lNum);
                     }
                 });
             })();
@@ -1398,7 +1321,8 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                         const rad = deg*Math.PI/180;
                         const x = CX + Math.cos(rad)*ring.R;
                         const y = CY + Math.sin(rad)*ring.R;
-                        addMeoSeat(gRing, x, y, SW, SH, 'ring', 'meo-ring-'+ring.fila+'-'+(++idx), deg+90);
+                        idx++;
+                        addMeoSeat(gRing, x, y, SW, SH, 'ring', 'meo-ring-'+ring.fila+'-'+idx, deg+90, ring.fila, idx);
                     }
                 });
             })();
@@ -1414,7 +1338,8 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                     const startX = 340 - totalW/2;
                     const y = 318 + ri*(SH+GY) + SH/2;
                     for(let c=0; c<cols; c++){
-                        addMeoSeat(gPlateia, startX+c*(SW+GX)+SW/2, y, SW, SH, 'plateia', 'meo-plateia-'+fila+'-'+(c+1), 0);
+                        const lNum = c + 1;
+                        addMeoSeat(gPlateia, startX+c*(SW+GX)+SW/2, y, SW, SH, 'plateia', 'meo-plateia-'+fila+'-'+lNum, 0, fila, lNum);
                     }
                 });
             })();
@@ -1430,7 +1355,8 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                     const totalH = n*(SH+GY) - GY;
                     const startY = 370 - totalH/2;
                     for(let s=0; s<n; s++){
-                        addMeoSeat(gLatL, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-l-'+fila+'-'+(s+1), 0);
+                        const lNum = s + 1;
+                        addMeoSeat(gLatL, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'l-'+fila+'-'+lNum, 0, fila, lNum);
                     }
                 });
             })();
@@ -1446,7 +1372,8 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                     const totalH = n*(SH+GY) - GY;
                     const startY = 370 - totalH/2;
                     for(let s=0; s<n; s++){
-                        addMeoSeat(gLatR, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-r-'+fila+'-'+(s+1), 0);
+                        const lNum = s + 1;
+                        addMeoSeat(gLatR, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-r-'+fila+'-'+lNum, 0, fila, lNum);
                     }
                 });
             })();

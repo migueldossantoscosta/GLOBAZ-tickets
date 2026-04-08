@@ -57,17 +57,21 @@ public with sharing class AgentPesquisarEventos {
                 'WHERE  EstadoEvento__c = \'Ativo\' ' +
                 'AND    DataEvento__c  >= TODAY ';
 
-            // 2. Filtros Dinâmicos (LIKE %...% para encontrar Hybrid Theory mesmo pesquisando só Hybrid)
+            String nomeBusca = '';
+            String cidadeBusca = '';
+            String catBusca = '';
+
+            // 2. Filtros Dinâmicos
             if (String.isNotBlank(inp.nomeEvento)) {
-                String nomeBusca = '%' + String.escapeSingleQuotes(inp.nomeEvento) + '%';
+                nomeBusca = '%' + String.escapeSingleQuotes(inp.nomeEvento) + '%';
                 soql += 'AND Name LIKE :nomeBusca ';
             }
             if (String.isNotBlank(inp.cidade)) {
-                String cidadeBusca = '%' + String.escapeSingleQuotes(inp.cidade) + '%';
+                cidadeBusca = '%' + String.escapeSingleQuotes(inp.cidade) + '%';
                 soql += 'AND Recinto__r.Cidade__c LIKE :cidadeBusca ';
             }
             if (String.isNotBlank(inp.categoria)) {
-                String catBusca = '%' + String.escapeSingleQuotes(inp.categoria) + '%';
+                catBusca = '%' + String.escapeSingleQuotes(inp.categoria) + '%';
                 soql += 'AND CategoriaPrincipal__c LIKE :catBusca ';
             }
             if (String.isNotBlank(inp.dataInicio)) {
@@ -92,7 +96,7 @@ public with sharing class AgentPesquisarEventos {
             out.totalEventos = (Decimal) eventos.size();
 
             if (eventos.isEmpty()) {
-                out.mensagemChat = 'Infelizmente não encontrei nenhum evento com o nome "' + (inp.nomeEvento != null ? inp.nomeEvento : '') + '". Queres tentar outro nome ou cidade?';
+                out.mensagemChat = 'Infelizmente não encontrei nenhum evento com o nome "' + (inp.nomeEvento ?? '') + '". Queres tentar outro nome ou cidade?';
                 out.eventosJson  = '[]';
                 return new List<Output>{ out };
             }

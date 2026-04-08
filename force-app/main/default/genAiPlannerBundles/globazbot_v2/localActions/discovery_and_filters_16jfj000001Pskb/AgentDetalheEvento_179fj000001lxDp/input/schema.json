@@ -1,0 +1,14 @@
+{
+  "required" : [ "eventoId" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "eventoId" : {
+      "title" : "Evento ID",
+      "description" : "The unique Salesforce ID of the target event.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

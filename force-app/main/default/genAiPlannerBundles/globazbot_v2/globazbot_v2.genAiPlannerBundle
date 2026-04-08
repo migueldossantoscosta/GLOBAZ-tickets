@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Assistente premium da GLOBAZ Tickets para descoberta de eventos, compras de bilhetes e suporte ao cliente.</description>
+    <localTopicLinks>
+        <genAiPluginName>account_or_guest_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>ambiguous_question_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>checkout_and_payment_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>discovery_and_filters_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>escalation_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>off_topic_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>post_purchase_support_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>topic_selector_16jfj000001Pskb</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>checkout_and_payment_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Manages the full purchase transaction flow from price calculation to payment confirmation and ticket issuance.</description>
+        <developerName>checkout_and_payment_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDs</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDs</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>AgentCalcularTotalCompra_179fj000001lxDs</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>AgentCriarReservaAgent_179fj000001lxDs</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>AgentProcessarPagamento_179fj000001lxDs</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>AgentProcessarPagamento_179fj000001lxDs</fullName>
+            <description>Finalises the payment for a draft order and issues the tickets to the customer.</description>
+            <developerName>AgentProcessarPagamento_179fj000001lxDs</developerName>
+            <invocationTarget>AgentProcessarPagamento</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>true</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentProcessarPagamento</localDeveloperName>
+            <masterLabel>Confirmacao de Pagamento</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>AgentCalcularTotalCompra_179fj000001lxDs</fullName>
+            <description>Calculates the final price for the ticket selection including VAT and any extras chosen by the customer.</description>
+            <developerName>AgentCalcularTotalCompra_179fj000001lxDs</developerName>
+            <invocationTarget>AgentCalcularTotalCompra</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentCalcularTotalCompra</localDeveloperName>
+            <masterLabel>Calculo de Preco</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>AgentCriarReservaAgent_179fj000001lxDs</fullName>
+            <description>Creates a temporary draft order reservation in the system for the selected event and ticket type.</description>
+            <developerName>AgentCriarReservaAgent_179fj000001lxDs</developerName>
+            <invocationTarget>AgentCriarReservaAgent</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>true</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentCriarReservaAgent</localDeveloperName>
+            <masterLabel>Geracao de Reserva</masterLabel>
+        </localActions>
+        <localDeveloperName>checkout_and_payment</localDeveloperName>
+        <masterLabel>Processo de Compra</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>post_purchase_support_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handles administrative tasks and ticket management after purchase, including listing tickets, resending PDF tickets by email and creating support cases.</description>
+        <developerName>post_purchase_support_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDr</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDr</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>AgentCriarCaseSuporte_179fj000001lxDr</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>AgentVerBilhetesUtilizador_179fj000001lxDr</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>AgentReenviarBilhetePDF_179fj000001lxDr</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>AgentCriarCaseSuporte_179fj000001lxDr</fullName>
+            <description>Creates a formal support ticket in Salesforce for the customer&apos;s issue including billing, technical or general inquiries.</description>
+            <developerName>AgentCriarCaseSuporte_179fj000001lxDr</developerName>
+            <invocationTarget>AgentCriarCaseSuporte</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>true</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentCriarCaseSuporte</localDeveloperName>
+            <masterLabel>Criacao de Ticket de Suporte</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>AgentReenviarBilhetePDF_179fj000001lxDr</fullName>
+            <description>Resends the selected ticket as a PDF to the official email address associated with the customer account.</description>
+            <developerName>AgentReenviarBilhetePDF_179fj000001lxDr</developerName>
+            <invocationTarget>AgentReenviarBilhetePDF</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>true</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentReenviarBilhetePDF</localDeveloperName>
+            <masterLabel>Servico de Reenvio</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>AgentVerBilhetesUtilizador_179fj000001lxDr</fullName>
+            <description>Returns a list of active tickets with status Sold associated with the authenticated customer account.</description>
+            <developerName>AgentVerBilhetesUtilizador_179fj000001lxDr</developerName>
+            <invocationTarget>AgentVerBilhetesUtilizador</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentVerBilhetesUtilizador</localDeveloperName>
+            <masterLabel>Listagem de Bilhetes</masterLabel>
+        </localActions>
+        <localDeveloperName>post_purchase_support</localDeveloperName>
+        <masterLabel>Pos-Compra e Suporte</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>escalation_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handles requests from users who want to transfer or escalate their conversation to a live human agent.</description>
+        <developerName>escalation_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDq</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDq</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>escalation</localDeveloperName>
+        <masterLabel>Escalation</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>discovery_and_filters_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handles customer requests to search and discover events by multiple filtering criteria including name, city, category, date range and maximum price.</description>
+        <developerName>discovery_and_filters_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDp</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDp</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>AgentDetalheEvento_179fj000001lxDp</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>AgentPesquisarEventos_179fj000001lxDp</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>AgentPesquisarEventos_179fj000001lxDp</fullName>
+            <description>Searches active events filtering by name keyword, city, category and maximum price per ticket.</description>
+            <developerName>AgentPesquisarEventos_179fj000001lxDp</developerName>
+            <invocationTarget>AgentPesquisarEventos</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentPesquisarEventos</localDeveloperName>
+            <masterLabel>Ferramenta de Pesquisa</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>AgentDetalheEvento_179fj000001lxDp</fullName>
+            <description>Returns full event details including prices for Geral, VIP and Camarote ticket types, extras, capacity and available seats.</description>
+            <developerName>AgentDetalheEvento_179fj000001lxDp</developerName>
+            <invocationTarget>AgentDetalheEvento</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentDetalheEvento</localDeveloperName>
+            <masterLabel>Detalhes do Evento</masterLabel>
+        </localActions>
+        <localDeveloperName>discovery_and_filters</localDeveloperName>
+        <masterLabel>Descoberta de Eventos</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>account_or_guest_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handles user identification and account verification on the GLOBAZ portal before granting access to personalised features such as ticket history, checkout and account management.</description>
+        <developerName>account_or_guest_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDo</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDo</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>AgentVerificarSessao_179fj000001lxDo</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>AgentVerificarSessao_179fj000001lxDo</fullName>
+            <description>Validates the GLOBAZ portal session credentials and returns the user profile including name, email and preferences.</description>
+            <developerName>AgentVerificarSessao_179fj000001lxDo</developerName>
+            <invocationTarget>AgentVerificarSessao</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AgentVerificarSessao</localDeveloperName>
+            <masterLabel>Validar Sessao Utilizador</masterLabel>
+        </localActions>
+        <localDeveloperName>account_or_guest</localDeveloperName>
+        <masterLabel>Autenticacao e Sessao</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>ambiguous_question_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirect conversation to relevant topics when user request is too ambiguous</description>
+        <developerName>ambiguous_question_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDn</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDn</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>ambiguous_question</localDeveloperName>
+        <masterLabel>Ambiguous Question</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>off_topic_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirect conversation to relevant topics when user request goes off-topic</description>
+        <developerName>off_topic_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDm</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDm</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>off_topic</localDeveloperName>
+        <masterLabel>Off Topic</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>topic_selector_16jfj000001Pskb</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Welcome the user and determine the appropriate topic based on user input</description>
+        <developerName>topic_selector_16jfj000001Pskb</developerName>
+        <genAiPluginInstructions>
+            <description>You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number.</description>
+            <developerName>instruction0_179fj000001lxDl</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179fj000001lxDl</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>topic_selector</localDeveloperName>
+        <masterLabel>Topic Selector</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <masterLabel>globazbot</masterLabel>
+    <plannerType>Atlas__ConcurrentMultiAgentOrchestration</plannerType>
+</GenAiPlannerBundle>

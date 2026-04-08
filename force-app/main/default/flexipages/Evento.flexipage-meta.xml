@@ -38,13 +38,13 @@
                             <value>FeedItem.TextPost</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FeedItem.ContentPost</value>
-                        </valueListItems>
-                        <valueListItems>
                             <value>Global.NewEvent</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>Evento__c.CriarPricebook</value>
+                            <value>Evento__c.Criar_Pricebook</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FeedItem.ContentPost</value>
                         </valueListItems>
                         <valueListItems>
                             <value>Global.NewTask</value>

@@ -1,0 +1,56 @@
+{
+  "required" : [ ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "apenasDestaques" : {
+      "title" : "So Destaques",
+      "description" : "If true, returns only highlighted events.",
+      "lightning:type" : "lightning__booleanType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "categoria" : {
+      "title" : "Categoria",
+      "description" : "Event category filter such as Music, Theater or Festival.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "cidade" : {
+      "title" : "Localidade",
+      "description" : "The city where the event takes place.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "dataFim" : {
+      "title" : "Data Fim",
+      "description" : "Search events until this date in YYYY-MM-DD format.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "dataInicio" : {
+      "title" : "Data Inicio",
+      "description" : "Search events from this date in YYYY-MM-DD format.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "nomeEvento" : {
+      "title" : "Palavra-chave",
+      "description" : "Keyword or part of the event name to search.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "precoMax" : {
+      "title" : "Preco Max",
+      "description" : "Maximum budget per ticket.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

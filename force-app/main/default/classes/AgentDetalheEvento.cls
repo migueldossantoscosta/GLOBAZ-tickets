@@ -127,7 +127,7 @@ public with sharing class AgentDetalheEvento {
             String msg = '🎟️ *' + out.nomeEvento + '*\n\n';
             msg += '📅 ' + out.dataEvento + '\n';
             msg += '📍 ' + out.recinto    + '\n';
-            msg += '🔞 Classificação: '   + (out.classificacaoEtaria != null ? out.classificacaoEtaria : 'Livre') + '\n\n';
+            msg += '🔞 Classificação: '   + (out.classificacaoEtaria ?? 'Livre') + '\n\n';
             msg += '💶 *Preços (c/ IVA):*\n';
             if (out.precoGeral    != null) msg += '   🎫 Geral: '    + out.precoGeral    + '€\n';
             if (out.precoVIP      != null) msg += '   ⭐ VIP: '      + out.precoVIP      + '€\n';
