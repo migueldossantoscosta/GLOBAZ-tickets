@@ -501,11 +501,11 @@
       </div>
 
       <div class="nav-actions">
-        <a href="HomeEventos" class="ghost-btn">Voltar</a>
-        <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
-        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
-        <a href="SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
-        <a href="SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
+        <a href="{!$Page.HomeEventos}" class="ghost-btn">Voltar</a>
+        <a href="{!$Page.GlobazSiteAccount}" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='{!$Page.GlobazSiteAccount}'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
+        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='{!$Page.HomeEventos}';">Sair</a>
+        <a href="{!$Page.SiteLogin}" class="ghost-btn" id="navLogin">Entrar</a>
+        <a href="{!$Page.SiteRegister}" class="primary-btn" id="navRegister">Criar conta</a>
       </div>
     </div>
   </header>
@@ -518,8 +518,8 @@
           <apex:outputText value="{!IF(evento.Destaque__c, 'Em destaque agora', 'Evento disponível')}" />
         </div>
 
-        <div class="hero-bg"
-             style="background-image:url('{!IF(ISBLANK(evento.URLImagem__c), 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80', evento.URLImagem__c)}');">
+        <div class="hero-bg" data-img="{!evento.URLImagem__c}"
+             style="background-image:linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{!evento.URLImagem__c}');">
         </div>
         <div class="hero-overlay"></div>
 
@@ -531,7 +531,7 @@
           <h1 class="hero-title">{!evento.Name}</h1>
 
           <div class="meta">
-            <span class="meta-pill">{!TEXT(evento.DataEvento__c)}</span>
+            <span class="meta-pill">{!formattedDate}</span>
             <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
             <span class="meta-pill">{!evento.CategoriaPrincipal__c}</span>
           </div>
@@ -541,8 +541,8 @@
           </div>
 
           <div class="cta-row">
-            <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
-            <a href="HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
+            <a href="{!$Page.EscolherLugar}?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
+            <a href="{!$Page.HomeEventos}#eventos" class="ghost-btn">Ver mais eventos</a>
           </div>
 
           <div class="hero-bottom">
@@ -570,7 +570,7 @@
 
           <div class="detail-row">
             <strong>Data</strong>
-            <span>{!TEXT(evento.DataEvento__c)}</span>
+            <span>{!formattedDate}</span>
           </div>
 
           <div class="detail-row">
@@ -667,6 +667,36 @@
               }
           }
       }, 100);
+  </script>
+  <script>
+    (function() {
+      // Smart URL Fixer - handles migrated orgs and site prefixes
+      function fixImageUrls() {
+        var sitePrefix = window.location.pathname.split('/')[1];
+        if (sitePrefix === 'EventoDetalhe' || sitePrefix === 'apex') sitePrefix = '';
+        else sitePrefix = '/' + sitePrefix;
+
+        document.querySelectorAll('.hero-bg').forEach(function(div) {
+          var url = div.getAttribute('data-img') || '';
+          console.log('Fixing element:', div.className, 'Original URL:', url);
+
+          if (url.indexOf('force.com') !== -1 || url.indexOf('resource/') !== -1) {
+             var parts = url.split('/resource/');
+             if (parts.length > 1) {
+                var resName = parts[1].split('/')[1] || parts[1];
+                if (resName.indexOf('?') !== -1) resName = resName.split('?')[0];
+                var finalUrl = sitePrefix + "/resource/" + resName;
+                div.style.backgroundImage = "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5)), url('" + finalUrl + "')";
+             }
+          }
+          if (!url || url === 'undefined' || url === 'null') {
+             div.style.backgroundImage = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
+          }
+        });
+      }
+      fixImageUrls();
+      setTimeout(fixImageUrls, 1000);
+    })();
   </script>
 </body>
 </html>

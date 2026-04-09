@@ -980,26 +980,16 @@
       </div>
 
       <nav class="nav">
-        <a href="#destaques">Destaques</a>
-        <a href="#eventos">Eventos</a>
-        <a href="#vantagens">Vantagens</a>
+        <a href="#eventos">Explorar Agenda</a>
         <a href="#categorias">Categorias</a>
-        <a href="#newsletter">Newsletter</a>
       </nav>
 
        <div class="nav-actions">
-          <a href="#eventos" class="ghost-btn">Agenda</a>
-
-          <a href="/apex/SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
-          <a href="/apex/SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
-
-          <a href="/GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;align-items:center;gap:8px;" onclick="event.preventDefault(); var uid = (function(){ try { var c = (function(name){ var n=name+'='; var parts=document.cookie.split(';'); for(var i=0;i<parts.length;i++){ var p=parts[i]; while(p.charAt(0)===' ') p=p.substring(1); if(p.indexOf(n)===0) return p.substring(n.length,p.length);} return null; })('globaz_uid'); if(c) return c; } catch(e) {} return null; })(); window.location.href = '/apex/GlobazSiteAccount' + (uid ? ('?uid=' + encodeURIComponent(uid)) : '');">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-              Conta
-          </a>
-          <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
+          <a href="{!$Page.HomeEventos}#eventos" class="ghost-btn">Agenda</a>
+          <a href="{!$Page.GlobazSiteAccount}" class="ghost-btn" id="navAccount" style="display:none;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='{!$Page.GlobazSiteAccount}'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
+          <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;" onclick="event.preventDefault(); eraseCookie('globaz_uid'); window.location.href='{!$Page.HomeEventos}';">Sair</a>
+          <a href="{!$Page.SiteLogin}" class="ghost-btn navLogin" id="navLogin">Entrar</a>
+          <a href="{!$Page.SiteRegister}" class="primary-btn navRegister" id="navRegister">Criar conta</a>
       </div>
 
       <script>
@@ -1021,21 +1011,21 @@
         <div class="hero-ribbon"><span class="pulse"></span> Em destaque agora</div>
 
         <apex:outputPanel rendered="{!hasFeaturedEvents}">
-          <apex:repeat value="{!featuredEvents}" var="ev">
+          <apex:repeat value="{!featuredEvents}" var="wrap">
             <div class="slide">
-              <div class="slide-bg"
-                   style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80', ev.URLImagem__c)}');">
+              <div class="slide-bg" data-img="{!wrap.ev.URLImagem__c}"
+                   style="background-image:linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{!wrap.ev.URLImagem__c}');">
               </div>
               <div class="slide-overlay"></div>
 
               <div class="slide-content">
                 <div class="eyebrow">Evento premium</div>
-                <h1>{!ev.Name}</h1>
+                <h1>{!wrap.ev.Name}</h1>
 
                 <div class="meta">
-                  <span class="meta-pill">{!TEXT(ev.DataEvento__c)}</span>
-                  <span class="meta-pill">{!ev.LocalizacaoEvento__c}</span>
-                  <span class="meta-pill">{!ev.CategoriaPrincipal__c}</span>
+                  <span class="meta-pill">{!wrap.formattedDate}</span>
+                  <span class="meta-pill">{!wrap.city}</span>
+                  <span class="meta-pill">{!wrap.ev.CategoriaPrincipal__c}</span>
                 </div>
 
                 <p>
@@ -1043,7 +1033,7 @@
                 </p>
 
                 <div class="cta-row">
-                  <a href="EventoDetalhe?id={!ev.Id}" class="primary-btn">Comprar bilhetes</a>
+                  <a href="{!$Page.EventoDetalhe}?id={!wrap.ev.Id}" class="primary-btn">Comprar bilhetes</a>
                   <a href="#eventos" class="ghost-btn">Ver conceito</a>
                 </div>
 
@@ -1084,14 +1074,14 @@
         <div class="mini-panel">
           <div class="panel-label">A acontecer</div>
 
-          <apex:repeat value="{!nextEvents}" var="ev" rows="4">
+          <apex:repeat value="{!nextEvents}" var="wrap" rows="4">
             <div class="live-row">
               <div>
-                <strong>{!ev.Name}</strong>
-                <span>{!TEXT(ev.DataEvento__c)} · {!ev.LocalizacaoEvento__c}</span>
+                <strong>{!wrap.ev.Name}</strong>
+                <span>{!wrap.formattedDate} · {!wrap.city}</span>
               </div>
               <div class="pill-status">
-                <apex:outputText value="{!IF(ev.Destaque__c, 'Destaque', 'Agenda')}" />
+                <apex:outputText value="{!IF(wrap.ev.Destaque__c, 'Destaque', 'Agenda')}" />
               </div>
             </div>
           </apex:repeat>
@@ -1151,10 +1141,10 @@
       </div>
       <div class="chip-row" id="eventCategoryFilters">
         <a href="javascript:void(0)" class="chip-btn active" data-category="">Todos</a>
-        <a href="javascript:void(0)" class="chip-btn" data-category="concert">Concertos</a>
-        <a href="javascript:void(0)" class="chip-btn" data-category="festival">Festivais</a>
-        <a href="javascript:void(0)" class="chip-btn" data-category="teatro">Teatro</a>
-        <a href="javascript:void(0)" class="chip-btn" data-category="desport">Desporto</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="Concertos/Shows">Concertos</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="Festivais">Festivais</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="Teatro/Performance">Teatro</a>
+        <a href="javascript:void(0)" class="chip-btn" data-category="Eventos Desportivos">Desporto</a>
       </div>
     </div>
 
@@ -1164,27 +1154,27 @@
       </div>
 
       <div class="event-grid" id="eventGrid">
-        <apex:repeat value="{!nextEvents}" var="ev">
-          <a class="event-card medium event-filter-card" href="EventoDetalhe?id={!ev.Id}">
-            <div class="bg"
-                style="background-image:url('{!IF(ISBLANK(ev.URLImagem__c), 'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=1400&q=80', ev.URLImagem__c)}');">
+        <apex:repeat value="{!nextEvents}" var="wrap">
+          <a class="event-card medium event-filter-card" href="{!$Page.EventoDetalhe}?id={!wrap.ev.Id}">
+            <div class="bg" data-img="{!wrap.ev.URLImagem__c}"
+                style="background-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.4)), url('{!wrap.ev.URLImagem__c}');">
             </div>
 
             <div class="overlay"></div>
 
             <div class="event-content">
               <div class="badge-row">
-                <apex:outputPanel rendered="{!ev.Destaque__c}">
+                <apex:outputPanel rendered="{!wrap.ev.Destaque__c}">
                   <span class="tag featured">Destaque</span>
                 </apex:outputPanel>
-                <span class="tag js-event-category">{!ev.CategoriaPrincipal__c}</span>
+                <span class="tag js-event-category">{!wrap.ev.CategoriaPrincipal__c}</span>
               </div>
 
-              <h3 class="js-event-name">{!ev.Name}</h3>
+              <h3 class="js-event-name">{!wrap.ev.Name}</h3>
 
               <div class="event-meta">
-                <span>{!TEXT(ev.DataEvento__c)}</span>
-                <span class="js-event-location">{!ev.Recinto__r.Cidade__c}</span>
+                <span>{!wrap.formattedDate}</span>
+                <span class="js-event-location">{!wrap.city}</span>
               </div>
 
               <span class="event-link">Ver detalhes</span>
@@ -1250,32 +1240,32 @@
     </div>
 
     <div class="categories">
-      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="concert">
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="Concertos/Shows">
         <div class="category-icon">🎤</div>
         <h3>Concertos</h3>
         <p>Artistas nacionais e internacionais, tours, showcases e atuações especiais.</p>
-        <div class="category-count">Categoria visual</div>
+        <div class="category-count">Ver todos</div>
       </a>
 
-      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="festival">
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="Festivais">
         <div class="category-icon">🎪</div>
         <h3>Festivais</h3>
         <p>Grandes produções ao ar livre, cartazes premium e experiências imersivas.</p>
-        <div class="category-count">Categoria visual</div>
+        <div class="category-count">Ver todos</div>
       </a>
 
-      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="teatro">
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="Teatro/Performance">
         <div class="category-icon">🎭</div>
         <h3>Teatro</h3>
         <p>Peças, comédia, musicais e programas culturais para vários públicos.</p>
-        <div class="category-count">Categoria visual</div>
+        <div class="category-count">Ver todos</div>
       </a>
 
-      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="desport">
+      <a href="javascript:void(0)" class="category-box category-filter-box" data-category="Eventos Desportivos">
         <div class="category-icon">🏟️</div>
         <h3>Desporto</h3>
         <p>Jogos, torneios, exibições e experiências pensadas para adeptos.</p>
-        <div class="category-count">Categoria visual</div>
+        <div class="category-count">Ver todos</div>
       </a>
     </div>
   </section>
@@ -1530,6 +1520,45 @@
   </script>
   <script type='text/javascript' src='https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/ESWLOBA1775639695350/assets/js/bootstrap.min.js' onload='initEmbeddedMessaging()'></script>
 
+  <script>
+    (function() {
+      // Smart URL Fixer - handles migrated orgs and site prefixes
+      function fixImageUrls() {
+        var sitePrefix = window.location.pathname.split('/')[1];
+        if (sitePrefix === 'HomeEventos' || sitePrefix === 'apex') sitePrefix = '';
+        else sitePrefix = '/' + sitePrefix;
+
+        document.querySelectorAll('.bg, .slide-bg').forEach(function(div) {
+          var url = div.getAttribute('data-img') || '';
+          
+          // Debug logs for the user to see in browser console
+          console.log('Fixing element:', div.className, 'Original URL:', url);
+
+          if (url.indexOf('force.com') !== -1 || url.indexOf('resource/') !== -1) {
+             var parts = url.split('/resource/');
+             if (parts.length > 1) {
+                var resName = parts[1].split('/')[1] || parts[1];
+                if (resName.indexOf('?') !== -1) resName = resName.split('?')[0];
+                
+                // Construct path with site prefix if necessary
+                var finalUrl = sitePrefix + "/resource/" + resName;
+                console.log('Constructed local URL:', finalUrl);
+                
+                div.style.backgroundImage = "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5)), url('" + finalUrl + "')";
+             }
+          }
+
+          // Force a fallback if it looks like it will fail (black card prevention)
+          if (!url || url === 'undefined' || url === 'null') {
+             div.style.backgroundImage = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
+          }
+        });
+      }
+      // Execute immediately and again after 1s to catch dynamic content
+      fixImageUrls();
+      setTimeout(fixImageUrls, 1000);
+    })();
+  </script>
 </body>
 </html>
 </apex:page>

@@ -18,6 +18,9 @@ public without sharing class AgentProcessarPagamento {
 
         @InvocableVariable(label='Lugar' required=false)
         public Decimal lugar;
+
+        @InvocableVariable(label='Extras selecionados (JSON)' required=false)
+        public String extrasJson;
     }
 
     public class Output {
@@ -65,7 +68,7 @@ public without sharing class AgentProcessarPagamento {
                 });
             }
             String bilhetesJsonFinal = JSON.serialize(bilhetesList);
-            String extrasJsonFinal   = '[]';
+            String extrasJsonFinal   = String.isNotBlank(inp.extrasJson) ? inp.extrasJson : '[]';
 
             // Reutilizar lógica existente
             String resultado = BilheteiraController.processarPagamentoMock(
@@ -83,21 +86,40 @@ public without sharing class AgentProcessarPagamento {
                 out.sucesso       = true;
                 out.totalBilhetes = totalBilhetesCriados;
 
-                // Buscar email do cliente para confirmar envio
+                // Buscar detalhes da Order e do Promotor (Business Account)
                 List<Order> ords = [
-                    SELECT Account.PersonEmail, Account.FirstName
+                    SELECT Account.PersonEmail, Account.FirstName, MetodoPagamento__c,
+                           Evento__r.Account__r.Name, Evento__r.Account__r.Phone
                     FROM   Order WHERE Id = :ordId LIMIT 1
                 ];
-                String emailCliente = (!ords.isEmpty() && ords[0].Account != null)
-                    ? ords[0].Account.PersonEmail : '';
-                String nomeCliente = (!ords.isEmpty() && ords[0].Account != null)
-                    ? ords[0].Account.FirstName : 'Cliente';
+                
+                String emailCliente = !ords.isEmpty() ? ords[0].Account.PersonEmail : '';
+                String nomeCliente  = !ords.isEmpty() ? ords[0].Account.FirstName : 'Cliente';
+                String metodo       = !ords.isEmpty() ? ords[0].MetodoPagamento__c : 'Cartão';
+                String promotorNome = (!ords.isEmpty() && ords[0].Evento__r.Account__r != null) ? ords[0].Evento__r.Account__r.Name : 'GLOBAZ';
+                String promotorTel  = (!ords.isEmpty() && ords[0].Evento__r.Account__r != null) ? ords[0].Evento__r.Account__r.Phone : '910 000 000';
 
-                out.mensagemChat =
-                    '🎉 *Compra confirmada, ' + nomeCliente + '!*\n\n'
-                    + '🎫 ' + totalBilhetesCriados + ' bilhete(s) reservado(s) com sucesso.\n'
-                    + '📧 O teu bilhete PDF vai chegar ao email *' + emailCliente + '* em breve.\n\n'
-                    + '📱 Guarda o email — precisas dele na entrada do evento.\n'
+                String msgBase = '🎉 *Compra confirmada, ' + nomeCliente + '!*\n\n'
+                    + '🎫 ' + totalBilhetesCriados + ' bilhete(s) reservado(s) com sucesso.\n';
+
+                if (metodo == 'MBWay') {
+                    msgBase += '📱 *Pagamento via MBWay:*\n'
+                        + 'Total para o promotor (*' + promotorNome + '*): **' + promotorTel + '**\n'
+                        + '🔗 [📱 Abrir App MBWay](https://globaz-tickets.force.com/qr?order=' + ordId + ')\n\n';
+                } else if (metodo == 'Multibanco') {
+                    String ref = String.valueOf(Math.abs(ordId.hashCode())).left(9);
+                    ref = ref.substring(0,3) + ' ' + ref.substring(3,6) + ' ' + ref.substring(6,9);
+                    msgBase += '🏧 *Dados para Multibanco:*\n'
+                        + '   Entidade: **12345** | Ref: **' + ref + '**\n'
+                        + '🔗 [📄 Ver Entidade e Referência](https://globaz-tickets.force.com/checkout?order=' + ordId + ')\n\n';
+                } else {
+                    msgBase += '💳 *Pagamento via Cartão:*\n'
+                        + 'Clica no link para pagar de forma segura:\n'
+                        + '🔗 [💳 PAGAR AGORA](https://globaz-tickets.force.com/checkout?order=' + ordId + ')\n\n';
+                }
+
+                out.mensagemChat = msgBase
+                    + '📧 O teu bilhete PDF vai chegar ao e-mail *' + emailCliente + '* em breve.\n\n'
                     + 'Posso ajudar-te com mais alguma coisa? 😊';
 
             } else if (resultado == 'PAGAMENTO_RECUSADO') {

@@ -109,6 +109,7 @@ public with sharing class AgentDetalheEvento {
                     // Se não for um dos 3 bilhetes principais, é um extra
                     if (!isTicket && !code.startsWith('blt-')) {
                         extras.add(new Map<String, Object>{
+                            'pbeId' => pbe.Id,
                             'nome'  => pbe.Product2.Name,
                             'code'  => pbe.Product2.ProductCode,
                             'preco' => comIva
@@ -135,7 +136,18 @@ public with sharing class AgentDetalheEvento {
             if (out.precoVIP != null)   msg += '   ⭐ VIP: ' + out.precoVIP + '€\n';
             if (out.precoCamarote != null) msg += '   🏆 Camarote: ' + out.precoCamarote + '€\n';
             
-            out.mensagemChat = msg + '\n🪑 Lugares: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima;
+            // Adicionar serviços associados (extras)
+            if (String.isNotBlank(out.extrasJson) && out.extrasJson != '[]') {
+                msg += '\n✨ *Serviços Associados:*\n';
+                List<Object> extrasList = (List<Object>) JSON.deserializeUntyped(out.extrasJson);
+                for (Object obj : extrasList) {
+                    Map<String, Object> extra = (Map<String, Object>) obj;
+                    msg += '   ➕ ' + (String)extra.get('nome') + ': ' + extra.get('preco') + '€\n';
+                }
+            }
+
+            out.mensagemChat = msg + '\n🪑 Lugares: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima +
+                               '\n📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](https://globaz-tickets.force.com/apex/EscolherLugar?idEvento=' + out.eventoIdOut + ')';
 
         } catch (Exception e) {
             out.erroMsg = 'Erro: ' + e.getMessage();

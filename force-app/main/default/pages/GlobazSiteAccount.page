@@ -152,7 +152,7 @@
 
             <div class="actions">
                 <div class="left-actions">
-                    <a href="HomeEventos" class="btn btn-ghost">Voltar ao Site</a>
+                    <a href="{!$Page.HomeEventos}" class="btn btn-ghost">Voltar ao Site</a>
                     <a href="javascript:void(0)" class="btn btn-ghost" style="color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="logout();">Sair</a>
                 </div>
                 <button id="btnSalvar" class="btn btn-primary" onclick="salvarConta()">Guardar Alterações</button>
@@ -197,9 +197,9 @@
             <div class="eyebrow">Acesso Restrito</div>
             <div class="title">Precisas de fazer login</div>
             <div class="actions" style="justify-content:center;">
-                <a href="SiteLogin" class="btn btn-primary">Entrar</a>
-                <a href="SiteRegister" class="btn btn-ghost">Criar Conta</a>
-                <a href="HomeEventos" class="btn btn-ghost">Voltar ao Início</a>
+                <a href="{!$Page.SiteLogin}" class="btn btn-primary">Entrar</a>
+                <a href="{!$Page.SiteRegister}" class="btn btn-ghost">Criar Conta</a>
+                <a href="{!$Page.HomeEventos}" class="btn btn-ghost">Voltar ao Início</a>
             </div>
         </div>
     </apex:outputPanel>
@@ -213,7 +213,7 @@
 
         function logout() {
             document.cookie = 'globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-            window.location.href = 'HomeEventos';
+            window.location.href = '{!$Page.HomeEventos}';
         }
 
         function salvarConta() {

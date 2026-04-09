@@ -1,5 +1,5 @@
 system:
-    instructions: "You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method, then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number."
+    instructions: "You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method (MBWay, Cartão or Multibanco), then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number."
 
     messages:
         welcome: "Olá! Sou o GLO, o teu assistente GLOBAZ Tickets. 🎫 Estou aqui para te ajudar a encontrar os melhores eventos e garantir o teu lugar na primeira fila. O que te traz por cá hoje? Procuras algum concerto em específico ou queres ver os destaques da semana?"
@@ -40,6 +40,14 @@ variables:
     SelectedEventPrice: mutable number
         label: "SelectedEventPrice"
         description: "Armazena o preco base do evento selecionado."
+        visibility: "Internal"
+    SelectedEventExtras: mutable string
+        label: "SelectedEventExtras"
+        description: "Estrutura JSON com os servicos adicionais (estacionamento, consumacao, etc.) disponiveis para o evento."
+        visibility: "Internal"
+    CurrentOrderId: mutable string
+        label: "CurrentOrderId"
+        description: "ID da Order (Draft) criada para o checkout atual."
         visibility: "Internal"
     EndUserId: linked string
         source: @MessagingSession.MessagingEndUserId
@@ -196,6 +204,7 @@ topic discovery_and_filters:
                 with eventoId = ...
                 set @variables.SelectedEventId = @outputs.eventoIdOut
                 set @variables.SelectedEventPrice = @outputs.precoGeral
+                set @variables.SelectedEventExtras = @outputs.extrasJson
 
     actions:
         AgentPesquisarEventos:
@@ -319,8 +328,8 @@ topic discovery_and_filters:
                 extrasJson: string
                     description: "List of available extras in JSON format."
                     label: "Extras JSON"
-                    filter_from_agent: True
-                    is_displayable: False
+                    filter_from_agent: False
+                    is_displayable: True
                 lugaresVendidos: number
                     description: "Total number of sold tickets."
                     label: "Vendidos"
@@ -359,10 +368,9 @@ topic checkout_and_payment:
 
     reasoning:
         instructions: ->
-            | Your job is to guide the customer through the ticket purchase process step by step.
-            | Step 1 - Configuration: Confirm the ticket type such as Geral, VIP or Camarote and the quantity with the customer.
-            | Step 2 - Price: Use {!@actions.AgentCalcularTotalCompra} to calculate and present the final price including VAT before asking for payment details.
-            | Step 3 - Data: Collect the Row, Seat Number and Payment Method such as MBWay or Card. If the user is not logged in, also collect their full name and email address.
+            | Step 1 - Configuration: Confirm the ticket type such as Geral, VIP or Camarote, the quantity AND any associated services/extras with the customer.
+            | Step 2 - Price: Use {!@actions.AgentCalcularTotalCompra} to calculate and present the final price including VAT and extras before asking for payment details.
+            | Step 3 - Data: Collect the Row, Seat Number and Payment Method such as MBWay, Card or Multibanco. If the user is not logged in, also collect their full name and email address.
             | Step 4 - Reservation: Use {!@actions.AgentCriarReservaAgent} to generate a draft order in the system.
             | Step 5 - Payment: Use {!@actions.AgentProcessarPagamento} to finalise the transaction and issue the tickets.
             | Never skip the price calculation step before proceeding to reservation.
@@ -380,16 +388,18 @@ topic checkout_and_payment:
                 with eventoId = @variables.SelectedEventId
                 with accountId = @variables.VerifiedCustomerId
                 with metodoPagamento = ...
-                with nomeCompleto = @variables.UserName
-                with email = @variables.UserEmail
+                with nomeCompleto = ...
+                with email = ...
+                set @variables.CurrentOrderId = @outputs.orderId
 
             AgentProcessarPagamento: @actions.AgentProcessarPagamento
-                with orderId = ...
+                with orderId = @variables.CurrentOrderId
                 with eventoId = @variables.SelectedEventId
                 with tipoBilhete = ...
                 with quantidade = ...
                 with fila = ...
                 with lugar = ...
+                with extrasJson = ...
 
     actions:
         AgentCalcularTotalCompra:
@@ -450,19 +460,19 @@ topic checkout_and_payment:
                     is_required: False
                     is_user_input: False
                 metodoPagamento: string
-                    description: "The chosen payment method such as MBWay or Card."
+                    description: "The chosen payment method such as MBWay, Card or Multibanco."
                     label: "Metodo de Pagamento"
                     is_required: True
                     is_user_input: True
                 nomeCompleto: string
                     description: "Guest full name if the user is not authenticated."
                     label: "Nome"
-                    is_required: False
+                    is_required: True
                     is_user_input: True
                 email: string
                     description: "Guest email for ticket delivery if the user is not authenticated."
                     label: "Email"
-                    is_required: False
+                    is_required: True
                     is_user_input: True
             outputs:
                 orderId: string
@@ -575,7 +585,7 @@ topic post_purchase_support:
 
             AgentCriarCaseSuporte: @actions.AgentCriarCaseSuporte
                 with accountId = @variables.VerifiedCustomerId
-                with email = @variables.UserEmail
+                with email = ...
                 with assunto = ...
                 with descricao = ...
                 with tipo = ...

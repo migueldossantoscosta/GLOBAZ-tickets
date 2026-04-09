@@ -84,13 +84,33 @@ public with sharing class AgentCalcularTotalCompra {
                 }
             }
 
-            // 3. Calcular Total (IVA 23%)
+            // 3. Calcular Total de Bilhetes (IVA 23%)
             out.totalComIva = (precoUnitario * 1.23 * inp.quantidade).setScale(2);
+            String itensSelecionados = '🎫 ' + inp.quantidade.setScale(0) + 'x ' + nomeProdutoDisplay + ': ' + out.totalComIva + '€\n';
 
-            // 4. Mensagem
+            // 4. Calcular Extras
+            if (String.isNotBlank(inp.extrasJson) && inp.extrasJson != '[]') {
+                try {
+                    List<Object> rawExtras = (List<Object>) JSON.deserializeUntyped(inp.extrasJson);
+                    for (Object obj : rawExtras) {
+                        Map<String, Object> extra = (Map<String, Object>) obj;
+                        Decimal preco = (extra.get('preco') != null) ? Decimal.valueOf(String.valueOf(extra.get('preco'))) : 0;
+                        Decimal qtd = (extra.get('qty') != null) ? Decimal.valueOf(String.valueOf(extra.get('qty'))) : 1;
+                        String nome = (String) extra.get('nome');
+                        
+                        Decimal totalExtra = (preco * qtd).setScale(2);
+                        out.totalComIva += totalExtra;
+                        itensSelecionados += '✨ ' + (Integer)qtd.intValue() + 'x ' + nome + ': ' + totalExtra + '€\n';
+                    }
+                } catch (Exception parseEx) {
+                    // Ignora extras mal formatados
+                }
+            }
+
+            // 5. Mensagem
             String msg = '🛒 *Resumo da tua seleção:*\n\n' +
-                         '🎫 ' + inp.quantidade.setScale(0) + 'x ' + nomeProdutoDisplay + '\n' +
-                         '💰 *TOTAL (c/ IVA): ' + out.totalComIva + '€*\n\n' +
+                         itensSelecionados +
+                         '\n💰 *TOTAL FINAL (c/ IVA): ' + out.totalComIva + '€*\n\n' +
                          'Posso avançar com a reserva?';
 
             out.resumoChat = msg;
