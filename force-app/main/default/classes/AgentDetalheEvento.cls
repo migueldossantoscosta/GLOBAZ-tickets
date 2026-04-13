@@ -147,7 +147,7 @@ public with sharing class AgentDetalheEvento {
             }
 
             out.mensagemChat = msg + '\n🪑 Lugares: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima +
-                               '\n📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](https://globaz-tickets.force.com/apex/EscolherLugar?idEvento=' + out.eventoIdOut + ')';
+                               '\n📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + out.eventoIdOut + ')';
 
         } catch (Exception e) {
             out.erroMsg = 'Erro: ' + e.getMessage();

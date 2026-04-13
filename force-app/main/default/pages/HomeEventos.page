@@ -1013,8 +1013,8 @@
         <apex:outputPanel rendered="{!hasFeaturedEvents}">
           <apex:repeat value="{!featuredEvents}" var="wrap">
             <div class="slide">
-              <div class="slide-bg" data-img="{!wrap.ev.URLImagem__c}"
-                   style="background-image:linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{!wrap.ev.URLImagem__c}');">
+              <div class="slide-bg" data-img="{!wrap.imageUrl}"
+                   style="background-image:linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{!wrap.imageUrl}');">
               </div>
               <div class="slide-overlay"></div>
 
@@ -1156,8 +1156,8 @@
       <div class="event-grid" id="eventGrid">
         <apex:repeat value="{!nextEvents}" var="wrap">
           <a class="event-card medium event-filter-card" href="{!$Page.EventoDetalhe}?id={!wrap.ev.Id}">
-            <div class="bg" data-img="{!wrap.ev.URLImagem__c}"
-                style="background-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.4)), url('{!wrap.ev.URLImagem__c}');">
+            <div class="bg" data-img="{!wrap.imageUrl}"
+                style="background-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.4)), url('{!wrap.imageUrl}');">
             </div>
 
             <div class="overlay"></div>
@@ -1519,46 +1519,6 @@
     };
   </script>
   <script type='text/javascript' src='https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/ESWLOBA1775639695350/assets/js/bootstrap.min.js' onload='initEmbeddedMessaging()'></script>
-
-  <script>
-    (function() {
-      // Smart URL Fixer - handles migrated orgs and site prefixes
-      function fixImageUrls() {
-        var sitePrefix = window.location.pathname.split('/')[1];
-        if (sitePrefix === 'HomeEventos' || sitePrefix === 'apex') sitePrefix = '';
-        else sitePrefix = '/' + sitePrefix;
-
-        document.querySelectorAll('.bg, .slide-bg').forEach(function(div) {
-          var url = div.getAttribute('data-img') || '';
-          
-          // Debug logs for the user to see in browser console
-          console.log('Fixing element:', div.className, 'Original URL:', url);
-
-          if (url.indexOf('force.com') !== -1 || url.indexOf('resource/') !== -1) {
-             var parts = url.split('/resource/');
-             if (parts.length > 1) {
-                var resName = parts[1].split('/')[1] || parts[1];
-                if (resName.indexOf('?') !== -1) resName = resName.split('?')[0];
-                
-                // Construct path with site prefix if necessary
-                var finalUrl = sitePrefix + "/resource/" + resName;
-                console.log('Constructed local URL:', finalUrl);
-                
-                div.style.backgroundImage = "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5)), url('" + finalUrl + "')";
-             }
-          }
-
-          // Force a fallback if it looks like it will fail (black card prevention)
-          if (!url || url === 'undefined' || url === 'null') {
-             div.style.backgroundImage = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
-          }
-        });
-      }
-      // Execute immediately and again after 1s to catch dynamic content
-      fixImageUrls();
-      setTimeout(fixImageUrls, 1000);
-    })();
-  </script>
 </body>
 </html>
 </apex:page>

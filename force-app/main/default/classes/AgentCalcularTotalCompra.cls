@@ -1,4 +1,4 @@
-public with sharing class AgentCalcularTotalCompra {
+public without sharing class AgentCalcularTotalCompra {
 
     public class Input {
         @InvocableVariable(label='ID do Evento' required=true)

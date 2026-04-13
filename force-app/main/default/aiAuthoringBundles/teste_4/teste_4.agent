@@ -49,18 +49,7 @@ variables:
         label: "CurrentOrderId"
         description: "ID da Order (Draft) criada para o checkout atual."
         visibility: "Internal"
-    EndUserId: linked string
-        source: @MessagingSession.MessagingEndUserId
-        description: "This variable may also be referred to as MessagingEndUser Id"
-    RoutableId: linked string
-        source: @MessagingSession.Id
-        description: "This variable may also be referred to as MessagingSession Id"
-    ContactId: linked string
-        source: @MessagingEndUser.ContactId
-        description: "This variable may also be referred to as MessagingEndUser ContactId"
-    EndUserLanguage: linked string
-        source: @MessagingSession.EndUserLanguage
-        description: "This variable may also be referred to as MessagingSession EndUserLanguage"
+
 
 knowledge:
     rag_feature_config_id: ""
@@ -533,6 +522,11 @@ topic checkout_and_payment:
                     label: "Lugar"
                     is_required: False
                     is_user_input: True
+                extrasJson: string
+                    description: "JSON string containing selected extras if any."
+                    label: "Extras"
+                    is_required: False
+                    is_user_input: False
             outputs:
                 mensagemChat: string
                     description: "Celebration message confirming the purchase completion and ticket issuance."

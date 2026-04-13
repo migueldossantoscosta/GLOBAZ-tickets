@@ -104,6 +104,7 @@ topic account_or_guest:
             | Never ask the user to provide their accountId directly. The system will attempt to resolve it automatically.
             | After verification, proceed with the action the user intended to perform.
 
+            
         actions:
             AgentVerificarSessao: @actions.AgentVerificarSessao
                 with accountId = ...

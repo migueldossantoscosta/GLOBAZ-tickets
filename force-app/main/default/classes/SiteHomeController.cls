@@ -53,10 +53,13 @@ public without sharing class SiteHomeController {
         public Evento__c ev { get; set; }
         public String formattedDate { get; set; }
         public String city { get; set; }
+        public String imageUrl { get; set; }
 
         public EventoWrapper(Evento__c e) {
             this.ev = e;
-            this.city = e.Recinto__r.Cidade__c != null ? e.Recinto__r.Cidade__c : (e.LocalizacaoEvento__c != null ? e.LocalizacaoEvento__c : 'Local a definir');
+            this.city = (e.Recinto__r != null && e.Recinto__r.Cidade__c != null) ? e.Recinto__r.Cidade__c : (e.LocalizacaoEvento__c != null ? e.LocalizacaoEvento__c : 'Local a definir');
+            this.imageUrl = e.URLImagem__c; // Use raw field value as it already contains the full URL
+            
             if (e.DataEvento__c != null) {
                 this.formattedDate = e.DataEvento__c.format('dd MMM yyyy HH:mm');
             } else {
