@@ -671,20 +671,20 @@ topic post_purchase_support:
         instructions: ->
             | Assiste o cliente na gestão dos seus bilhetes com foco em resolucão técnica IMEDIATA.
             | 
-            | SEQUÊNCIA OBRIGATÓRIA (FLUXO LINEAR):
-            | 1. CAPTURA DE EMAIL: Assim que o utilizador fornecer o email, o teu próximo passo OBRIGATÓRIO é listar os bilhetes.
-            | 2. LISTAGEM IMEDIATA: Executa {!@actions.AgentVerBilhetesUtilizador} mal tenhas o email. Deves mostrar a lista visual para provar que encontraste os bilhetes ativos.
-            | 3. ESCOLHA DO UTILIZADOR: Só após exibires a lista podes perguntar: "Queres cancelar tudo ou apenas um evento específico?"
-            | 4. EXECUÇÃO SÍNCRONA: Assim que o utilizador escolher (ex: "todos"), dispara IMEDIATAMENTE a ferramenta técnica ({!@actions.GLO_BulkCancelAction} ou {!@actions.GLO_CancelEventTickets}).
+            | PROTOCOLO EXCLUSIVO DE EXECUÇÃO:
+            | 1. LISTAGEM (Obrigatória): Executa {!@actions.AgentVerBilhetesUtilizador} mal tenhas o email. Mostra a lista e para.
+            | 2. DECISÃO DETERMINÍSTICA:
+            |    - Se o utilizador disser "TODOS", "TUDO" ou "SIM": O teu ÚNICO passo permitido é {!@actions.GLO_BulkCancelAction}. É proibido re-listar ou falar.
+            |    - Se o utilizador disser "EVENTO" ou nomear um evento: O teu ÚNICO passo permitido é {!@actions.GLO_CancelEventTickets}.
+            | 3. BLOQUEIO DE REDUNDÂNCIA: Após a escolha do utilizador, as ferramentas de listagem e suporte ficam DESATIVADAS. Foca-te apenas na Action técnica.
             | 
-            | CADEADO DE INTEGRIDADE:
-            | - É PROIBIDO chamar a ferramenta de listagem mais do que uma vez por sessão.
-            | - É PROIBIDO confirmar o cancelamento sem o código "DML_SUCCESS".
-            | - Se o utilizador disser "sim" ou "todos", não resumas nem voltes a listar. EXECUTA A ACTION.
+            | VALIDAÇÃO DE SUCESSO:
+            | - Só confirma o cancelamento se o output técnico devolver um código de sucesso.
+            | - Não inventes "processamento em curso". Ou executas a Action ou reportas erro.
             | 
-            | GESTÃO DE ERROS:
-            | - Se a Action retornar erro, reporta o código técnico original. Não inventes sucesso.
-            | - Fallback: "Não foi possível cancelar. Nenhum dado foi alterado."
+            | RESTRIÇÕES:
+            | - Proibido criar casos (Cases) ou pedir suporte externo.
+            | - [MANDATÓRIO]: A Action técnica deve ser o fim da conversação.
 
         actions:
             # Listagem/Contexto (Mapeamento Dinâmico para evitar falhas de variáveis)
@@ -693,11 +693,10 @@ topic post_purchase_support:
                 with email = ...
                 with orderName = ...
 
-            # Cancelamento em massa (Mapeamento Dinâmico para Slot Filling)
+            # CANCELAMENTO MANDATÓRIO (Única via técnica permitida)
             GLO_BulkCancelAction: @actions.GLO_BulkCancelAction
                 with emailUser = ...
 
-            # Cancelamento por evento (Mapeamento Dinâmico)
             GLO_CancelEventTickets: @actions.GLO_CancelEventTickets
                 with emailUser = ...
                 with nomeEvento = ...
@@ -707,18 +706,10 @@ topic post_purchase_support:
                 with orderId = ...
                 with seatNumber = ...
 
-            # Suporte
+            # Reenvio (Apenas após validação de que não é cancelamento)
             AgentReenviarBilhetePDF: @actions.AgentReenviarBilhetePDF
                 with bilheteId = ...
                 with accountId = @variables.VerifiedCustomerId
-
-            AgentCriarCaseSuporte: @actions.AgentCriarCaseSuporte
-                with accountId = @variables.VerifiedCustomerId
-                with email = ...
-                with assunto = ...
-                with descricao = ...
-                with tipo = ...
-                with orderId = ...
 
     actions:
         AgentVerBilhetesUtilizador:
@@ -909,7 +900,7 @@ topic post_purchase_support:
             include_in_progress_indicator: True
 
         GLO_BulkCancelAction:
-            description: "Ultra-fast cancellation for up to 50 tickets."
+            description: "MANDATORY: CALL THIS TO PERFORM THE ACTUAL REFUND/CANCELLATION IN SALESFORCE. This is the only tool that updates ticket status. Never skip this."
             inputs:
                 emailUser: string
                     description: "The user email for bulk cancellation."
@@ -928,7 +919,7 @@ topic post_purchase_support:
             include_in_progress_indicator: True
 
         GLO_CancelEventTickets:
-            description: "Cancels tickets by email and specific event name. Returns OK:X or ERRO:ZERO_REGISTOS."
+            description: "Mandatory tool for event-specific cancellation. Performs actual DML in database. Use this instead of creating support cases."
             inputs:
                 emailUser: string
                     description: "User email."
