@@ -1,10 +1,12 @@
 public with sharing class AgentReenviarBilhetePDF {
+    // Definir entrada para o bot reenviar o PDF do bilhete
+
 
     public class Input {
         @InvocableVariable(label='ID do Bilhete' required=true)
         public String bilheteId;
 
-        @InvocableVariable(label='Account ID do utilizador (para validação)' required=true)
+        @InvocableVariable(label='accountId' required=true)
         public String accountId;
     }
 
@@ -31,14 +33,14 @@ public with sharing class AgentReenviarBilhetePDF {
         Output out = new Output();
         try {
             Id bilheteId = (Id) inputs[0].bilheteId;
-            Id accId     = (Id) inputs[0].accountId;
+            Id accIdVal  = (Id) inputs[0].accountId;
 
             // Validar que o bilhete pertence ao utilizador
             List<Bilhete__c> bilhetes = [
                 SELECT Id, Account__c, Account__r.PersonEmail, Account__r.FirstName
                 FROM   Bilhete__c
                 WHERE  Id         = :bilheteId
-                AND    Account__c = :accId
+                AND    Account__c = :accIdVal
                 LIMIT  1
             ];
 

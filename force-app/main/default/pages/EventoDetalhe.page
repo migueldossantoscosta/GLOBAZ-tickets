@@ -1,4 +1,4 @@
-<apex:page controller="EventoDetalheController"
+<apex:page controller="EventoDetalheController" cache="false"
            showHeader="false"
            sidebar="false"
            standardStylesheets="false"
@@ -196,8 +196,9 @@
       inset: 0;
       background-size: cover;
       background-position: center;
-      filter: brightness(.55);
-      transform: scale(1.08);
+      filter: brightness(.75) saturate(1.1);
+      transform: scale(1.04);
+      transition: filter 0.6s ease;
     }
 
     .hero-overlay {
@@ -501,11 +502,13 @@
       </div>
 
       <div class="nav-actions">
-        <a href="{!$Page.HomeEventos}" class="ghost-btn">Voltar</a>
-        <a href="{!$Page.GlobazSiteAccount}" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='{!$Page.GlobazSiteAccount}'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
+        <a href="HomeEventos" class="ghost-btn">Voltar</a>
+        <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">
+          👤 Meu Perfil, <apex:outputText value="{!currentAccountName}" />
+        </a>
         <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='{!$Page.HomeEventos}';">Sair</a>
-        <a href="{!$Page.SiteLogin}" class="ghost-btn" id="navLogin">Entrar</a>
-        <a href="{!$Page.SiteRegister}" class="primary-btn" id="navRegister">Criar conta</a>
+        <a href="SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
+        <a href="SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
       </div>
     </div>
   </header>
@@ -518,8 +521,8 @@
           <apex:outputText value="{!IF(evento.Destaque__c, 'Em destaque agora', 'Evento disponível')}" />
         </div>
 
-        <div class="hero-bg" data-img="{!evento.URLImagem__c}"
-             style="background-image:linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{!evento.URLImagem__c}');">
+        <div class="hero-bg" 
+             style="background-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.4)), url('{!urlImagem}');">
         </div>
         <div class="hero-overlay"></div>
 
@@ -532,7 +535,9 @@
 
           <div class="meta">
             <span class="meta-pill">{!formattedDate}</span>
-            <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
+            <apex:outputPanel rendered="{!NOT(ISBLANK(evento.LocalizacaoEvento__c))}">
+                <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
+            </apex:outputPanel>
             <span class="meta-pill">{!evento.CategoriaPrincipal__c}</span>
           </div>
 
@@ -541,8 +546,8 @@
           </div>
 
           <div class="cta-row">
-            <a href="{!$Page.EscolherLugar}?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
-            <a href="{!$Page.HomeEventos}#eventos" class="ghost-btn">Ver mais eventos</a>
+            <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
+            <a href="HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
           </div>
 
           <div class="hero-bottom">
@@ -559,7 +564,7 @@
         <div class="section-kicker">Informação</div>
         <h2 class="section-title">Sobre o evento</h2>
         <p class="section-text">
-          Esta página já está alinhada com o visual da homepage para o utilizador sentir continuidade na experiência. Depois podes ligar aqui descrição longa, recinto, lotação, promotor ou qualquer outro campo.
+          <apex:outputText value="{!IF(ISBLANK(descricao), 'Descobre todos os pormenores deste evento único. Uma experiência exclusiva desenhada para proporcionar momentos inesquecíveis.', descricao)}" escape="false" />
         </p>
 
         <div class="detail-list">
@@ -575,7 +580,7 @@
 
           <div class="detail-row">
             <strong>Localização</strong>
-            <span>{!evento.LocalizacaoEvento__c}</span>
+            <span><apex:outputText value="{!IF(ISBLANK(evento.LocalizacaoEvento__c), 'Local a anunciar', evento.LocalizacaoEvento__c)}" /></span>
           </div>
 
           <div class="detail-row">
@@ -630,7 +635,7 @@
           </div>
 
           <div class="cta-row">
-            <a href="/globaztickets" class="primary-btn">Voltar à homepage</a>
+            <a href="HomeEventos" class="primary-btn">Voltar à homepage</a>
           </div>
         </div>
       </div>
@@ -667,36 +672,6 @@
               }
           }
       }, 100);
-  </script>
-  <script>
-    (function() {
-      // Smart URL Fixer - handles migrated orgs and site prefixes
-      function fixImageUrls() {
-        var sitePrefix = window.location.pathname.split('/')[1];
-        if (sitePrefix === 'EventoDetalhe' || sitePrefix === 'apex') sitePrefix = '';
-        else sitePrefix = '/' + sitePrefix;
-
-        document.querySelectorAll('.hero-bg').forEach(function(div) {
-          var url = div.getAttribute('data-img') || '';
-          console.log('Fixing element:', div.className, 'Original URL:', url);
-
-          if (url.indexOf('force.com') !== -1 || url.indexOf('resource/') !== -1) {
-             var parts = url.split('/resource/');
-             if (parts.length > 1) {
-                var resName = parts[1].split('/')[1] || parts[1];
-                if (resName.indexOf('?') !== -1) resName = resName.split('?')[0];
-                var finalUrl = sitePrefix + "/resource/" + resName;
-                div.style.backgroundImage = "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5)), url('" + finalUrl + "')";
-             }
-          }
-          if (!url || url === 'undefined' || url === 'null') {
-             div.style.backgroundImage = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
-          }
-        });
-      }
-      fixImageUrls();
-      setTimeout(fixImageUrls, 1000);
-    })();
   </script>
 </body>
 </html>

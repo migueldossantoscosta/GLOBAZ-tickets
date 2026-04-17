@@ -1,8 +1,14 @@
 public with sharing class AgentVerBilhetesUtilizador {
 
     public class Input {
-        @InvocableVariable(label='Account ID do utilizador' required=true)
+        @InvocableVariable(label='accountId' required=false)
         public String accountId;
+
+        @InvocableVariable(label='Email (alternativa se ID for vazio)' required=false)
+        public String email;
+
+        @InvocableVariable(label='ID da Reserva (ex: 000123)' required=false)
+        public String orderName;
     }
 
     public class Output {
@@ -30,32 +36,58 @@ public with sharing class AgentVerBilhetesUtilizador {
     public static List<Output> verBilhetes(List<Input> inputs) {
         Output out = new Output();
         try {
-            Id accId = (Id) inputs[0].accountId;
+            Input inp = inputs[0];
+            Id targetAccId = String.isNotBlank(inp.accountId) ? (Id) inp.accountId : null;
+            String emailSanitized = (inp.email != null) ? inp.email.trim().toLowerCase() : '';
 
+            if (targetAccId == null && String.isNotBlank(emailSanitized)) {
+                List<Account> accs = [
+                    SELECT Id FROM Account 
+                    WHERE PersonEmail = :emailSanitized
+                    AND IsPersonAccount = true 
+                    LIMIT 1
+                ];
+                if (!accs.isEmpty()) targetAccId = accs[0].Id;
+            }
+
+            // Pesquisa por ID de Reserva (Order Name) se ainda não encontrou nada
+            if (targetAccId == null && String.isNotBlank(inp.orderName)) {
+                List<Order> ords = [SELECT AccountId FROM Order WHERE Name = :inp.orderName LIMIT 1];
+                if (!ords.isEmpty()) targetAccId = ords[0].AccountId;
+            }
+
+            if (targetAccId == null) {
+                out.temBilhetes = false;
+                out.totalBilhetes = 0;
+                out.mensagemChat = 'Não consegui encontrar nenhuma compra associada ao email "' + emailSanitized + '". 🧐\n\n'
+                    + 'Podes verificar se há algum erro de digitação ou tentar indicar o **ID da Reserva** (ex: 000123)?';
+                return new List<Output>{ out };
+            }
+
+            // 1. Pesquisa Abrangente: Procura todos os bilhetes 'Vendidos' do utilizador para eventos FUTUROS
             List<Bilhete__c> bilhetes = [
                 SELECT Id, Name, Fila__c, NumeroLugar__c, EstadoBilhete__c,
                        Evento__r.Name, Evento__r.DataEvento__c,
                        Evento__r.LocalizacaoEvento__c, Evento__r.Recinto__r.Name,
-                       Order__r.Name, Order__r.MetodoPagamento__c,
+                       Order__c, Order__r.Name, Order__r.MetodoPagamento__c,
                        CreatedDate
                 FROM   Bilhete__c
-                WHERE  Account__c       = :accId
+                WHERE  Account__c       = :targetAccId
                 AND    EstadoBilhete__c = 'Vendido'
-                ORDER BY Evento__r.DataEvento__c ASC
-                LIMIT  20
+                AND    Evento__r.DataEvento__c >= TODAY
+                ORDER BY Evento__r.DataEvento__c ASC, NumeroLugar__c ASC
             ];
 
             out.totalBilhetes = bilhetes.size();
             out.temBilhetes   = !bilhetes.isEmpty();
 
             if (bilhetes.isEmpty()) {
-                out.mensagemChat = 'Não tens bilhetes ativos de momento. '
-                    + 'Queres que te mostre eventos disponíveis? 🎵';
+                out.mensagemChat = 'Não encontrei nenhum bilhete ativo para os teus próximos eventos. 🧐';
                 out.bilhetesJson = '[]';
                 return new List<Output>{ out };
             }
 
-            // Agrupar por evento
+            // 2. Agrupamento por Evento
             Map<String, List<Bilhete__c>> porEvento = new Map<String, List<Bilhete__c>>();
             for (Bilhete__c b : bilhetes) {
                 String chave = b.Evento__r.Name;
@@ -65,7 +97,7 @@ public with sharing class AgentVerBilhetesUtilizador {
                 porEvento.get(chave).add(b);
             }
 
-            String msg = '🎫 *Os teus bilhetes:*\n\n';
+            String msg = '🎫 *Encontrei os seguintes bilhetes para os teus próximos eventos:*\n\n';
             List<Map<String, Object>> jsonList = new List<Map<String, Object>>();
 
             for (String nomeEvento : porEvento.keySet()) {
@@ -78,12 +110,11 @@ public with sharing class AgentVerBilhetesUtilizador {
                     : primeiro.Evento__r.LocalizacaoEvento__c;
 
                 msg += '🎪 *' + nomeEvento + '*\n';
-                msg += '   📅 ' + dataStr + '\n';
-                msg += '   📍 ' + recinto + '\n';
+                msg += '   📅 ' + dataStr + ' | 📍 ' + recinto + '\n';
 
                 for (Bilhete__c b : grupo) {
-                    msg += '   🎟️ ' + b.Name + ' — Fila ' + b.Fila__c
-                        + ', Lugar ' + (Integer) b.NumeroLugar__c + '\n';
+                    msg += '   🎟️ Lugar **' + (Integer) b.NumeroLugar__c + '** (Fila ' + b.Fila__c + ')\n';
+                    
                     jsonList.add(new Map<String, Object>{
                         'id'         => b.Id,
                         'nome'       => b.Name,
@@ -91,15 +122,14 @@ public with sharing class AgentVerBilhetesUtilizador {
                         'data'       => dataStr,
                         'fila'       => b.Fila__c,
                         'lugar'      => b.NumeroLugar__c,
-                        'orderId'    => b.Order__r?.Name,
+                        'orderId'    => b.Order__c,
                         'pagamento'  => b.Order__r?.MetodoPagamento__c
                     });
                 }
                 msg += '\n';
             }
 
-            msg += 'Precisas de alguma ajuda com estes bilhetes? '
-                + '(reenviar PDF, cancelar, etc.)';
+            msg += 'Como posso ajudar-te com estes bilhetes? (cancelar, pdf, etc.)';
 
             out.mensagemChat = msg;
             out.bilhetesJson = JSON.serialize(jsonList);

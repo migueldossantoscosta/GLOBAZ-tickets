@@ -1,7 +1,7 @@
 public with sharing class AgentCriarCaseSuporte {
 
     public class Input {
-        @InvocableVariable(label='Account ID (pode ser null se guest)' required=false)
+        @InvocableVariable(label='accountId' required=false)
         public String accountId;
 
         @InvocableVariable(label='Email do utilizador' required=true)

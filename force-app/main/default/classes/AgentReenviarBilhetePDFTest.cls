@@ -1,5 +1,7 @@
 @isTest
 private class AgentReenviarBilhetePDFTest {
+    // Teste para o reenvio de bilhetes
+
     @isTest
     static void testReenviarBilhete() {
         Account acc = AgentTestDataFactory.createPersonAccount();

@@ -1,27 +1,27 @@
 public without sharing class AgentCalcularTotalCompra {
 
     public class Input {
-        @InvocableVariable(label='ID do Evento' required=true)
+        @InvocableVariable(label='eventoId' required=true)
         public String eventoId;
 
-        @InvocableVariable(label='Tipo de bilhete (Geral, VIP ou Camarote)' required=true)
+        @InvocableVariable(label='tipoBilhete' required=true)
         public String tipoBilhete;
 
-        @InvocableVariable(label='Quantidade de bilhetes' required=true)
-        public Decimal quantidade;
+        @InvocableVariable(label='quantidade' required=true)
+        public Integer quantidade;
 
-        @InvocableVariable(label='Extras selecionados (JSON)')
+        @InvocableVariable(label='extrasJson')
         public String extrasJson;
     }
 
     public class Output {
-        @InvocableVariable(label='TOTAL com IVA')
+        @InvocableVariable(label='totalComIva')
         public Decimal totalComIva;
 
-        @InvocableVariable(label='Resumo formatado para o chat')
+        @InvocableVariable(label='resumoChat')
         public String resumoChat;
 
-        @InvocableVariable(label='Erro')
+        @InvocableVariable(label='erroMsg')
         public String erroMsg;
     }
 
@@ -56,37 +56,44 @@ public without sharing class AgentCalcularTotalCompra {
             Boolean encontradoNoPricebook = false;
 
             if (ev.Pricebook__c != null) {
-                List<PricebookEntry> pbes = [
-                    SELECT UnitPrice, Product2.Name 
+                for (PricebookEntry pbe : [
+                    SELECT UnitPrice, Product2.Name, Product2.ProductCode 
                     FROM   PricebookEntry 
                     WHERE  Pricebook2Id = :ev.Pricebook__c 
-                    AND    (Product2.ProductCode = :codigoGeral OR Product2.Name LIKE :nomeBusca)
-                    AND    IsActive = true 
-                    LIMIT  1
-                ];
-                
-                if (!pbes.isEmpty()) {
-                    precoUnitario = pbes[0].UnitPrice;
-                    nomeProdutoDisplay = pbes[0].Product2.Name;
-                    encontradoNoPricebook = true;
+                    AND    IsActive = true
+                ]) {
+                    String nome = pbe.Product2.Name.toLowerCase();
+                    String code = (pbe.Product2.ProductCode != null ? pbe.Product2.ProductCode.toLowerCase() : '');
+                    String busca = inp.tipoBilhete.toLowerCase();
+
+                    if (nome.contains(busca) || code.contains(busca) || 
+                       (busca == 'geral' && (code.contains('geral') || nome.contains('geral'))) ||
+                       (busca == 'vip' && (code.contains('vip') || nome.contains('vip'))) ||
+                       (busca == 'camarote' && (code.contains('camarote') || nome.contains('camarote')))) {
+                        
+                        precoUnitario = pbe.UnitPrice;
+                        nomeProdutoDisplay = pbe.Product2.Name;
+                        encontradoNoPricebook = true;
+                        break;
+                    }
                 }
             }
 
-            // Fallback apenas para bilhete Geral se o Pricebook falhar
+            // Fallback apenas para bilhete Geral se o Pricebook falhar ou não existir
             if (!encontradoNoPricebook) {
-                if (inp.tipoBilhete.equalsIgnoreCase('Geral') && ev.PrecoBilhete__c != null) {
+                if ((inp.tipoBilhete.equalsIgnoreCase('Geral') || inp.tipoBilhete.toLowerCase().contains('geral')) && ev.PrecoBilhete__c != null) {
                     precoUnitario = ev.PrecoBilhete__c;
                     nomeProdutoDisplay = 'Geral';
                 } else {
                     out.erroMsg = 'Não foi possível encontrar o preço para "' + inp.tipoBilhete + '" no Pricebook deste evento.';
-                    out.resumoChat = 'Desculpa, não encontrei o preço para o tipo "' + inp.tipoBilhete + '". Confirma se é Geral, VIP ou Camarote?';
+                    out.resumoChat = 'Desculpa, não encontrei o preço para o tipo "' + inp.tipoBilhete + '". Os tipos disponíveis são Geral, VIP ou Camarote.';
                     return new List<Output>{ out };
                 }
             }
 
             // 3. Calcular Total de Bilhetes (IVA 23%)
             out.totalComIva = (precoUnitario * 1.23 * inp.quantidade).setScale(2);
-            String itensSelecionados = '🎫 ' + inp.quantidade.setScale(0) + 'x ' + nomeProdutoDisplay + ': ' + out.totalComIva + '€\n';
+            String itensSelecionados = '🎫 ' + inp.quantidade + 'x ' + nomeProdutoDisplay + ': ' + out.totalComIva + '€\n';
 
             // 4. Calcular Extras
             if (String.isNotBlank(inp.extrasJson) && inp.extrasJson != '[]') {
@@ -108,10 +115,13 @@ public without sharing class AgentCalcularTotalCompra {
             }
 
             // 5. Mensagem
+            String idLimpo = String.valueOf(ev.Id);
+            String mapUrl = 'https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + idLimpo;
+
             String msg = '🛒 *Resumo da tua seleção:*\n\n' +
                          itensSelecionados +
-                         '\n💰 *TOTAL FINAL (c/ IVA): ' + out.totalComIva + '€*\n\n' +
-                         'Posso avançar com a reserva?';
+                         '\n📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](' + mapUrl + ')' +
+                         '\n\n💰 *TOTAL FINAL (c/ IVA): ' + out.totalComIva + '€*';
 
             out.resumoChat = msg;
 

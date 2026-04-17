@@ -1,18 +1,18 @@
-public with sharing class AgentVerificarSessao {
+public with sharing class AgentValidarSessaoPortal {
 
     public class Input {
-        @InvocableVariable(label='accountId' required=false)
-        public String accountId;
+        @InvocableVariable(label='ID da Conta Portal')
+        public String idContaPortal;
     }
 
     public class Output {
-        @InvocableVariable(label='Autenticado')
+        @InvocableVariable(label='Está autenticado?')
         public Boolean isLoggedIn;
 
-        @InvocableVariable(label='Primeiro Nome')
+        @InvocableVariable(label='Primeiro nome')
         public String firstName;
 
-        @InvocableVariable(label='Nome Completo')
+        @InvocableVariable(label='Nome completo')
         public String fullName;
 
         @InvocableVariable(label='Email')
@@ -21,22 +21,22 @@ public with sharing class AgentVerificarSessao {
         @InvocableVariable(label='Cidade')
         public String cidade;
 
-        @InvocableVariable(label='Preferencias')
+        @InvocableVariable(label='Categorias preferidas')
         public String categoriasPreferidas;
 
-        @InvocableVariable(label='Erro')
+        @InvocableVariable(label='Mensagem de erro')
         public String erroMsg;
 
-        @InvocableVariable(label='accountId')
-        public String accountId;
+        @InvocableVariable(label='ID da Conta Portal Output')
+        public String idContaPortalOut;
     }
 
     @InvocableMethod(
-        label='Agente - Verificar Sessao do Utilizador'
-        description='Verifica se o accountId corresponde a um utilizador valido e retorna o seu perfil.'
+        label='Agente - Validar Sessao Portal'
+        description='Verifica se o ID da conta corresponde a um utilizador válido no portal Globaz.'
         category='GLOBAZ Tickets'
     )
-    public static List<Output> verificarSessao(List<Input> inputs) {
+    public static List<Output> validarSessao(List<Input> inputs) {
         Output out = new Output();
         out.isLoggedIn = false;
 
@@ -48,14 +48,14 @@ public with sharing class AgentVerificarSessao {
 
             Input inp = inputs[0];
 
-            if (String.isBlank(inp.accountId)) {
+            if (String.isBlank(inp.idContaPortal)) {
                 out.erroMsg = 'Sem sessao ativa.';
                 return new List<Output>{ out };
             }
 
-            Id targetAccId;
+            Id accId;
             try {
-                targetAccId = (Id) inp.accountId;
+                accId = (Id) inp.idContaPortal;
             } catch (Exception e) {
                 out.erroMsg = 'ID de sessao invalido.';
                 return new List<Output>{ out };
@@ -64,7 +64,7 @@ public with sharing class AgentVerificarSessao {
             List<Account> accs = [
                 SELECT Id, FirstName, LastName, PersonEmail, BillingCity, CategoriaFavorita__c
                 FROM Account
-                WHERE Id = :targetAccId
+                WHERE Id = :accId
                 AND IsPersonAccount = true
                 AND Valido__c = true
                 LIMIT 1
@@ -82,7 +82,7 @@ public with sharing class AgentVerificarSessao {
             out.email = acc.PersonEmail;
             out.cidade = acc.BillingCity;
             out.categoriasPreferidas = (String)acc.get('CategoriaFavorita__c');
-            out.accountId = String.valueOf(acc.Id);
+            out.idContaPortalOut = String.valueOf(acc.Id);
 
         } catch (Exception e) {
             out.isLoggedIn = false;

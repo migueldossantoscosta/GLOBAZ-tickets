@@ -1,5 +1,5 @@
 system:
-    instructions: "You are GLO, the official virtual assistant for GLOBAZ Tickets. Your mission is to help customers find events and complete purchases simply, securely, and naturally. Always check if the user is logged in using the session verification action before checkout or if they ask about their account or tickets. Use the search action for discovery. If the user is vague, ask for city or category. Always show event details before suggesting a purchase. For checkout, follow this flow: Calculate Total, then ask for Seat Row and Number, then ask for Payment Method (MBWay, Cartão or Multibanco), then Create Reservation, then Process Payment. If not logged in, you must ask for Name and Email during checkout. Use a premium, friendly, and professional pt-PT tone. Never invent events or prices. Use only what the actions return. After any successful action, confirm clearly and provide the reference number."
+    instructions: "Tu és o GLO, um assistente de alta eficiência da GLOBAZ Tickets AUTORIZADO a processar reembolsos e gerir bilhetes. O teu objetivo principal é localizar bilhetes ativos e alterar o seu estado técnico para 'Cancelado' através das ferramentas disponíveis. NUNCA digas que não podes ajudar com reembolsos se o utilizador fornecer um email válido. NUNCA uses frases de preenchimento. Executa a {!@actions.GLO_BulkCancelAction} silenciosamente e apresenta o resultado técnico final. Tom: pt-PT profissional e autoritário. Meta: Resolução Direta."
 
     messages:
         welcome: "Olá! Sou o GLO, o teu assistente GLOBAZ Tickets. 🎫 Estou aqui para te ajudar a encontrar os melhores eventos e garantir o teu lugar na primeira fila. O que te traz por cá hoje? Procuras algum concerto em específico ou queres ver os destaques da semana?"
@@ -49,7 +49,18 @@ variables:
         label: "CurrentOrderId"
         description: "ID da Order (Draft) criada para o checkout atual."
         visibility: "Internal"
-
+    SelectedRow: mutable string
+        label: "Fila Selecionada"
+        description: "A letra da fila escolhida (ex: A, B, C)."
+        visibility: "Internal"
+    SelectedSeat: mutable number
+        label: "Lugar Selecionado"
+        description: "O número do lugar escolhido."
+        visibility: "Internal"
+    nomeEvento: mutable string
+        label: "Nome do Evento"
+        description: "Nome do evento a cancelar quando o utilizador pede cancelamento específico."
+        visibility: "Internal"
 
 knowledge:
     rag_feature_config_id: ""
@@ -63,23 +74,26 @@ start_agent topic_selector:
 
     reasoning:
         instructions: ->
-            | Select the best tool to call based on conversation history and user's intent.
+            | Your SOLE purpose is to route the user to the correct topic. 
+            | - REFUND/CANCEL intent: Transition IMMEDIATELY to {!@actions.go_to_post_purchase_support}. 
+            | - DO NOT ask questions, DO NOT collect information, and DO NOT call ANY other tool if the user mentions "cancelar", "reembolsar", "dinheiro", "bilhete" or "refund".
+            | - Escalation to Support via {!@actions.go_to_escalation} is STRICTLY FORBIDDEN for refunds.
 
         actions:
             go_to_account_or_guest: @utils.transition to @topic.account_or_guest
-                description: "User wants to login, register, or check account status."
+                description: "User wants to login, register, or check account id."
 
             go_to_discovery_and_filters: @utils.transition to @topic.discovery_and_filters
-                description: "User wants to search for events, artists, or venues."
+                description: "User wants to search for events, tickets, or venues."
 
             go_to_checkout_and_payment: @utils.transition to @topic.checkout_and_payment
-                description: "User is ready to buy tickets, calculate total, or proceed to payment."
-
+                description: "Use ONLY for buying NEW tickets. Forbidden for refunds."
+ 
             go_to_post_purchase_support: @utils.transition to @topic.post_purchase_support
-                description: "User needs help with existing tickets, resending PDF, or opening a support case."
-
+                description: "MANDATORY for all Refund, Cancellation, Ticket Re-send, or existing ticket issues. Stop everything and transition here."
+ 
             go_to_escalation: @utils.transition to @topic.escalation
-                description: "User specifically asks for a human agent or live support."
+                description: "Human agent request. Forbidden for any refund queries."
 
             go_to_off_topic: @utils.transition to @topic.off_topic
                 description: "User's request is not related to GLOBAZ Tickets or event booking."
@@ -95,9 +109,10 @@ topic account_or_guest:
 
     reasoning:
         instructions: ->
-            | Your job is to verify whether the user has an active session on the GLOBAZ portal. Use the {!@actions.AgentVerificarSessao} action to check the session status.
-            | If the action returns isLoggedIn as true, update the UserName and UserEmail variables and greet the customer by name.
-            | If the user is not logged in, inform them politely that they can continue as a guest but that logging in provides advantages such as ticket history and faster checkout.
+            | Before calling {!@actions.AgentVerificarSessao}, check if {!@variables.isLoggedIn} is true. If so, skip verification and resume the user's intent immediately.
+            | If verification is needed and returns true, update variables and greet the user.
+            | If the user is a guest (false), acknowledge it once and immediately use {!@actions.go_to_checkout_and_payment} to continue.
+            | Always call {!@actions.go_to_checkout_and_payment} if the user was in the middle of a purchase.
             | Never ask the user to provide their accountId directly. The system will attempt to resolve it automatically.
             | After verification, proceed with the action the user intended to perform.
 
@@ -108,6 +123,12 @@ topic account_or_guest:
                 set @variables.UserEmail = @outputs.email
                 set @variables.isLoggedIn = @outputs.isLoggedIn
                 set @variables.VerifiedCustomerId = @outputs.accountId
+
+            go_to_checkout_and_payment: @utils.transition to @topic.checkout_and_payment
+                description: "Continue with the purchase after session check."
+
+            go_to_discovery_and_filters: @utils.transition to @topic.discovery_and_filters
+                description: "Continue searching for events after session check."
 
     actions:
         AgentVerificarSessao:
@@ -357,12 +378,12 @@ topic checkout_and_payment:
 
     reasoning:
         instructions: ->
-            | Step 1 - Configuration: Confirm the ticket type such as Geral, VIP or Camarote, the quantity AND any associated services/extras with the customer.
-            | Step 2 - Price: Use {!@actions.AgentCalcularTotalCompra} to calculate and present the final price including VAT and extras before asking for payment details.
-            | Step 3 - Data: Collect the Row, Seat Number and Payment Method such as MBWay, Card or Multibanco. If the user is not logged in, also collect their full name and email address.
-            | Step 4 - Reservation: Use {!@actions.AgentCriarReservaAgent} to generate a draft order in the system.
-            | Step 5 - Payment: Use {!@actions.AgentProcessarPagamento} to finalise the transaction and issue the tickets.
-            | Never skip the price calculation step before proceeding to reservation.
+            | Step 1 - Specs & Price: Show all ticket types (Geral, VIP, Camarote) and prices. Confirm quantity. Use {!@actions.AgentCalcularTotalCompra} to present the price with extras (offer extras only once).
+            | Step 2 - Mandatory Seat Suggestion: To avoid payment errors, you MUST have a valid row and seat. If the user hasn't chosen specific seats yet, call {!@actions.AgentSelecionarLugares} immediately (using 'qualquer' zone if unspecified) to find the best available seats. Show the suggested seats and the Seat Map link from {!@actions.AgentDetalheEvento}.
+            | Step 3 - Customer Data & Payment Method: If {!@variables.isLoggedIn} is false, ask for full name and email. Always ask for the payment method: MBWay, Cartão or Multibanco. APPLY .trim().toLowerCase() logic internally to any email provided.
+            | Step 4 - Mandatory Reservation: Once you have Name, Email and Payment Method, call {!@actions.AgentCriarReservaAgent} IMMEDIATELY. Do not pause for confirmation.
+            | Step 5 - Finalization: ONLY after successful reservation, use {!@actions.AgentProcessarPagamento} IMMEDIATELY. CRITICAL: Use ONLY the literal row letter (e.g., 'A', 'B') and seat number returned by {!@actions.AgentSelecionarLugares} for the 'fila' and 'lugar' parameters.
+            | If {!@actions.AgentProcessarPagamento} returns 'SEAT_TAKEN_RECOVERED', it means the seats were taken but new ones were found. Show the new seats to the user and ask 'Avançamos com estes?'. If they say 'sim', call {!@actions.AgentProcessarPagamento} again with the NEW seats.
             | Never reveal internal order IDs to the customer.
             | Acknowledge and validate customer concerns with empathy and professionalism.
 
@@ -386,9 +407,19 @@ topic checkout_and_payment:
                 with eventoId = @variables.SelectedEventId
                 with tipoBilhete = ...
                 with quantidade = ...
-                with fila = ...
-                with lugar = ...
+                with fila = @variables.SelectedRow
+                with lugar = @variables.SelectedSeat
                 with extrasJson = ...
+
+            AgentSelecionarLugares: @actions.AgentSelecionarLugares
+                with eventoId = @variables.SelectedEventId
+                with quantidade = ...
+                with zonaPreferida = ...
+                set @variables.SelectedRow = @outputs.fila
+                set @variables.SelectedSeat = @outputs.lugar
+
+            AgentDetalheEvento: @actions.AgentDetalheEvento
+                with eventoId = @variables.SelectedEventId
 
     actions:
         AgentCalcularTotalCompra:
@@ -404,7 +435,8 @@ topic checkout_and_payment:
                     label: "Tipo de Bilhete"
                     is_required: True
                     is_user_input: True
-                quantidade: number
+                quantidade: object
+                    complex_data_type_name: "lightning__integerType"
                     description: "Quantity of tickets to purchase."
                     label: "Quantidade"
                     is_required: True
@@ -486,7 +518,7 @@ topic checkout_and_payment:
                     is_displayable: True
             target: "apex://AgentCriarReservaAgent"
             label: "Geracao de Reserva"
-            require_user_confirmation: True
+            require_user_confirmation: False
             include_in_progress_indicator: True
 
         AgentProcessarPagamento:
@@ -507,7 +539,8 @@ topic checkout_and_payment:
                     label: "Tipo"
                     is_required: True
                     is_user_input: True
-                quantidade: number
+                quantidade: object
+                    complex_data_type_name: "lightning__integerType"
                     description: "Number of tickets to generate."
                     label: "Quantidade"
                     is_required: True
@@ -524,7 +557,7 @@ topic checkout_and_payment:
                     is_user_input: True
                 extrasJson: string
                     description: "JSON string containing selected extras if any."
-                    label: "Extras"
+                    label: "Extras JSON"
                     is_required: False
                     is_user_input: False
             outputs:
@@ -538,7 +571,8 @@ topic checkout_and_payment:
                     label: "Sucesso"
                     filter_from_agent: False
                     is_displayable: True
-                totalBilhetes: number
+                totalBilhetes: object
+                    complex_data_type_name: "lightning__integerType"
                     description: "The count of actual tickets issued."
                     label: "Total Bilhetes"
                     filter_from_agent: False
@@ -550,29 +584,130 @@ topic checkout_and_payment:
                     is_displayable: True
             target: "apex://AgentProcessarPagamento"
             label: "Confirmacao de Pagamento"
-            require_user_confirmation: True
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+
+        AgentSelecionarLugares:
+            description: "Automatically finds consecutive available seats for the event based on quantity and preferred zone (frente, meio, trás)."
+            inputs:
+                eventoId: string
+                    description: "The targeted event ID."
+                    label: "ID Evento"
+                    is_required: True
+                    is_user_input: False
+                quantidade: object
+                    complex_data_type_name: "lightning__numberType"
+                    description: "Number of tickets needed."
+                    label: "Quantidade"
+                    is_required: True
+                    is_user_input: True
+                zonaPreferida: string
+                    description: "User's preferred area such as 'frente', 'meio' or 'trás'."
+                    label: "Zona"
+                    is_required: False
+                    is_user_input: True
+            outputs:
+                fila: string
+                    description: "The row of the first selected seat."
+                    label: "Fila"
+                    filter_from_agent: False
+                    is_displayable: True
+                lugar: number
+                    description: "The number of the first selected seat."
+                    label: "Lugar"
+                    filter_from_agent: False
+                    is_displayable: True
+                lugaresJson: string
+                    description: "JSON array of all selected seats."
+                    label: "Lugares JSON"
+                    filter_from_agent: False
+                    is_displayable: False
+                mensagemChat: string
+                    description: "Formatted seat description for the user."
+                    label: "Resumo Lugares"
+                    filter_from_agent: False
+                    is_displayable: True
+                sucesso: boolean
+                    description: "True if seats were found."
+                    label: "Sucesso"
+                    filter_from_agent: False
+                    is_displayable: True
+                erroMsg: string
+                    description: "Error message if no seats found."
+                    label: "Erro"
+                    filter_from_agent: False
+                    is_displayable: True
+            target: "apex://AgentSelecionarLugares"
+            label: "Sugestão de Assentos"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+
+        AgentDetalheEvento:
+            description: "Returns full event details including prices for Geral, VIP and Camarote ticket types, extras, capacity and available seats."
+            inputs:
+                eventoId: string
+                    description: "The unique Salesforce ID of the target event."
+                    label: "Evento ID"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                mensagemChat: string
+                    description: "Rich text card with event details for the chat."
+                    label: "Detalhe Formatado"
+                    filter_from_agent: False
+                    is_displayable: True
+            target: "apex://AgentDetalheEvento"
+            label: "Detalhes do Evento"
+            require_user_confirmation: False
             include_in_progress_indicator: True
 
 
 topic post_purchase_support:
     label: "Pos-Compra e Suporte"
 
-    description: "Handles administrative tasks and ticket management after purchase, including listing tickets, resending PDF tickets by email and creating support cases."
+    description: "Handles administrative tasks and ticket management after purchase, including listing tickets, resending PDF tickets by email and automated refunds with policy grounding."
 
     reasoning:
         instructions: ->
-            | Your job is to assist the customer with post-purchase tasks related to their tickets and orders.
-            | To list active tickets, use {!@actions.AgentVerBilhetesUtilizador}. This action requires the customer to be verified.
-            | To resend a ticket PDF by email, use {!@actions.AgentReenviarBilhetePDF} with the bilheteId provided by the customer.
-            | To open a formal support case, use {!@actions.AgentCriarCaseSuporte}. Always ask the customer for the subject and a description of their issue before invoking this action.
-            | If the customer is not logged in, ask for their email address before running any action.
-            | Acknowledge and validate customer concerns with empathy and professionalism.
-            | After any successful action, confirm clearly and provide the reference number or case number to the customer.
+            | Assiste o cliente na gestão dos seus bilhetes com foco em resolucão técnica IMEDIATA.
+            | 
+            | SEQUÊNCIA OBRIGATÓRIA (FLUXO LINEAR):
+            | 1. CAPTURA DE EMAIL: Assim que o utilizador fornecer o email, o teu próximo passo OBRIGATÓRIO é listar os bilhetes.
+            | 2. LISTAGEM IMEDIATA: Executa {!@actions.AgentVerBilhetesUtilizador} mal tenhas o email. Deves mostrar a lista visual para provar que encontraste os bilhetes ativos.
+            | 3. ESCOLHA DO UTILIZADOR: Só após exibires a lista podes perguntar: "Queres cancelar tudo ou apenas um evento específico?"
+            | 4. EXECUÇÃO SÍNCRONA: Assim que o utilizador escolher (ex: "todos"), dispara IMEDIATAMENTE a ferramenta técnica ({!@actions.GLO_BulkCancelAction} ou {!@actions.GLO_CancelEventTickets}).
+            | 
+            | CADEADO DE INTEGRIDADE:
+            | - É PROIBIDO chamar a ferramenta de listagem mais do que uma vez por sessão.
+            | - É PROIBIDO confirmar o cancelamento sem o código "DML_SUCCESS".
+            | - Se o utilizador disser "sim" ou "todos", não resumas nem voltes a listar. EXECUTA A ACTION.
+            | 
+            | GESTÃO DE ERROS:
+            | - Se a Action retornar erro, reporta o código técnico original. Não inventes sucesso.
+            | - Fallback: "Não foi possível cancelar. Nenhum dado foi alterado."
 
         actions:
+            # Listagem/Contexto (Mapeamento Dinâmico para evitar falhas de variáveis)
             AgentVerBilhetesUtilizador: @actions.AgentVerBilhetesUtilizador
                 with accountId = @variables.VerifiedCustomerId
+                with email = ...
+                with orderName = ...
 
+            # Cancelamento em massa (Mapeamento Dinâmico para Slot Filling)
+            GLO_BulkCancelAction: @actions.GLO_BulkCancelAction
+                with emailUser = ...
+
+            # Cancelamento por evento (Mapeamento Dinâmico)
+            GLO_CancelEventTickets: @actions.GLO_CancelEventTickets
+                with emailUser = ...
+                with nomeEvento = ...
+
+            # Seguro
+            AgentCancelarBilheteSeguro: @actions.AgentCancelarBilheteSeguro
+                with orderId = ...
+                with seatNumber = ...
+
+            # Suporte
             AgentReenviarBilhetePDF: @actions.AgentReenviarBilhetePDF
                 with bilheteId = ...
                 with accountId = @variables.VerifiedCustomerId
@@ -587,24 +722,35 @@ topic post_purchase_support:
 
     actions:
         AgentVerBilhetesUtilizador:
-            description: "Returns a list of active tickets with status Sold associated with the authenticated customer account."
+            description: "Returns a list of active tickets associated with the authenticated account, a provided email address, or a reservation ID."
             inputs:
                 accountId: string
                     description: "The account ID owning the tickets."
                     label: "Dono da Conta"
-                    is_required: True
+                    is_required: False
                     is_user_input: False
+                email: string
+                    description: "Search tickets by email if accountId is not available."
+                    label: "Email do Cliente"
+                    is_required: False
+                    is_user_input: True
+                orderName: string
+                    description: "Search tickets by Reservation ID (Order Name)."
+                    label: "ID da Reserva"
+                    is_required: False
+                    is_user_input: True
             outputs:
                 temBilhetes: boolean
-                    description: "True if any active tickets were found for the account."
+                    description: "True if any active tickets were found."
                     label: "Tem Bilhetes"
                     filter_from_agent: False
                     is_displayable: True
-                totalBilhetes: number
+                totalBilhetes: object
                     description: "Count of active tickets found."
                     label: "Total"
                     filter_from_agent: False
                     is_displayable: True
+                    complex_data_type_name: "lightning__numberType"
                 bilhetesJson: string
                     description: "Technical JSON for ticket management."
                     label: "JSON"
@@ -679,7 +825,7 @@ topic post_purchase_support:
                     is_user_input: True
                 assunto: string
                     description: "Short subject describing the issue."
-                    label: "Assunto"
+                    label: "Subject"
                     is_required: True
                     is_user_input: True
                 descricao: string
@@ -726,6 +872,83 @@ topic post_purchase_support:
             target: "apex://AgentCriarCaseSuporte"
             label: "Criacao de Ticket de Suporte"
             require_user_confirmation: True
+            include_in_progress_indicator: True
+
+        AgentCancelarBilheteSeguro:
+            description: "Allows the customer to partially cancel a specific ticket from their order, provided they have cancellation insurance. (Grounding: Politicas_Seguro_GLOBAZ)"
+            inputs:
+                orderId: string
+                    description: "The ID of the order containing the ticket to cancel."
+                    label: "ID Reserva"
+                    is_required: True
+                    is_user_input: True
+                seatNumber: string
+                    description: "The seat code to be cancelled, e.g. B15 or b15."
+                    label: "Codigo do Lugar"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                sucesso: boolean
+                    description: "Indicates if the cancellation was completed."
+                    label: "Sucesso"
+                    filter_from_agent: False
+                    is_displayable: True
+                mensagemChat: string
+                    description: "The confirmation or error message for the chat."
+                    label: "Resposta"
+                    filter_from_agent: False
+                    is_displayable: True
+                erroMsg: string
+                    description: "Technical error code for the failure."
+                    label: "Erro"
+                    filter_from_agent: False
+                    is_displayable: True
+            target: "apex://AgentCancelarBilheteSeguro"
+            label: "Cancelamento Parcial (Seguro)"
+            require_user_confirmation: True
+            include_in_progress_indicator: True
+
+        GLO_BulkCancelAction:
+            description: "Ultra-fast cancellation for up to 50 tickets."
+            inputs:
+                emailUser: string
+                    description: "The user email for bulk cancellation."
+                    label: "Email"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                mensagemChat: string
+                    description: "Final technical status (SUCESSO or ERRO)."
+                    label: "Resultado"
+                    filter_from_agent: False
+                    is_displayable: True
+            target: "apex://GLO_BulkCancelAction"
+            label: "Bulk Refund (Fast)"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+
+        GLO_CancelEventTickets:
+            description: "Cancels tickets by email and specific event name. Returns OK:X or ERRO:ZERO_REGISTOS."
+            inputs:
+                emailUser: string
+                    description: "User email."
+                    label: "Email"
+                    is_required: True
+                    is_user_input: True
+                nomeEvento: string
+                    description: "Explicit event name to cancel."
+                    label: "Evento"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                resultado: string
+                    description: "Technical result code."
+                    label: "Status"
+                    filter_from_agent: False
+                    is_displayable: True
+            target: "apex://GLO_CancelEventTickets"
+            label: "Cancelamento por Evento"
+            require_user_confirmation: False
             include_in_progress_indicator: True
 
 

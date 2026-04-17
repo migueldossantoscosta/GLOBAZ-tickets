@@ -1,25 +1,28 @@
 public without sharing class AgentProcessarPagamento {
 
     public class Input {
-        @InvocableVariable(label='Order ID' required=true)
+        @InvocableVariable(label='orderId' required=true)
         public String orderId;
 
-        @InvocableVariable(label='ID do Evento' required=true)
+        @InvocableVariable(label='eventoId' required=true)
         public String eventoId;
 
-        @InvocableVariable(label='Tipo de bilhete' required=true)
+        @InvocableVariable(label='tipoBilhete' required=true)
         public String tipoBilhete;
 
-        @InvocableVariable(label='Quantidade' required=true)
-        public Decimal quantidade;
+        @InvocableVariable(label='quantidade' required=true)
+        public Integer quantidade;
 
-        @InvocableVariable(label='Fila' required=false)
+        @InvocableVariable(label='fila' required=false)
         public String fila;
 
-        @InvocableVariable(label='Lugar' required=false)
+        @InvocableVariable(label='lugar' required=false)
         public Decimal lugar;
 
-        @InvocableVariable(label='Extras selecionados (JSON)' required=false)
+        @InvocableVariable(label='zona' required=false)
+        public String zona;
+
+        @InvocableVariable(label='extrasJson' required=false)
         public String extrasJson;
     }
 
@@ -31,7 +34,7 @@ public without sharing class AgentProcessarPagamento {
         public String mensagemChat;
 
         @InvocableVariable(label='Número de bilhetes criados')
-        public Decimal totalBilhetes;
+        public Integer totalBilhetes;
 
         @InvocableVariable(label='Erro')
         public String erroMsg;
@@ -47,8 +50,17 @@ public without sharing class AgentProcessarPagamento {
         try {
             Input inp = inputs[0];
 
-            Id ordId = (Id) inp.orderId;
-            Id evId  = (Id) inp.eventoId;
+            Id ordId;
+            Id evId;
+            try {
+                ordId = (Id) inp.orderId;
+                evId  = (Id) inp.eventoId;
+            } catch (Exception e) {
+                out.sucesso = false;
+                out.erroMsg = 'ID_INVALIDO';
+                out.mensagemChat = '⚠️ Erro interno na transação. Por favor, reinicia o processo.';
+                return new List<Output>{ out };
+            }
 
             // Construir JSON de bilhetes baseado nos inputs simples (conforme YAML)
             String codigoBilhete = inp.tipoBilhete;
@@ -57,18 +69,54 @@ public without sharing class AgentProcessarPagamento {
             else if (codigoBilhete.equalsIgnoreCase('Camarote')) codigoBilhete = 'BLT-CAMAROTE';
 
             List<Map<String, Object>> bilhetesList = new List<Map<String, Object>>();
-            Integer qtd = (inp.quantidade != null) ? inp.quantidade.intValue() : 1;
-            Integer startLugar = (inp.lugar != null) ? inp.lugar.intValue() : 1;
+            Integer qtd = (inp.quantidade != null) ? inp.quantidade : 1;
+
+            // Se não temos fila/lugar, vamos procurar automaticamente antes de prosseguir
+            if (String.isBlank(inp.fila) || inp.lugar == null) {
+                List<Map<String, Object>> autoSeats = AgentSelecionarLugares.autoRecoverSeats(evId, qtd, inp.zona);
+                if (autoSeats != null && !autoSeats.isEmpty()) {
+                    inp.fila = (String) autoSeats[0].get('fila');
+                    inp.lugar = Decimal.valueOf(String.valueOf(autoSeats[0].get('lugar')));
+                } else {
+                    out.sucesso = false;
+                    out.erroMsg = 'FILA_LUGAR_OBRIGATORIO';
+                    out.mensagemChat = '⚠️ Não consegui encontrar lugares disponíveis automaticamente. Por favor, seleciona lugares no mapa.';
+                    return new List<Output>{ out };
+                }
+            }
 
             for(Integer i=0; i < qtd; i++) {
                 bilhetesList.add(new Map<String, Object>{
-                    'fila'  => (String.isNotBlank(inp.fila) ? inp.fila : 'A'),
-                    'lugar' => startLugar + i,
-                    'tipo'  => codigoBilhete
+                    'fila'  => inp.fila,
+                    'lugar' => inp.lugar.intValue() + i,
+                    'tipo'  => codigoBilhete,
+                    'stand' => inp.zona
                 });
             }
             String bilhetesJsonFinal = JSON.serialize(bilhetesList);
             String extrasJsonFinal   = String.isNotBlank(inp.extrasJson) ? inp.extrasJson : '[]';
+
+            // --- LOGICA ANTI-DUPLICIDADE ---
+            // Se já existirem bilhetes para esta Order, significa que o pagamento já foi processado com sucesso.
+            List<Bilhete__c> bilhetesExistentes = [SELECT Id FROM Bilhete__c WHERE Order__c = :ordId];
+            if (!bilhetesExistentes.isEmpty()) {
+                out.sucesso = true;
+                out.totalBilhetes = bilhetesExistentes.size();
+                
+                List<Order> ords = [SELECT Account.FirstName FROM Order WHERE Id = :ordId LIMIT 1];
+                String nome = !ords.isEmpty() ? ords[0].Account.FirstName : 'Cliente';
+                
+                List<Bilhete__c> blts = [SELECT Id FROM Bilhete__c WHERE Order__c = :ordId LIMIT 1];
+                String firstBId = !blts.isEmpty() ? blts[0].Id : '';
+
+                out.mensagemChat = '✅ *A tua compra já foi confirmada anteriormente, ' + nome + '!*\n\n'
+                    + '🎫 Já tens ' + out.totalBilhetes + ' bilhete(s) garantidos para este evento.\n'
+                    + '📧 O PDF já foi enviado para o teu e-mail.\n\n'
+                    + '📍 [🗺️ Ver Meus Lugares no Mapa](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + evId + ')\n'
+                    + '🎫 [⬇ Download Bilhete (PDF)](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/GerarBilhetePDF?id=' + firstBId + ')\n\n'
+                    + 'Posso ajudar-te com mais alguma coisa? 😊';
+                return new List<Output>{ out };
+            }
 
             // Reutilizar lógica existente
             String resultado = BilheteiraController.processarPagamentoMock(
@@ -118,9 +166,19 @@ public without sharing class AgentProcessarPagamento {
                         + '🔗 [💳 PAGAR AGORA](https://globaz-tickets.force.com/checkout?order=' + ordId + ')\n\n';
                 }
 
+                List<Bilhete__c> blts = [SELECT Id FROM Bilhete__c WHERE Order__c = :ordId LIMIT 1];
+                String firstBId = !blts.isEmpty() ? blts[0].Id : '';
+
                 out.mensagemChat = msgBase
-                    + '📧 O teu bilhete PDF vai chegar ao e-mail *' + emailCliente + '* em breve.\n\n'
+                    + '📧 O teu bilhete PDF já foi enviado para o e-mail *' + emailCliente + '* e está prontinho a usar!\n\n'
+                    + '📍 [🗺️ Ver Meus Lugares no Mapa e Detalhes](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + evId + ')\n'
+                    + '🎫 [⬇ Download Bilhete (PDF)](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/GerarBilhetePDF?id=' + ordId + ')\n\n'
                     + 'Posso ajudar-te com mais alguma coisa? 😊';
+
+                // Disparar envio de email assíncrono
+                if (String.isNotBlank(emailCliente)) {
+                    BilheteiraController.enviarEmailComBilhete(ordId, emailCliente, nomeCliente);
+                }
 
             } else if (resultado == 'PAGAMENTO_RECUSADO') {
                 out.sucesso      = false;
@@ -128,6 +186,28 @@ public without sharing class AgentProcessarPagamento {
                 out.mensagemChat = '❌ O pagamento foi recusado.\n'
                     + 'Queres tentar com outro método? (MBWay, Cartão, MB, Transferência)';
 
+            } else if (resultado == 'ERRO: SEAT_TAKEN') {
+                // AUTO-RECOVERY LOGIC
+                List<Map<String, Object>> newSeats = AgentSelecionarLugares.autoRecoverSeats(evId, qtd, inp.zona);
+                
+                if (newSeats != null && !newSeats.isEmpty()) {
+                    String seatList = '';
+                    String newFila = (String) newSeats[0].get('fila');
+                    List<String> seatNums = new List<String>();
+                    for (Map<String, Object> s : newSeats) {
+                        seatNums.add(String.valueOf(s.get('lugar')));
+                        seatList += '🪑 Fila ' + s.get('fila') + ', Lugar ' + s.get('lugar') + '\n';
+                    }
+
+                    out.sucesso = false;
+                    out.erroMsg = 'SEAT_TAKEN_RECOVERED';
+                    out.mensagemChat = 'Os lugares na Fila ' + inp.fila + ' acabaram de ser ocupados, mas já reservei para ti os dois melhores disponíveis logo a seguir:\n\n'
+                        + seatList + '\nAvançamos com estes?';
+                } else {
+                    out.sucesso      = false;
+                    out.erroMsg      = 'SEAT_TAKEN';
+                    out.mensagemChat = '😔 Infelizmente os lugares que escolheste já não estão disponíveis e não encontrei outros similares. Queres escolher novos lugares no mapa?';
+                }
             } else {
                 out.sucesso      = false;
                 out.erroMsg      = resultado;

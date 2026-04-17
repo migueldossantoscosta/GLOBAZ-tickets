@@ -1,7 +1,58 @@
-public class BilheteiraController {
+public without sharing class BilheteiraController {
     
     public Id idDoEvento  {get;set;}
     public Id idDaAccount {get;set;}
+    public List<Bilhete__c> bilhetesPDF {get;set;}
+    public Decimal precoUnitario {get;set;}
+
+    public BilheteiraController() {
+        String tidStr = ApexPages.currentPage().getParameters().get('id');
+        if (tidStr == null) return;
+        Id tid = (Id) tidStr;
+
+        String sType = tid.getSObjectType().getDescribe().getName();
+        
+        if (sType == 'Order') {
+            this.bilhetesPDF = [
+                SELECT Id, Name, Fila__c, NumeroLugar__c, EstadoBilhete__c, ChaveUnicaSeguranca__c,
+                       Evento__r.Name, Evento__r.DataEvento__c, Evento__r.PrecoBilhete__c,
+                       Evento__r.Recinto__r.Name, Evento__r.Recinto__r.MoradaCompleta__c,
+                       Evento__r.Recinto__r.CodigoPostal__c, Evento__r.Recinto__r.Cidade__c,
+                       Evento__r.Account__r.Name, Evento__r.Account__r.NIF__c,
+                       Evento__r.Account__r.BillingStreet, Evento__r.Account__r.BillingCity,
+                       Evento__r.Account__r.Phone, Evento__r.Account__r.Website,
+                       Order__c, Order__r.Account.Name
+                FROM Bilhete__c 
+                WHERE Order__c = :tid 
+                ORDER BY Name ASC
+            ];
+        } else {
+            this.bilhetesPDF = [
+                SELECT Id, Name, Fila__c, NumeroLugar__c, EstadoBilhete__c, ChaveUnicaSeguranca__c,
+                       Evento__r.Name, Evento__r.DataEvento__c, Evento__r.PrecoBilhete__c,
+                       Evento__r.Recinto__r.Name, Evento__r.Recinto__r.MoradaCompleta__c,
+                       Evento__r.Recinto__r.CodigoPostal__c, Evento__r.Recinto__r.Cidade__c,
+                       Evento__r.Account__r.Name, Evento__r.Account__r.NIF__c,
+                       Evento__r.Account__r.BillingStreet, Evento__r.Account__r.BillingCity,
+                       Evento__r.Account__r.Phone, Evento__r.Account__r.Website,
+                       Order__c, Order__r.Account.Name
+                FROM Bilhete__c 
+                WHERE Id = :tid 
+                LIMIT 1
+            ];
+        }
+
+        if (!bilhetesPDF.isEmpty()) {
+            Id orderId = bilhetesPDF[0].Order__c;
+            List<OrderItem> items = [SELECT UnitPrice FROM OrderItem WHERE OrderId = :orderId AND PricebookEntry.Product2.ProductCode LIKE 'BLT-%' LIMIT 1];
+            if(!items.isEmpty()) {
+                // Cálculo do preço com IVA (23%) para bater com o checkout
+                this.precoUnitario = items[0].UnitPrice * 1.23;
+            } else {
+                this.precoUnitario = bilhetesPDF[0].Evento__r.PrecoBilhete__c;
+            }
+        }
+    }
 
     public BilheteiraController(ApexPages.StandardController controller) {
         this.idDoEvento  = ApexPages.currentPage().getParameters().get('idEvento');
@@ -33,21 +84,97 @@ public class BilheteiraController {
     }
 
     @RemoteAction
+    public static String getBilheteBase64(Id targetId) {
+        if (targetId == null) return 'ERRO: ID é nulo.';
+        try {
+            // Pode receber Order ID (para todos os bilhetes) ou Bilhete ID (singular)
+            PageReference pdfPage = new PageReference('/apex/GerarBilhetePublicoPDF');
+            pdfPage.getParameters().put('id', targetId);
+            
+            Blob pdfBlob;
+            if(Test.isRunningTest()) {
+                pdfBlob = Blob.valueOf('Teste');
+            } else {
+                pdfBlob = pdfPage.getContentAsPDF();
+            }
+            
+            if (pdfBlob == null) return 'ERRO: Falha ao gerar o binário do PDF (Blob vazio).';
+            return EncodingUtil.base64Encode(pdfBlob);
+        } catch (Exception e) {
+            return 'ERRO: [' + e.getTypeName() + '] ' + (e.getMessage() != null ? e.getMessage() : 'Erro desconhecido');
+        }
+    }
+
+    @future(callout=true)
+    public static void enviarEmailComBilhete(Id targetId, String emailDestino, String nomeCliente) {
+        try {
+            PageReference pdfPage = new PageReference('/apex/GerarBilhetePublicoPDF');
+            pdfPage.getParameters().put('id', targetId);
+            
+            Blob pdfBlob;
+            if(Test.isRunningTest()) {
+                pdfBlob = Blob.valueOf('Teste');
+            } else {
+                pdfBlob = pdfPage.getContentAsPDF();
+            }
+
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            mail.setToAddresses(new String[] { emailDestino });
+            mail.setSubject('🎫 Os teus bilhetes GLOBAZ chegaram!');
+            mail.setPlainTextBody('Olá ' + nomeCliente + ',\n\n'
+                + 'Obrigado pela tua compra! Em anexo encontras os teus bilhetes em formato PDF.\n\n'
+                + 'Diverte-te no evento!\n'
+                + 'Equipa GLOBAZ Tickets');
+            
+            Messaging.EmailFileAttachment attach = new Messaging.EmailFileAttachment();
+            attach.setFileName('Bilhetes_GLOBAZ.pdf');
+            attach.setBody(pdfBlob);
+            mail.setFileAttachments(new Messaging.EmailFileAttachment[] { attach });
+
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        } catch (Exception e) {
+            System.debug('Erro ao enviar email: ' + e.getMessage());
+        }
+    }
+
+    @RemoteAction
+    public static String getFirstBilheteFromOrder(Id orderId) {
+        try {
+            List<Bilhete__c> bilhetes = [SELECT Id FROM Bilhete__c WHERE Order__c = :orderId LIMIT 1];
+            if (!bilhetes.isEmpty()) return bilhetes[0].Id;
+            return 'ERRO: Nenhum bilhete encontrado.';
+        } catch (Exception e) {
+            return 'ERRO: ' + e.getMessage();
+        }
+    }
+
+    @RemoteAction
     public static List<String> getLugaresOcupados(Id eventoId) {
         List<String> ocupados = new List<String>();
+        
+        // Mapping prefixes to sync with the SVG map (same as JS)
+        Map<String, String> zonePrefixes = new Map<String, String>{
+            'samsung' => '', 'portimao' => '', 'standing' => '', 'sagres-top' => '',
+            'solverde' => '', 'sagres-bot' => '', 'lagos' => '', 'meo' => '',
+            'millennium' => '', 'topo' => '', 'laterais' => '', 'plateia_central' => '',
+            'plateia_verde' => '', 'plateia_azul' => '', 'camarote' => '', 'fila_frontal' => ''
+        };
+
         for (Bilhete__c b : [SELECT Fila__c, NumeroLugar__c, Pessoa__c FROM Bilhete__c WHERE Evento__c = :eventoId AND EstadoBilhete__c = 'Vendido']) {
-            // Se a fila vier com prefixo (ex: SA-A), tentamos limpar para o mapa JS se necessário
-            // No entanto, o mapa JS agora também usa prefixos nas chaves 'k' se quisermos.
-            // Mas para compatibilidade com o que já está lá (fila original no JSON do mapa),
-            // vamos garantir que a chave bata certo.
-            String f = b.Fila__c;
-            if (f != null && f.contains('-')) {
-                // Se o prefixo for fixo, podemos remover, mas o mais seguro é manter f-n-p
-                // e garantir que o JS saiba validar.
+            String zona = b.Pessoa__c != null ? b.Pessoa__c.toLowerCase() : '';
+            String prefix = zonePrefixes.containsKey(zona) ? zonePrefixes.get(zona) : '';
+            
+            // Format 1: Fila-Lugar-Zona (e.g. A-1-plateia)
+            String k1 = b.Fila__c + '-' + b.NumeroLugar__c;
+            if (String.isNotBlank(zona)) {
+                ocupados.add(k1 + '-' + zona);
             }
-            String k = b.Fila__c + '-' + b.NumeroLugar__c;
-            if (String.isNotBlank(b.Pessoa__c)) k += '-' + b.Pessoa__c;
-            ocupados.add(k);
+            // Format 2: Prefix+Fila-Lugar-Zona (Legacy format)
+            String k2 = prefix + b.Fila__c + '-' + b.NumeroLugar__c;
+            if (String.isNotBlank(zona)) k2 += '-' + zona;
+            ocupados.add(k2);
+            // Format 3: Simple Fila-Lugar (Fallback)
+            ocupados.add(k1);
         }
         return ocupados;
     }
@@ -269,11 +396,43 @@ public class BilheteiraController {
 
             // Processar Bilhetes (Lugares)
             List<Object> rawBilhetes = (List<Object>) JSON.deserializeUntyped(jsonBilhetes);
+            List<Map<String, Object>> bilhetes = new List<Map<String, Object>>();
+            Set<String> filas = new Set<String>();
+            Set<Decimal> numsLugares = new Set<Decimal>();
+
             for (Object obj : rawBilhetes) {
                 Map<String, Object> m = (Map<String, Object>) obj;
+                bilhetes.add(m);
+                filas.add((String)m.get('fila'));
+                numsLugares.add(Decimal.valueOf(String.valueOf(m.get('lugar'))));
+            }
+
+            // 1. Verificar se algum dos lugares já foi vendido (Anti-Duplicidade Global)
+            List<Bilhete__c> conflitos = [
+                SELECT Fila__c, NumeroLugar__c 
+                FROM Bilhete__c 
+                WHERE Evento__c = :eventoId 
+                AND Fila__c IN :filas 
+                AND NumeroLugar__c IN :numsLugares 
+                AND EstadoBilhete__c = 'Vendido'
+            ];
+            if (!conflitos.isEmpty()) {
+                return 'ERRO: SEAT_TAKEN';
+            }
+
+            // 2. Limpar possíveis reservas antigas ou registos de inventário lixo
+            List<Bilhete__c> lixo = [
+                SELECT Id FROM Bilhete__c 
+                WHERE Evento__c = :eventoId 
+                AND Fila__c IN :filas 
+                AND NumeroLugar__c IN :numsLugares
+            ];
+            if (!lixo.isEmpty()) delete lixo;
+
+            // 3. Criar os novos bilhetes e itens de encomenda
+            for (Map<String, Object> m : bilhetes) {
                 String fila = (String) m.get('fila');
                 Long lugar = Long.valueOf(String.valueOf(m.get('lugar')));
-                
                 String tipo = (String) m.get('tipo'); 
                 if(String.isBlank(tipo)) tipo = 'BLT-Geral';
                 
@@ -345,6 +504,28 @@ public class BilheteiraController {
                 Status = 'Activated'
             );
 
+            // Atualizar estatísticas na conta
+            if (orderDados.AccountId != null) {
+                try {
+                    List<Order> accOrders = [SELECT TotalAmount, EffectiveDate FROM Order WHERE AccountId = :orderDados.AccountId AND Status = 'Activated'];
+                    Decimal total = 0;
+                    Date lastDate = null;
+                    for(Order o : accOrders) {
+                        total += (o.TotalAmount != null ? o.TotalAmount : 0);
+                        if(o.EffectiveDate != null && (lastDate == null || o.EffectiveDate > lastDate)) {
+                            lastDate = o.EffectiveDate;
+                        }
+                    }
+                    update new Account(
+                        Id = orderDados.AccountId,
+                        ValorTotalGasto__c = total,
+                        DataUltimaCompra__c = lastDate
+                    );
+                } catch(Exception eStats) {
+                    System.debug('>>> Erro ao atualizar stats da conta: ' + eStats.getMessage());
+                }
+            }
+
             return 'PAGAMENTO_OK';
         } catch (Exception e) {
             return 'ERRO: ' + e.getMessage();
@@ -353,11 +534,13 @@ public class BilheteiraController {
 
 
     private static Id criarOuObterPersonAccount(String nomeCompleto, String email) {
+        String emailSanitized = (email != null) ? email.trim().toLowerCase() : '';
+
         List<Account> existentes = [
             SELECT Id, PersonEmail
             FROM Account
             WHERE IsPersonAccount = true
-            AND PersonEmail = :email
+            AND PersonEmail = :emailSanitized
             LIMIT 1
         ];
 
@@ -389,7 +572,7 @@ public class BilheteiraController {
         pa.RecordTypeId = paRecordTypeId;
         pa.FirstName    = firstName;
         pa.LastName     = lastName;
-        pa.PersonEmail  = email;
+        pa.PersonEmail  = emailSanitized;
         pa.Valido__c    = true;
 
         insert pa;

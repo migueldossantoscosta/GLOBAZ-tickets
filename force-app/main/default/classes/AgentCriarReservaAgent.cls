@@ -1,25 +1,28 @@
 public without sharing class AgentCriarReservaAgent {
 
     public class Input {
-        @InvocableVariable(label='ID do Evento' required=true)
+        @InvocableVariable(label='eventoId' required=true)
         public String eventoId;
 
-        @InvocableVariable(label='ID do Account (null se guest)' required=false)
+        @InvocableVariable(label='accountId' required=false)
         public String accountId;
 
-        @InvocableVariable(label='Método de pagamento' required=true)
+        @InvocableVariable(label='metodoPagamento' required=true)
         public String metodoPagamento;
 
-        @InvocableVariable(label='Nome completo (obrigatório se guest)' required=false)
+        @InvocableVariable(label='nomeCompleto' required=true)
         public String nomeCompleto;
 
-        @InvocableVariable(label='Email (obrigatório se guest)' required=false)
+        @InvocableVariable(label='email' required=false)
         public String email;
     }
 
     public class Output {
         @InvocableVariable(label='Order ID criada')
         public String orderId;
+
+        @InvocableVariable(label='Account ID (Dono da Reserva)')
+        public String reservaAccountId;
 
         @InvocableVariable(label='Sucesso?')
         public Boolean sucesso;
@@ -42,16 +45,34 @@ public without sharing class AgentCriarReservaAgent {
         try {
             Input inp = inputs[0];
 
-            Id evId  = (Id) inp.eventoId;
-            Id accId = String.isNotBlank(inp.accountId) ? (Id) inp.accountId : null;
+            Id evId;
+            try {
+                evId = (Id) inp.eventoId;
+            } catch (Exception e) {
+                out.sucesso = false;
+                out.erroMsg = 'ID_EVENTO_INVALIDO';
+                out.mensagemChat = '⚠️ Erro interno: O ID do evento não é válido. Por favor, reinicia a seleção.';
+                return new List<Output>{ out };
+            }
+
+            if (String.isBlank(inp.nomeCompleto) || String.isBlank(inp.email)) {
+                out.sucesso = false;
+                out.erroMsg = 'DADOS_USER_FALTAL';
+                out.mensagemChat = '⚠️ Preciso que indiques o teu nome e e-mail para finalizar a reserva como convidado.';
+                return new List<Output>{ out };
+            }
+
+            Id accIdVal = String.isNotBlank(inp.accountId) ? (Id) inp.accountId : null;
+
+            String emailSanitized = (inp.email != null) ? inp.email.trim().toLowerCase() : '';
 
             // Reutilizar lógica existente do BilheteiraController
             String resultado = BilheteiraController.criarReserva(
                 evId,
-                accId,
+                accIdVal,
                 inp.metodoPagamento,
                 inp.nomeCompleto,
-                inp.email
+                emailSanitized
             );
 
             if (resultado == 'PAGAMENTO_RECUSADO') {
@@ -73,6 +94,13 @@ public without sharing class AgentCriarReservaAgent {
             // Sucesso — resultado é o ID da Order
             out.sucesso      = true;
             out.orderId      = resultado;
+            
+            // Buscar o AccountId associado à Order (pode ser o guest account recém-criada)
+            List<Order> ords = [SELECT AccountId FROM Order WHERE Id = :resultado LIMIT 1];
+            if (!ords.isEmpty()) {
+                out.reservaAccountId = ords[0].AccountId;
+            }
+            
             out.mensagemChat = '✅ Reserva criada! A processar o pagamento...';
 
         } catch (Exception e) {

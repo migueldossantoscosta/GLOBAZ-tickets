@@ -227,7 +227,7 @@ topic discovery_and_filters:
                     label: "Data Fim"
                     is_required: False
                     is_user_input: True
-                precoMax: number
+                precoMax: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Maximum budget per ticket."
                     label: "Preco Max"
                     is_required: False
@@ -243,7 +243,7 @@ topic discovery_and_filters:
                     label: "Eventos JSON"
                     filter_from_agent: False
                     is_displayable: False
-                totalEventos: number
+                totalEventos: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "The count of events found matching criteria."
                     label: "Total"
                     filter_from_agent: False
@@ -302,17 +302,17 @@ topic discovery_and_filters:
                     label: "Idade"
                     filter_from_agent: False
                     is_displayable: True
-                precoGeral: number
+                precoGeral: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Price for General tickets including VAT."
                     label: "Preco Geral"
                     filter_from_agent: False
                     is_displayable: True
-                precoVIP: number
+                precoVIP: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Price for VIP tickets including VAT."
                     label: "Preco VIP"
                     filter_from_agent: False
                     is_displayable: True
-                precoCamarote: number
+                precoCamarote: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Price for Camarote tickets including VAT."
                     label: "Preco Camarote"
                     filter_from_agent: False
@@ -322,17 +322,17 @@ topic discovery_and_filters:
                     label: "Extras JSON"
                     filter_from_agent: True
                     is_displayable: False
-                lugaresVendidos: number
+                lugaresVendidos: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Total number of sold tickets."
                     label: "Vendidos"
                     filter_from_agent: False
                     is_displayable: True
-                capacidadeMaxima: number
+                capacidadeMaxima: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Maximum venue capacity."
                     label: "Capacidade"
                     filter_from_agent: False
                     is_displayable: True
-                lugaresDisponiveis: number
+                lugaresDisponiveis: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Remaining seats available."
                     label: "Disponivel"
                     filter_from_agent: False
@@ -406,7 +406,8 @@ topic checkout_and_payment:
                     label: "Tipo de Bilhete"
                     is_required: True
                     is_user_input: True
-                quantidade: number
+                quantidade: object
+                    complex_data_type_name: "lightning__numberType"
                     description: "Quantity of tickets to purchase."
                     label: "Quantidade"
                     is_required: True
@@ -417,7 +418,7 @@ topic checkout_and_payment:
                     is_required: False
                     is_user_input: False
             outputs:
-                totalComIva: number
+                totalComIva: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "The final transaction amount including VAT."
                     label: "Total"
                     filter_from_agent: False
@@ -509,7 +510,8 @@ topic checkout_and_payment:
                     label: "Tipo"
                     is_required: True
                     is_user_input: True
-                quantidade: number
+                quantidade: object
+                    complex_data_type_name: "lightning__numberType"
                     description: "Number of tickets to generate."
                     label: "Quantidade"
                     is_required: True
@@ -519,7 +521,7 @@ topic checkout_and_payment:
                     label: "Fila"
                     is_required: False
                     is_user_input: True
-                lugar: number
+                lugar: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "The selected seat number in the venue."
                     label: "Lugar"
                     is_required: False
@@ -535,7 +537,7 @@ topic checkout_and_payment:
                     label: "Sucesso"
                     filter_from_agent: False
                     is_displayable: True
-                totalBilhetes: number
+                totalBilhetes: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "The count of actual tickets issued."
                     label: "Total Bilhetes"
                     filter_from_agent: False
@@ -597,7 +599,7 @@ topic post_purchase_support:
                     label: "Tem Bilhetes"
                     filter_from_agent: False
                     is_displayable: True
-                totalBilhetes: number
+                totalBilhetes: object`n                    complex_data_type_name: "lightning__numberType"
                     description: "Count of active tickets found."
                     label: "Total"
                     filter_from_agent: False
