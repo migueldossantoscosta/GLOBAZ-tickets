@@ -1,4 +1,4 @@
-<apex:page showHeader="false" sidebar="false" standardStylesheets="false"
+<apex:page cache="false" showHeader="false" sidebar="false" standardStylesheets="false"
              docType="html-5.0" applyHtmlTag="false" applyBodyTag="false"
              controller="GlobazSiteAccountController" title="Minha Conta">
 <html lang="pt">
@@ -22,12 +22,22 @@
             try {
                 var params = new URLSearchParams(window.location.search || '');
                 var uid = params.get('uid');
-                var stored = getCookie('globaz_uid');
-                if (!uid && stored) {
-                    var base = window.location.pathname;
-                    window.location.replace(base + '?uid=' + encodeURIComponent(stored));
+                if (uid) {
+                    // Se temos o UID na URL, garantimos que está no cookie por 30 dias
+                    var date = new Date();
+                    date.setTime(date.getTime() + (30*24*60*60*1000));
+                    document.cookie = "globaz_uid=" + uid + "; expires=" + date.toUTCString() + "; path=/";
+                } else {
+                    // Se não temos na URL, tentamos recuperar do cookie
+                    var stored = getCookie('globaz_uid');
+                    if (stored) {
+                        var base = window.location.pathname;
+                        window.location.replace(base + '?uid=' + encodeURIComponent(stored));
+                    }
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error("Erro na persistência de sessão:", e);
+            }
         })();
     </script>
     <style>
@@ -75,54 +85,54 @@
             <div class="info-grid">
                 <div class="info-box">
                     <div class="info-label">Primeiro Nome</div>
-                    <input type="text" id="FirstName" class="info-input" value="{!account.FirstName}" />
+                    <input type="text" id="FirstName" class="info-input" value="{!accFirstName}" />
                 </div>
                 <div class="info-box">
                     <div class="info-label">Apelido</div>
-                    <input type="text" id="LastName" class="info-input" value="{!account.LastName}" />
+                    <input type="text" id="LastName" class="info-input" value="{!accLastName}" />
                 </div>
                 <div class="info-box">
                     <div class="info-label">Email</div>
-                    <input type="email" id="PersonEmail" class="info-input" value="{!account.PersonEmail}" />
+                    <input type="email" id="PersonEmail" class="info-input" value="{!accEmail}" />
                 </div>
                 <div class="info-box">
                     <div class="info-label">Telemóvel</div>
-                    <input type="text" id="Phone" class="info-input" value="{!account.Phone}" placeholder="Não definido" />
+                    <input type="text" id="Phone" class="info-input" value="{!accPhone}" placeholder="Não definido" />
                 </div>
                 
                 <!-- Campos Customizados -->
                 <div class="info-box">
                     <div class="info-label">Data de Nascimento</div>
-                    <apex:outputPanel rendered="{!NOT(ISBLANK(account.DataNascimento__c))}">
-                        <input type="date" id="DataNascimento__c" class="info-input" value="{!TEXT(YEAR(account.DataNascimento__c))}-{!LPAD(TEXT(MONTH(account.DataNascimento__c)),2,'0')}-{!LPAD(TEXT(DAY(account.DataNascimento__c)),2,'0')}" />
-                    </apex:outputPanel>
-                    <apex:outputPanel rendered="{!ISBLANK(account.DataNascimento__c)}">
-                        <input type="date" id="DataNascimento__c" class="info-input" value="" />
-                    </apex:outputPanel>
+                    <input type="date" id="DataNascimento__c" class="info-input" value="{!accBorn}" />
                 </div>
                 <div class="info-box" style="display:flex; align-items:center; gap:16px;">
                     <div class="info-label" style="display:none;">Idade</div>
                     <span style="color:var(--muted); font-size:14px; font-weight:600;">Idade atual: 
-                        <span style="color:#fff">{!IF(ISBLANK(account.Idade__c), '-', TEXT(account.Idade__c))} anos</span>
+                        <span style="color:#fff">{!accAge} anos</span>
                     </span>
                 </div>
 
                 <div class="info-box">
                     <div class="info-label">Categoria Favorita</div>
-                    <input type="text" id="CategoriaFavorita__c" class="info-input" value="{!account.CategoriaFavorita__c}" placeholder="Teatro, Conferências, etc." />
+                    <select id="CategoriaFavorita__c" class="info-input" style="background:#0d1425; border-radius:4px; padding:4px;">
+                        <option value="">Selecione uma categoria...</option>
+                        <apex:repeat value="{!categoriesList}" var="cat">
+                            <option value="{!cat}">{!cat}</option>
+                        </apex:repeat>
+                    </select>
                 </div>
                 <div class="info-box">
                     <div class="info-label">NIF</div>
-                    <input type="text" id="NIF__c" class="info-input" value="{!account.NIF__c}" placeholder="NIF para faturação" />
+                    <input type="text" id="NIF__c" class="info-input" value="{!accNif}" placeholder="NIF para faturação" />
                 </div>
                 
                 <div class="info-box">
                     <div class="info-label">IBAN</div>
-                    <input type="text" id="IBAN__c" class="info-input" value="{!account.IBAN__c}" placeholder="PT50..." />
+                    <input type="text" id="IBAN__c" class="info-input" value="{!accIban}" placeholder="PT50..." />
                 </div>
                 <div class="info-box">
-                    <div class="info-label">Palavra-Passe (Hash)</div>
-                    <input type="password" id="Password__c" class="info-input" value="{!account.Password__c}" placeholder="Nova palavra-passe" />
+                    <div class="info-label">Alterar Palavra-Passe</div>
+                    <input type="password" id="Password__c" class="info-input" value="" placeholder="Inserir nova password" />
                 </div>
 
                 <!-- Checkboxes -->
@@ -140,19 +150,19 @@
                 </div>
                 
                 <!-- Read Only Stats -->
-                <div class="info-box">
+                <div class="info-box" data-uid="{!accountId}">
                     <div class="info-label">Total Gasto (Histórico)</div>
-                    <input type="text" class="info-input" value="{!IF(ISBLANK(account.ValorTotalGasto__c), '0.00', TEXT(account.ValorTotalGasto__c))} €" disabled="true" />
+                    <input type="text" class="info-input" value="{!accTotalStr} €" disabled="true" />
                 </div>
                 <div class="info-box">
                     <div class="info-label">Data da Última Compra</div>
-                    <input type="text" class="info-input" value="{!IF(ISBLANK(account.DataUltimaCompra__c), 'Sem compras', TEXT(DAY(account.DataUltimaCompra__c)) + '/' + TEXT(MONTH(account.DataUltimaCompra__c)) + '/' + TEXT(YEAR(account.DataUltimaCompra__c)))}" disabled="true" />
+                    <input type="text" class="info-input" value="{!accLast}" disabled="true" />
                 </div>
             </div>
 
             <div class="actions">
                 <div class="left-actions">
-                    <a href="HomeEventos" class="btn btn-ghost">Voltar ao Site</a>
+                    <a href="{!$Page.HomeEventos}" class="btn btn-ghost">Voltar ao Site</a>
                     <a href="javascript:void(0)" class="btn btn-ghost" style="color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="logout();">Sair</a>
                 </div>
                 <button id="btnSalvar" class="btn btn-primary" onclick="salvarConta()">Guardar Alterações</button>
@@ -197,23 +207,26 @@
             <div class="eyebrow">Acesso Restrito</div>
             <div class="title">Precisas de fazer login</div>
             <div class="actions" style="justify-content:center;">
-                <a href="SiteLogin" class="btn btn-primary">Entrar</a>
-                <a href="SiteRegister" class="btn btn-ghost">Criar Conta</a>
-                <a href="HomeEventos" class="btn btn-ghost">Voltar ao Início</a>
+                <a href="{!$Page.SiteLogin}" class="btn btn-primary">Entrar</a>
+                <a href="{!$Page.SiteRegister}" class="btn btn-ghost">Criar Conta</a>
+                <a href="{!$Page.HomeEventos}" class="btn btn-ghost">Voltar ao Início</a>
             </div>
         </div>
     </apex:outputPanel>
 
     <script>
-        // Init checkboxes (Visualforce booleans render as true/false text in bind variables usually, but easiest via JS init)
+        // Init fields
         document.addEventListener('DOMContentLoaded', function() {
-            if('{!account.Marketing__c}' === 'true') document.getElementById('Marketing__c').checked = true;
-            if('{!account.RGPD__c}' !== '') document.getElementById('RGPD__c').checked = true;
+            if('{!accMark}' === 'true') document.getElementById('Marketing__c').checked = true;
+            if('{!accRgpd}' === 'true') document.getElementById('RGPD__c').checked = true;
+            
+            var fav = '{!JSENCODE(accFav)}';
+            if(fav) document.getElementById('CategoriaFavorita__c').value = fav;
         });
 
         function logout() {
             document.cookie = 'globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-            window.location.href = 'HomeEventos';
+            window.location.href = '{!$Page.HomeEventos}';
         }
 
         function salvarConta() {
@@ -236,22 +249,26 @@
                 RGPD__c: document.getElementById('RGPD__c').checked ? 'true' : 'false'
             };
 
+            console.log('>>> A guardar dados:', dados);
+
             Visualforce.remoting.Manager.invokeAction(
                 '{!$RemoteAction.GlobazSiteAccountController.guardarConta}',
                 dados,
                 function(result, event) {
-                    btn.innerHTML = 'Guardar Alterações';
-                    btn.disabled = false;
                     if (event.status && result === 'SUCESSO') {
-                        // Faz uma pequena animação de sucesso no botão
-                        btn.innerHTML = 'Guardado!';
-                        btn.style.background = '#10b981';
+                        btn.innerHTML = '✅ Guardado com Sucesso!';
+                        btn.style.background = '#059669';
                         setTimeout(() => { 
-                            btn.innerHTML = 'Guardar Alterações'; 
-                            btn.style.background = '';
-                        }, 2500);
+                            var currentUrl = new URL(window.location.href);
+                            window.location.href = currentUrl.toString(); // Force reload with same params
+                        }, 1000);
                     } else {
-                        alert('Erro ao guardar: ' + result + '\n\nCertifica-te que respeitas as regras de validação.');
+                        btn.innerHTML = 'Guardar Alterações';
+                        btn.disabled = false;
+                        btn.style.background = '';
+                        var msg = result || (event && event.message) || 'Erro desconhecido';
+                        console.error('>>> Erro ao guardar:', msg);
+                        alert('Erro ao guardar: ' + msg + '\n\nVerifica se os campos estão corretos.');
                     }
                 },
                 {escape: true}

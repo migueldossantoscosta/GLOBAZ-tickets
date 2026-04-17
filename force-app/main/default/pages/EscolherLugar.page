@@ -525,7 +525,7 @@
             </div>
         </div>
 
-        <a href="/globaztickets" class="top-back">Voltar</a>
+        <a href="HomeEventos" class="top-back">Voltar</a>
     </div>
 
         <!-- STEP 1: MAPA -->
@@ -610,7 +610,7 @@
             <div class="success-icon">✓</div>
             <h2 style="font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px;">Pago com Sucesso!</h2>
             <p style="color:#888;font-size:14px;margin-bottom:28px;">Os teus bilhetes foram emitidos com sucesso.</p>
-            <button class="btn-main" onclick="window.open('/apex/BilhetePDF?id='+orderIdAtiva,'_blank')">⬇ Download Bilhete (PDF)</button>
+            <button class="btn-main" id="customDownloadBtn" onclick="downloadBilheteFinal(this)">⬇ Download Bilhete (PDF)</button>
             <button class="btn-main" style="background:#f5f5f7;color:#000;margin-top:10px;" onclick="window.location.reload()">Nova Reserva</button>
         </div>
     </div>
@@ -672,14 +672,13 @@
     const accId = '{!idDaAccount}';
     
     const ZONE_PREFIXES = {
-        'samsung': 'SA-', 'portimao': 'PA-', 'standing': 'ST-', 'sagres-top': 'STP-',
-        'solverde': 'SOL-', 'sagres-bot': 'SBT-', 'lagos': 'LAG-', 'meo': 'ME-',
-        'millennium': 'MIL-', 'topo': 'TP-', 'laterais': 'LT-', 'plateia_central': 'PC-',
-        'plateia_verde': 'PV-', 'plateia_azul': 'PAZ-', 'camarote': 'CAM-', 'fila_frontal': 'FF-'
+        'samsung': '', 'portimao': '', 'standing': '', 'sagres-top': '',
+        'solverde': '', 'sagres-bot': '', 'lagos': '', 'meo': '',
+        'millennium': '', 'topo': '', 'laterais': '', 'plateia_central': '',
+        'plateia_verde': '', 'plateia_azul': '', 'camarote': '', 'fila_frontal': ''
     };
     function getPrefixedFila(fila, zoneId){
-        const prefix = (zoneId && ZONE_PREFIXES[zoneId.toLowerCase()]) || '';
-        return prefix + fila;
+        return fila;
     }
 
     function getTipoBilhete(zona) {
@@ -1152,87 +1151,117 @@
     return el;
 }
 
-function makeMeoSeatRect(group, x, y, w, h, fila, lugar, zona, ocupadosSet){
-    totalSeats++;
-    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
-    const ocupado = ocupadosSet.has(k);
 
-    const seat = makeSvgEl('rect', {
-        x: x, y: y, width: w, height: h, rx: 1.5, ry: 1.5,
-        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
-    });
 
-    seat.dataset.k = k;
-    seat.dataset.fila = fila;
-    seat.dataset.lugar = lugar;
-    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
-
-    if(!ocupado){
-        seat.onclick = function(){
-            const idx = selecionados.findIndex(s => s.k === k);
-            if(idx > -1){
-                selecionados.splice(idx,1);
-                seat.classList.remove('selecionado');
-            } else {
-                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
-                seat.classList.add('selecionado');
-            }
-            document.getElementById('count').innerText  = selecionados.length;
-            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
-            document.getElementById('msSel').innerText  = selecionados.length;
-            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
-        };
+    function decodeHtml(html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
     }
 
-    group.appendChild(seat);
-}
-
-function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona, ocupadosSet){
-    totalSeats++;
-    const k = getPrefixedFila(fila, zona) + '-' + lugar + '-' + zona;
-    const ocupado = ocupadosSet.has(k);
-
-    const rad = angleDeg * Math.PI / 180;
-    const x = cx + Math.cos(rad) * radius - w / 2;
-    const y = cy + Math.sin(rad) * radius - h / 2;
-
-    const seat = makeSvgEl('rect', {
-        x: x,
-        y: y,
-        width: w,
-        height: h,
-        rx: 1.5,
-        ry: 1.5,
-        transform: 'rotate(' + (angleDeg + 90) + ' ' + (x + w/2) + ' ' + (y + h/2) + ')',
-        class: 'seat ' + zona + (ocupado ? ' ocupado' : '')
-    });
-
-    seat.dataset.k = k;
-    seat.dataset.fila = fila;
-    seat.dataset.lugar = lugar;
-    seat.style.cursor = ocupado ? 'not-allowed' : 'pointer';
-
-    if(!ocupado){
-        seat.onclick = function(){
-            const idx = selecionados.findIndex(s => s.k === k);
-            if(idx > -1){
-                selecionados.splice(idx,1);
-                seat.classList.remove('selecionado');
-            } else {
-                const tipo = getTipoBilhete(zona); selecionados.push({k, fila:fila, lugar:lugar, stand: zona, tipo: tipo});
-                seat.classList.add('selecionado');
-            }
-            document.getElementById('count').innerText  = selecionados.length;
-            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
-            document.getElementById('msSel').innerText  = selecionados.length;
-            document.getElementById('msDisp').innerText = totalSeats - ocupadosCount - selecionados.length;
-        };
+    function getPrefixedFila(fila, zoneId) {
+        const zone = STANDS_TEATRO ? STANDS_TEATRO.find(z => z.id === zoneId) : null;
+        if (zone && zone.prefixo_fila) return zone.prefixo_fila + fila;
+        return fila;
     }
 
-    group.appendChild(seat);
-}
+    function getTipoBilhete(zoneId) {
+        if (zoneId.indexOf('VIP') > -1) return 'BLT-VIP';
+        if (zoneId.indexOf('camarote') > -1) return 'BLT-CAMAROTE';
+        return 'BLT-Geral';
+    }
 
-        function construirMapaMeoArena(mapa, ocupados){
+    function construirMapaForumBraga(mapa, ocupados) {
+        const oc = new Set(ocupados);
+        ocupadosCount = oc.size;
+        totalSeats = 0;
+
+        const frente = document.getElementById('mapa-frente');
+        const tras   = document.getElementById('mapa-tras');
+        frente.innerHTML = '';
+        tras.innerHTML = '';
+
+        // Agrupar zonas por posição
+        mapa.zonas.forEach(z => {
+            const zoneContainer = document.createElement('div');
+            zoneContainer.className = 'zone-hall';
+            zoneContainer.style.cssText = 'margin-bottom:32px;';
+            
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size:11px;font-weight:800;color:' + z.cor + ';margin-bottom:10px;text-align:center;text-transform:uppercase;letter-spacing:1px;opacity:0.8;';
+            title.innerText = z.label;
+            zoneContainer.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.style.cssText = 'display:flex;flex-direction:column;gap:5px;align-items:center;';
+
+            z.filas.forEach(fila => {
+                const rowLine = document.createElement('div');
+                rowLine.style.cssText = 'display:flex;gap:4px;align-items:center;';
+                
+                const lbl = document.createElement('div');
+                lbl.style.cssText = 'width:20px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-align:right;margin-right:6px;';
+                lbl.innerText = fila;
+                rowLine.appendChild(lbl);
+
+                for(let n=1; n<=z.colunas; n++){
+                    totalSeats++;
+                    const prefixedFila = getPrefixedFila(fila, z.id);
+                    const key = prefixedFila + '-' + n + '-' + z.id;
+                    const isOc = oc.has(key) || oc.has(fila + '-' + n);
+                    const isSel = selecionados.findIndex(s => s.k === key) > -1;
+                    
+                    const seat = document.createElement('div');
+                    seat.style.cssText = 'width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;';
+                    
+                    if(isOc){
+                        seat.style.background = '#ff3b7f';
+                        seat.style.opacity = '0.3';
+                        seat.style.cursor = 'not-allowed';
+                    } else {
+                        seat.style.background = isSel ? '#fbbf24' : z.cor;
+                        if(isSel) seat.style.outline = '1.5px solid #fff';
+                        seat.style.cursor = 'pointer';
+                        
+                        seat.onmouseenter = () => { if(!selecionados.find(s=>s.k===key)) seat.style.opacity = '0.75'; };
+                        seat.onmouseleave = () => { seat.style.opacity = '1'; };
+                        
+                        seat.onclick = function(){
+                            const idx = selecionados.findIndex(s => s.k === key);
+                            const tipo = getTipoBilhete(z.id);
+                            if(idx > -1){
+                                selecionados.splice(idx,1);
+                                seat.style.background = z.cor;
+                                seat.style.outline = 'none';
+                            } else {
+                                selecionados.push({k:key, fila:prefixedFila, lugar:n, stand:z.id, tipo:tipo});
+                                seat.style.background = '#fbbf24';
+                                seat.style.outline = '1.5px solid #fff';
+                            }
+                            document.getElementById('count').innerText = selecionados.length;
+                            document.getElementById('plural').innerText = selecionados.length !== 1 ? 's' : '';
+                            document.getElementById('msSel').innerText = selecionados.length;
+                            document.getElementById('msDisp').innerText = totalSeats - oc.size - selecionados.length;
+                        };
+                    }
+                    rowLine.appendChild(seat);
+                }
+                const lblRight = lbl.cloneNode(true);
+                lblRight.style.textAlign = 'left';
+                lblRight.style.marginRight = '0';
+                lblRight.style.marginLeft = '6px';
+                rowLine.appendChild(lblRight);
+                grid.appendChild(rowLine);
+            });
+            zoneContainer.appendChild(grid);
+            frente.appendChild(zoneContainer);
+        });
+
+        document.getElementById('msTotal').innerText = totalSeats;
+        document.getElementById('msDisp').innerText  = totalSeats - oc.size;
+    }
+
+    function construirMapaMeoArena(mapa, ocupados){
             const NS2 = 'http://www.w3.org/2000/svg';
             const COLORS2 = { topo:'#fb923c', ring:'#38bdf8', plateia:'#34d399', lat:'#c084fc' };
             const oc = new Set(ocupados);
@@ -1260,12 +1289,14 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             shell1.setAttribute('fill','#0d1424');
             shell1.setAttribute('stroke','rgba(255,255,255,0.12)');
             shell1.setAttribute('stroke-width','1.5');
+            shell1.style.pointerEvents = 'none'; // Prevent blocking clicks
             svg.appendChild(shell1);
 
             const shell2 = document.createElementNS(NS2,'ellipse');
             shell2.setAttribute('cx','340'); shell2.setAttribute('cy','370');
             shell2.setAttribute('rx','295'); shell2.setAttribute('ry','345');
             shell2.setAttribute('fill','#111827');
+            shell2.style.pointerEvents = 'none'; // Prevent blocking clicks
             svg.appendChild(shell2);
 
             // Stage
@@ -1303,10 +1334,10 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             svgWrap.appendChild(svg);
             arena.appendChild(svgWrap);
 
-            function addMeoSeat(parent, cx, cy, w, h, zone, key, angleDeg){
+            function addMeoSeat(parent, cx, cy, w, h, zone, key, angleDeg, fila, lNum){
                 totalSeats++;
-                const isOc = oc.has(key);
-                if(isOc) ocupadosCount = oc.size; // already counted
+                const isOc = oc.has(key) || oc.has(fila + '-' + lNum);
+                if(isOc) ocupadosCount++; // Increment count correctly
 
                 const r2 = document.createElementNS(NS2,'rect');
                 r2.setAttribute('x', cx - w/2);
@@ -1337,7 +1368,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                             r2.setAttribute('stroke-width','0.4');
                             r2.setAttribute('opacity','1');
                         } else {
-                            selecionados.push({k:key, fila:zone+'-seat', lugar:key, stand:zone, tipo:tipo});
+                            selecionados.push({k:key, fila:fila, lugar:lNum, stand:zone, tipo:tipo});
                             r2.setAttribute('fill','#fbbf24');
                             r2.setAttribute('stroke','#fff');
                             r2.setAttribute('stroke-width','1.5');
@@ -1360,18 +1391,17 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             // ── TOPO ───────────────────────────────────────
             (function(){
                 const SW=8, SH=6, GX=2, GY=4;
-                const filas = [
-                    {fila:'A', cols:20, y:80},
-                    {fila:'B', cols:24, y:80+SH+GY},
-                    {fila:'C', cols:28, y:80+2*(SH+GY)},
-                    {fila:'D', cols:30, y:80+3*(SH+GY)},
-                    {fila:'E', cols:32, y:80+4*(SH+GY)},
-                ];
-                filas.forEach(function(f){
-                    const totalW = f.cols*(SW+GX) - GX;
+                const rowsArr = ['O5','O4','O3','O2','O1']; // Topo: O1 to O5
+                const colsArr = [32,30,28,24,20];
+                rowsArr.forEach(function(fila, ri){
+                    const cols = colsArr[ri];
+                    const totalW = cols*(SW+GX) - GX;
                     const startX = 340 - totalW/2;
-                    for(let c=0; c<f.cols; c++){
-                        addMeoSeat(gTopo, startX+c*(SW+GX)+SW/2, f.y+SH/2, SW, SH, 'topo', 'meo-topo-'+f.fila+'-'+(c+1), 0);
+                    const y = 80 + ri*(SH+GY) + SH/2;
+                    for(let c=0; c<cols; c++){
+                        const lNum = c + 1;
+                        const k = fila + '-' + lNum + '-topo';
+                        addMeoSeat(gTopo, startX+c*(SW+GX)+SW/2, y, SW, SH, 'topo', k, 0, fila, lNum);
                     }
                 });
             })();
@@ -1381,9 +1411,9 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                 const CX=340, CY=370;
                 const SW=7, SH=13;
                 const rings2 = [
-                    {R:160, fila:'R1'},
-                    {R:175, fila:'R2'},
-                    {R:190, fila:'R3'},
+                    {R:160, fila:'AN1', zone:'ring'},
+                    {R:175, fila:'AN2', zone:'ring'},
+                    {R:190, fila:'AN3', zone:'ring'},
                 ];
                 rings2.forEach(function(ring){
                     const startDeg=150, endDeg=390;
@@ -1398,7 +1428,9 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                         const rad = deg*Math.PI/180;
                         const x = CX + Math.cos(rad)*ring.R;
                         const y = CY + Math.sin(rad)*ring.R;
-                        addMeoSeat(gRing, x, y, SW, SH, 'ring', 'meo-ring-'+ring.fila+'-'+(++idx), deg+90);
+                        idx++;
+                        const k = ring.fila + '-' + idx + '-' + ring.zone;
+                        addMeoSeat(gRing, x, y, SW, SH, ring.zone, k, deg+90, ring.fila, idx);
                     }
                 });
             })();
@@ -1406,15 +1438,18 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             // ── PLATEIA CENTRAL ────────────────────────────
             (function(){
                 const SW=9, SH=8, GX=2, GY=3;
-                const filas = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
-                const colsPerRow = [14,16,18,20,22,22,22,22,22,22,20,18,16,14];
-                filas.forEach(function(fila, ri){
-                    const cols = colsPerRow[ri];
+                // Inverted: A is near Stage (bottom), N is furthest (top)
+                const rowsArr = ['N','M','L','K','J','I','H','G','F','E','D','C','B','A']; 
+                const colsArr = [14,16,18,20,22,22,22,22,22,22,20,18,16,14];
+                rowsArr.forEach(function(fila, ri){
+                    const cols = colsArr[ri];
                     const totalW = cols*(SW+GX) - GX;
                     const startX = 340 - totalW/2;
                     const y = 318 + ri*(SH+GY) + SH/2;
                     for(let c=0; c<cols; c++){
-                        addMeoSeat(gPlateia, startX+c*(SW+GX)+SW/2, y, SW, SH, 'plateia', 'meo-plateia-'+fila+'-'+(c+1), 0);
+                        const lNum = c + 1;
+                        const k = fila + '-' + lNum + '-plateia';
+                        addMeoSeat(gPlateia, startX+c*(SW+GX)+SW/2, y, SW, SH, 'plateia', k, 0, fila, lNum);
                     }
                 });
             })();
@@ -1422,15 +1457,17 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             // ── LATERAL ESQUERDA ───────────────────────────
             (function(){
                 const SW=8, SH=8, GX=4, GY=2;
-                const filas = ['A','B','C','D','E','F','G','H'];
-                const seatsPerFila = [10,12,14,15,16,16,15,13];
+                const filas = ['AC8','AC7','AC6','AC5','AC4','AC3','AC2','AC1']; // Laterais: AC1 to AC8
+                const seatsArr = [13,15,16,16,15,14,12,10];
                 filas.forEach(function(fila, fi){
-                    const n = seatsPerFila[fi];
+                    const n = seatsArr[fi];
                     const cx = 52 + fi*(SW+GX) + SW/2;
                     const totalH = n*(SH+GY) - GY;
                     const startY = 370 - totalH/2;
                     for(let s=0; s<n; s++){
-                        addMeoSeat(gLatL, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-l-'+fila+'-'+(s+1), 0);
+                        const lNum = s + 1;
+                        const k = fila + '-' + lNum + '-lat';
+                        addMeoSeat(gLatL, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', k, 0, fila, lNum);
                     }
                 });
             })();
@@ -1438,15 +1475,17 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             // ── LATERAL DIREITA ────────────────────────────
             (function(){
                 const SW=8, SH=8, GX=4, GY=2;
-                const filas = ['A','B','C','D','E','F','G','H'];
-                const seatsPerFila = [10,12,14,15,16,16,15,13];
+                const filas = ['AC8','AC7','AC6','AC5','AC4','AC3','AC2','AC1']; // Laterais: AC1 to AC8
+                const seatsArr = [13,15,16,16,15,14,12,10];
                 filas.forEach(function(fila, fi){
-                    const n = seatsPerFila[fi];
+                    const n = seatsArr[fi];
                     const cx = 628 - fi*(SW+GX) - SW/2;
                     const totalH = n*(SH+GY) - GY;
                     const startY = 370 - totalH/2;
                     for(let s=0; s<n; s++){
-                        addMeoSeat(gLatR, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', 'meo-lat-r-'+fila+'-'+(s+1), 0);
+                        const lNum = s + 1;
+                        const k = fila + '-' + lNum + '-lat';
+                        addMeoSeat(gLatR, cx, startY+s*(SH+GY)+SH/2, SW, SH, 'lat', k, 0, fila, lNum);
                     }
                 });
             })();
@@ -1585,7 +1624,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
                         '{!$RemoteAction.BilheteiraController.getLugaresOcupados}', evtId,
                         function(ocupados){
                             ocupadosGlobal = new Set(ocupados || []);
-                            construirMapaTeatro(mapa.zonas, ocupados || []);
+                            construirMapaForumBraga(mapa, ocupados || []);
                         }
                     );
                 }
@@ -1670,9 +1709,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
         renderExtras();
         
         document.getElementById('modalChips').innerHTML = selecionados.map(s => {
-            const label = s.stand
-                ? `${s.stand.replace('-',' ')} · Fila ${s.fila} · Lugar ${s.lugar}`
-                : `Fila ${s.fila} · Lugar ${s.lugar}`;
+            const label = `Fila ${s.fila} · Lugar ${s.lugar}`;
             return `<div class="chip"><div class="chip-dot"></div>${label}</div>`;
         }).join('');
         
@@ -1766,7 +1803,7 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
             const totalFmt = totalNum.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
             
             document.getElementById('receipt-lugares').innerText = selecionados.map(s =>
-                s.stand ? `${s.stand} ${s.fila}${s.lugar}` : `${s.fila}${s.lugar}`
+                `${s.fila}-${s.lugar}`
             ).join(', ');
             document.getElementById('receipt-metodo').innerText  = metodoAtual;
             document.getElementById('total-display').innerText   = totalFmt;
@@ -1829,5 +1866,48 @@ function makeMeoSeatArc(group, cx, cy, angleDeg, radius, w, h, fila, lugar, zona
         );
     }
 //]]>
-    </script>
+        function downloadBilheteFinal(btn) {
+        if (!orderIdAtiva) return;
+        
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⌛ A gerar bilhete...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.BilheteiraController.getBilheteBase64}',
+            orderIdAtiva,
+            function(base64, event2) {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                            btn.style.opacity = '1';
+
+                            if (event2.status && base64 && !base64.startsWith('ERRO')) {
+                                try {
+                                    const byteCharacters = atob(base64);
+                                    const byteNumbers = new Array(byteCharacters.length);
+                                    for (let i = 0; i < byteCharacters.length; i++) {
+                                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                    }
+                                    const byteArray = new Uint8Array(byteNumbers);
+                                    const blob = new Blob([byteArray], {type: 'application/pdf'});
+                                    
+                                    const link = document.createElement('a');
+                                    link.href = window.URL.createObjectURL(blob);
+                                    link.download = 'Bilhetes_GLOBAZ_' + orderIdAtiva + '.pdf';
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                } catch (e) {
+                                    alert('Erro ao processar ficheiro no browser: ' + e);
+                                }
+                            } else {
+                                // Se o status for false, o erro está em event2.message
+                                const errorMsg = event2.status ? base64 : event2.message;
+                                alert('Erro ao gerar binário do PDF: ' + errorMsg);
+                            }
+                        }
+                    );
+                }
+</script>
 </apex:page>

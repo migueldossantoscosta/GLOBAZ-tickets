@@ -1,0 +1,35 @@
+{
+  "required" : [ "eventoId", "tipoBilhete", "quantidade" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "eventoId" : {
+      "title" : "ID Evento",
+      "description" : "The event ID for price calculation.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "extrasJson" : {
+      "title" : "Extras",
+      "description" : "JSON string containing selected extras if any.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "quantidade" : {
+      "title" : "Quantidade",
+      "description" : "Quantity of tickets to purchase.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "tipoBilhete" : {
+      "title" : "Tipo de Bilhete",
+      "description" : "Type of ticket selected by the customer such as Geral, VIP or Camarote.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

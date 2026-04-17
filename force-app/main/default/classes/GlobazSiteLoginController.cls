@@ -42,8 +42,10 @@ public without sharing class GlobazSiteLoginController {
                   'Login bem-sucedido! Bem-vindo, ' + acc.FirstName + '.'
               ));
 
-              // Redirect com UID na URL
-              PageReference home = new PageReference('/apex/HomeEventos?uid=' + acc.Id);
+              // Redirect seguro usando a referência da página
+              // O Salesforce resolve automaticamente o prefixo do site correto (/globaztickets)
+              PageReference home = Page.HomeEventos;
+              home.getParameters().put('uid', acc.Id);
               home.setRedirect(true);
               return home;
 

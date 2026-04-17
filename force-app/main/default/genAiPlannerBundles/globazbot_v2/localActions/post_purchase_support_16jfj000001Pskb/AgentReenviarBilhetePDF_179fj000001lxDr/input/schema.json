@@ -1,0 +1,21 @@
+{
+  "required" : [ "bilheteId", "accountId" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "accountId" : {
+      "title" : "Account ID",
+      "description" : "The owner account ID for security verification.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "bilheteId" : {
+      "title" : "Bilhete ID",
+      "description" : "Target ticket ID for PDF generation and sending.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

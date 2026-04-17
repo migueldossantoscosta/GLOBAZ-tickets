@@ -1,0 +1,49 @@
+{
+  "required" : [ "orderId", "eventoId", "tipoBilhete", "quantidade" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "eventoId" : {
+      "title" : "Evento ID",
+      "description" : "The targeted event ID.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "fila" : {
+      "title" : "Fila",
+      "description" : "The selected row in the venue.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "lugar" : {
+      "title" : "Lugar",
+      "description" : "The selected seat number in the venue.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "orderId" : {
+      "title" : "Order ID",
+      "description" : "The ID of the draft order to finalise.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "quantidade" : {
+      "title" : "Quantidade",
+      "description" : "Number of tickets to generate.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "tipoBilhete" : {
+      "title" : "Tipo",
+      "description" : "The type of ticket being purchased.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

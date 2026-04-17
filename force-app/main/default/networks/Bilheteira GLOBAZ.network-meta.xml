@@ -36,8 +36,10 @@
     <headlessRegistrationTemplate>unfiled$public/CommunityHeadlessRegistrationTemplate</headlessRegistrationTemplate>
     <networkAuthApiSettings>
         <doesForgotPasswordRequireAuth>false</doesForgotPasswordRequireAuth>
+        <doesPasswordLoginRequireAuth>false</doesPasswordLoginRequireAuth>
         <doesPwdlessLoginRequireAuth>false</doesPwdlessLoginRequireAuth>
         <doesRegistrationRequireAuth>false</doesRegistrationRequireAuth>
+        <isFirstPartyAppsAllowed>false</isFirstPartyAppsAllowed>
         <isForgotPwdAllowed>false</isForgotPwdAllowed>
         <isForgotPwdEmailTemplateAllowlistingEnabled>false</isForgotPwdEmailTemplateAllowlistingEnabled>
         <isHeadlessUserRegistrationAllowed>false</isHeadlessUserRegistrationAllowed>
@@ -46,6 +48,8 @@
         <isRecaptchaRequiredPwdlessLogin>false</isRecaptchaRequiredPwdlessLogin>
         <isRecaptchaRequiredRgstr>false</isRecaptchaRequiredRgstr>
         <isUniversalClientRgstrAllowed>false</isUniversalClientRgstrAllowed>
+        <isUserDisambiguationAllowedForgotPwd>false</isUserDisambiguationAllowedForgotPwd>
+        <isUserDisambiguationAllowedUsernamePwd>false</isUserDisambiguationAllowedUsernamePwd>
         <maxPasswordResetAttempts>5</maxPasswordResetAttempts>
         <recaptchaScoreThreshold>0.0</recaptchaScoreThreshold>
     </networkAuthApiSettings>

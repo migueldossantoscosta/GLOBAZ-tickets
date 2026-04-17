@@ -1,4 +1,4 @@
-<apex:page controller="EventoDetalheController"
+<apex:page controller="EventoDetalheController" cache="false"
            showHeader="false"
            sidebar="false"
            standardStylesheets="false"
@@ -196,8 +196,9 @@
       inset: 0;
       background-size: cover;
       background-position: center;
-      filter: brightness(.55);
-      transform: scale(1.08);
+      filter: brightness(.75) saturate(1.1);
+      transform: scale(1.04);
+      transition: filter 0.6s ease;
     }
 
     .hero-overlay {
@@ -502,8 +503,10 @@
 
       <div class="nav-actions">
         <a href="HomeEventos" class="ghost-btn">Voltar</a>
-        <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
-        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
+        <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">
+          👤 Meu Perfil, <apex:outputText value="{!currentAccountName}" />
+        </a>
+        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='{!$Page.HomeEventos}';">Sair</a>
         <a href="SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
         <a href="SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
       </div>
@@ -518,8 +521,8 @@
           <apex:outputText value="{!IF(evento.Destaque__c, 'Em destaque agora', 'Evento disponível')}" />
         </div>
 
-        <div class="hero-bg"
-             style="background-image:url('{!IF(ISBLANK(evento.URLImagem__c), 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1800&q=80', evento.URLImagem__c)}');">
+        <div class="hero-bg" 
+             style="background-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.4)), url('{!urlImagem}');">
         </div>
         <div class="hero-overlay"></div>
 
@@ -531,8 +534,10 @@
           <h1 class="hero-title">{!evento.Name}</h1>
 
           <div class="meta">
-            <span class="meta-pill">{!TEXT(evento.DataEvento__c)}</span>
-            <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
+            <span class="meta-pill">{!formattedDate}</span>
+            <apex:outputPanel rendered="{!NOT(ISBLANK(evento.LocalizacaoEvento__c))}">
+                <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
+            </apex:outputPanel>
             <span class="meta-pill">{!evento.CategoriaPrincipal__c}</span>
           </div>
 
@@ -559,7 +564,7 @@
         <div class="section-kicker">Informação</div>
         <h2 class="section-title">Sobre o evento</h2>
         <p class="section-text">
-          Esta página já está alinhada com o visual da homepage para o utilizador sentir continuidade na experiência. Depois podes ligar aqui descrição longa, recinto, lotação, promotor ou qualquer outro campo.
+          <apex:outputText value="{!IF(ISBLANK(descricao), 'Descobre todos os pormenores deste evento único. Uma experiência exclusiva desenhada para proporcionar momentos inesquecíveis.', descricao)}" escape="false" />
         </p>
 
         <div class="detail-list">
@@ -570,12 +575,12 @@
 
           <div class="detail-row">
             <strong>Data</strong>
-            <span>{!TEXT(evento.DataEvento__c)}</span>
+            <span>{!formattedDate}</span>
           </div>
 
           <div class="detail-row">
             <strong>Localização</strong>
-            <span>{!evento.LocalizacaoEvento__c}</span>
+            <span><apex:outputText value="{!IF(ISBLANK(evento.LocalizacaoEvento__c), 'Local a anunciar', evento.LocalizacaoEvento__c)}" /></span>
           </div>
 
           <div class="detail-row">
@@ -630,7 +635,7 @@
           </div>
 
           <div class="cta-row">
-            <a href="/globaztickets" class="primary-btn">Voltar à homepage</a>
+            <a href="HomeEventos" class="primary-btn">Voltar à homepage</a>
           </div>
         </div>
       </div>

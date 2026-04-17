@@ -1,0 +1,118 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "capacidadeMaxima" : {
+      "title" : "Capacidade",
+      "description" : "Maximum venue capacity.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "categoria" : {
+      "title" : "Categoria",
+      "description" : "Primary category of the event.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "classificacaoEtaria" : {
+      "title" : "Idade",
+      "description" : "Age rating for the event.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "dataEvento" : {
+      "title" : "Data",
+      "description" : "Formatted date of the event.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "erroMsg" : {
+      "title" : "Erro",
+      "description" : "Error details if the event lookup fails.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "extrasJson" : {
+      "title" : "Extras JSON",
+      "description" : "List of available extras in JSON format.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : false
+    },
+    "lugaresDisponiveis" : {
+      "title" : "Disponivel",
+      "description" : "Remaining seats available.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "lugaresVendidos" : {
+      "title" : "Vendidos",
+      "description" : "Total number of sold tickets.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "mensagemChat" : {
+      "title" : "Detalhe Formatado",
+      "description" : "Rich text card with event details for the chat.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "nomeEvento" : {
+      "title" : "Nome",
+      "description" : "Name of the event.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "precoCamarote" : {
+      "title" : "Preco Camarote",
+      "description" : "Price for Camarote tickets including VAT.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "precoGeral" : {
+      "title" : "Preco Geral",
+      "description" : "Price for General tickets including VAT.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "precoVIP" : {
+      "title" : "Preco VIP",
+      "description" : "Price for VIP tickets including VAT.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "recinto" : {
+      "title" : "Recinto",
+      "description" : "Venue name and location.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

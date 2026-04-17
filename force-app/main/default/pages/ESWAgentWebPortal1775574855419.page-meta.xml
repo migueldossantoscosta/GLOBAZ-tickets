@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>58.0</apiVersion>
+    <availableInTouch>false</availableInTouch>
+    <confirmationTokenRequired>false</confirmationTokenRequired>
+    <description>Test Enhanced Web Chat page for Agent_Web_Portal embedded service deployment</description>
+    <label>ESWAgentWebPortal1775574855419</label>
+    <packageVersions>
+        <majorNumber>3</majorNumber>
+        <minorNumber>21</minorNumber>
+        <namespace>cdpactvstrgptnr</namespace>
+    </packageVersions>
+    <packageVersions>
+        <majorNumber>1</majorNumber>
+        <minorNumber>132</minorNumber>
+        <namespace>ssot</namespace>
+    </packageVersions>
+</ApexPage>

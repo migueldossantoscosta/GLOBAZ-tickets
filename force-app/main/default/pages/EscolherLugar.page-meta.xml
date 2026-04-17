@@ -4,14 +4,4 @@
     <availableInTouch>false</availableInTouch>
     <confirmationTokenRequired>false</confirmationTokenRequired>
     <label>Escolher Lugar</label>
-    <packageVersions>
-        <majorNumber>1</majorNumber>
-        <minorNumber>7</minorNumber>
-        <namespace>sf_com_apps</namespace>
-    </packageVersions>
-    <packageVersions>
-        <majorNumber>2</majorNumber>
-        <minorNumber>5</minorNumber>
-        <namespace>trlhdtips</namespace>
-    </packageVersions>
 </ApexPage>

@@ -1,11 +1,5 @@
-List<Bilhete__c> bilhetes = [SELECT Id FROM Bilhete__c WHERE EstadoBilhete__c = 'Vendido' ORDER BY CreatedDate DESC LIMIT 1];
-if(!bilhetes.isEmpty()) {
-    try {
-        EnviarBilhetePDF.enviarEmailFuturo(new List<Id>{bilhetes[0].Id});
-        System.debug('SUCESSO - CHAMADA FEITA PARA: ' + bilhetes[0].Id);
-    } catch (Exception e) {
-        System.debug('ERRO NA CHAMADA: ' + e.getMessage());
-    }
-} else {
-    System.debug('NENHUM BILHETE VENDIDO ENCONTRADO.');
+for(Evento__c e : [SELECT Name, URLImagem__c FROM Evento__c]) {
+    System.debug('--- EVENTO DATA ---');
+    System.debug('Nome: ' + e.Name);
+    System.debug('URL Imagem: ' + e.URLImagem__c);
 }

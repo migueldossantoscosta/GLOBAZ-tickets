@@ -26,6 +26,10 @@ public without sharing class GlobazSiteRegisterController {
               // Criar hash da password
               String passwordHash = generatePasswordHash(password);
 
+              System.debug('>>> Registando utilizador: ' + firstName + ' ' + lastName + ' (' + email + ')');
+              System.debug('>>> Password recebida: ' + (String.isBlank(password) ? 'NAO' : 'SIM'));
+              System.debug('>>> Data recebida: ' + birthdateText);
+
               Account pa = new Account();
               pa.RecordTypeId = personAccountRtId;
               pa.OwnerId = adminOwnerId;
@@ -34,7 +38,8 @@ public without sharing class GlobazSiteRegisterController {
               pa.PersonEmail = email;
               pa.Phone = phone;
               pa.Marketing__c = marketingOptIn;
-              pa.Password__c = passwordHash;  // Campo chama-se Password__c
+              pa.Password__c = passwordHash;
+              pa.Valido__c = true;
 
               if (rgpdAccepted) {
                   pa.RGPD__c = System.now();
@@ -44,7 +49,9 @@ public without sharing class GlobazSiteRegisterController {
                   pa.DataNascimento__c = parseDatePT(birthdateText);
               }
 
+              System.debug('>>> Objecto Account a inserir: ' + pa);
               insert pa;
+              System.debug('>>> Utilizador inserido com ID: ' + pa.Id);
 
               ApexPages.addMessage(new ApexPages.Message(
                   ApexPages.Severity.INFO,
@@ -113,23 +120,31 @@ public without sharing class GlobazSiteRegisterController {
       }
 
       private Date parseDatePT(String inputDate) {
+          if (String.isBlank(inputDate)) return null;
           try {
-              String cleanDate = inputDate != null ? inputDate.trim() : '';
-              if (String.isBlank(cleanDate)) return null;
-
+              String cleanDate = inputDate.trim();
+              
+              // Tenta formato YYYY-MM-DD (comum em inputs HTML5)
+              if (cleanDate.contains('-')) {
+                  return Date.valueOf(cleanDate);
+              }
+              
+              // Tenta formato DD/MM/AAAA
               if (cleanDate.contains('/')) {
                   List<String> parts = cleanDate.split('/');
-                  if (parts.size() != 3) throw new RegisterException('Data inválida. Usa DD/MM/AAAA.');
-                  return Date.newInstance(
-                      Integer.valueOf(parts[2]),
-                      Integer.valueOf(parts[1]),
-                      Integer.valueOf(parts[0])
-                  );
+                  if (parts.size() == 3) {
+                      return Date.newInstance(
+                          Integer.valueOf(parts[2]),
+                          Integer.valueOf(parts[1]),
+                          Integer.valueOf(parts[0])
+                      );
+                  }
               }
-              if (cleanDate.contains('-')) return Date.valueOf(cleanDate);
-              throw new RegisterException('Data inválida. Usa DD/MM/AAAA ou AAAA-MM-DD.');
+              
+              return null;
           } catch (Exception e) {
-              throw new RegisterException('Data de nascimento inválida.');
+              System.debug('>>> Erro ao fazer parse da data: ' + inputDate + ' - ' + e.getMessage());
+              return null; // Nao bloqueia o registo por causa da data
           }
       }
   }

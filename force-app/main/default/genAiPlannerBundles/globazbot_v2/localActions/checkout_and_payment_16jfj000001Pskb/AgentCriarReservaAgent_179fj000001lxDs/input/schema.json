@@ -1,0 +1,42 @@
+{
+  "required" : [ "eventoId", "metodoPagamento" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "accountId" : {
+      "title" : "Account ID",
+      "description" : "Account ID if the user is authenticated. Leave empty for guests.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "email" : {
+      "title" : "Email",
+      "description" : "Guest email for ticket delivery if the user is not authenticated.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "eventoId" : {
+      "title" : "ID Evento",
+      "description" : "The targeted event for the reservation.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "metodoPagamento" : {
+      "title" : "Metodo de Pagamento",
+      "description" : "The chosen payment method such as MBWay or Card.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "nomeCompleto" : {
+      "title" : "Nome",
+      "description" : "Guest full name if the user is not authenticated.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

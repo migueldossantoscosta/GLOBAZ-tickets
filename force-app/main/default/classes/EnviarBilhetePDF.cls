@@ -13,7 +13,7 @@ public class EnviarBilhetePDF {
         
         List<Messaging.SingleEmailMessage> emailsParaEnviar = new List<Messaging.SingleEmailMessage>();
 
-        for (bilhete__c bilhete : bilhetes) {
+        for (Bilhete__c bilhete : bilhetes) {
             
             PageReference pdfPage = Page.GerarBilhetePDF; 
             pdfPage.getParameters().put('id', bilhete.Id);
@@ -32,7 +32,7 @@ public class EnviarBilhetePDF {
 
             Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
 
-            String emailCliente = Bilhete.Account__r.PersonEmail; 
+            String emailCliente = bilhete.Account__r.PersonEmail;
             
             if (String.isNotBlank(emailCliente)) {
                 email.setToAddresses(new String[] { emailCliente });
