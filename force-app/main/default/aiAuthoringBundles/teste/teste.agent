@@ -196,7 +196,7 @@ topic discovery_and_filters:
         instructions: ->
             | Your job is to help customers find events using the available search and detail actions.
             | Use {!@actions.AgentPesquisarEventos} with filters for name, city or category when the user is specific about what they want.
-            | If the user is undecided or browsing, call {!@actions.AgentPesquisarEventos} with apenasDestaques set to true to show highlighted recommendations.
+            | If the user is undecided or browsing, call {!@actions.AgentPesquisarEventos} to show all active events available. Mention that these are the current recommendations.
             | Once a specific event is mentioned or selected, use {!@actions.AgentDetalheEvento} to show real prices and availability.
             | Never present prices or availability without first calling {!@actions.AgentDetalheEvento}.
             | If no events are found, ask the user to adjust their filters such as broadening the date range or changing the city.
@@ -670,33 +670,21 @@ topic post_purchase_support:
 
     reasoning:
         instructions: ->
-            | TAREFA CRÍTICA: Mal recebas o email, CHAMA {!@actions.AgentVerBilhetesUtilizador} e MOSTRA a 'mensagemChat'. 
-            | NUNCA digas "Vou verificar" ou "Vou encaminhar". CHAMA A ACTION E MOSTRA O RESULTADO.
-            | REGRAS DE OURO:
-            | 1. É TERMINANTEMENTE PROIBIDO usar {!@actions.AgentCriarCaseSuporte} para pedidos de cancelamento. Deves ser TU (Agente) a listar e o Flow a cancelar.
-            | 2. É PROIBIDO omitir a 'mensagemChat' da action de listagem. Ela contém a lista que o utilizador precisa de ver.
-            | 3. Se @variables.cancelFlowState = "INIT", a TUA ÚNICA MISSÃO é listar bilhetes. Não faças promessas de cancelamento antes de listar.
-            | 4. Após listar, PARA e pergunta: "Qual destes bilhetes (ID ou Lugar) deseja cancelar?".
-            | 5. Só podes prosseguir para {!@actions.Cancelar_BIlhete} após o utilizador escolher da lista.
-            | 6. Extração de IDs (CRÍTICO): Deves analisar o output 'bilhetesJson', que tem este formato: [{"id": "a01...", "evento": "..."}, ...]. 
-            |    - O valor para 'idsBilhetes' deve vir SEMPRE da chave "id" desse JSON. 
-            |    - É TERMINANTEMENTE PROIBIDO usar textos como "Lugar 1 (Fila A)" ou o nome do evento como ID. Se o fizeres, o Flow irá falhar.
-            | 7. É PROIBIDO chamar a listagem e o cancelamento no mesmo turno. 
-            | Usar @variables.cancelFlowState para controlar o estado (INIT -> LISTED -> DONE).
-            | - Se o utilizador enviar apenas "ok/sim" após um pedido de cancelamento e @variables.cancelFlowState = "LISTED", interpreta isso como confirmação e executa a action de cancelamento imediatamente.
-            | - Só confirmar sucesso com código técnico de sucesso:
-            |   * Bulk: mensagemChat começa por "DML_SUCCESS:"
-            |   * Evento: resultado começa por "OK:"
-            | - Se não houver sucesso técnico, devolve erro e não confirmes cancelamento.
-            |
-            | FORMATO DA RESPOSTA FINAL (SUCESSO):
-            | - "Bilhetes cancelados com sucesso."
-            | - Inclui o código técnico devolvido pela action.
-            |
-            | FALHA:
-            | - "Não foi possível cancelar. Nenhum dado foi alterado."
-            | - Inclui o código técnico de erro original.
-            | - Se nenhuma action de cancelamento tiver sido executada no turno atual, responde que o cancelamento ainda não foi executado e executa a action correta no passo seguinte, sem declarar sucesso.
+            | FLUXO DETERMINÍSTICO E OBRIGATÓRIO:
+            | 1. Se tens o email do utilizador, CHAMA IMEDIATAMENTE {!@actions.AgentVerBilhetesUtilizador} e MOSTRA o conteúdo total de 'mensagemChat'. 
+            |    - É PROIBIDO dizer "Vou encaminhar" ou "Aguarde" sem imprimir a lista de bilhetes no mesmo turno.
+            |    - Se não mostrares a lista, estás a falhar a tua missão principal.
+            | 2. Após a escolha do utilizador (ex: "Todos", "Karting"):
+            |    - Extrai os IDs técnicos da 'listaIds' (Lista de Strings) ou do 'bilhetesJson'.
+            |    - CHAMA {!@actions.Cancelar_BIlhete} e aguarda o resultado técnico.
+            | 
+            | REGRAS CRÍTICAS:
+            | - NUNCA uses placeholders como "[INSERIR_IDS]". 
+            | - É PROIBIDO omitir a lista de bilhetes. O utilizador TEM de a ver.
+            | - Extração de IDs: Deves capturar a coleção 'listaIds' e passá-la INTEGRALMENTE como uma lista para o Flow.
+            | - É TERMINANTEMENTE PROIBIDO enviar os IDs como um texto separado por vírgulas (ex: "ID1,ID2"). 
+            | - Deve ser enviado no formato de coleção/array para que o Flow receba múltiplos valores individuais.
+            | - Se o Flow devolver 'OK:PROCESSADO', confirma o sucesso. Caso contrário, mostra o erro.
 
         actions:
             # Listagem/Contexto (Mapeamento Dinâmico para evitar falhas de variáveis)

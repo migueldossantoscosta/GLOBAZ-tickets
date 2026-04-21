@@ -1,0 +1,50 @@
+<template>
+    <div class="gestor-container">
+        <div class="header">
+            <h3>
+                <lightning-icon icon-name="custom:custom13" size="small" class="slds-m-right_x-small"></lightning-icon>
+                Gestão de Bilhetes do Cliente
+            </h3>
+        </div>
+
+        <template if:true={temBilhetes}>
+            <div class="tickets-grid">
+                <template for:each={bilhetesAtivos} for:item="ticket">
+                    <div key={ticket.id} class="ticket-card">
+                        <div class="ticket-status-badge">
+                            <span class={ticket.statusClass}>{ticket.status}</span>
+                        </div>
+                        <div class="event-name">{ticket.eventoNome}</div>
+                        <div class="ticket-detail">
+                            <lightning-icon icon-name="utility:event" size="xx-small"></lightning-icon>
+                            <span>{ticket.data}</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <lightning-icon icon-name="utility:checkin" size="xx-small"></lightning-icon>
+                            <span>{ticket.lugar}</span>
+                        </div>
+                        <div class="ticket-detail code">
+                            <lightning-icon icon-name="utility:outbound_call" size="xx-small"></lightning-icon>
+                            <span>Cod: {ticket.codigo}</span>
+                        </div>
+
+                        <div class="actions">
+                            <button class="action-btn secondary" onclick={handleReenviarPdf} data-id={ticket.id}>
+                                Reenviar PDF
+                            </button>
+                            <button class="action-btn danger" onclick={handleCancelar} data-id={ticket.id} if:true={ticket.isValido}>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template if:false={temBilhetes}>
+            <div class="empty-state">
+                Este cliente não possui bilhetes ativos.
+            </div>
+        </template>
+    </div>
+</template>

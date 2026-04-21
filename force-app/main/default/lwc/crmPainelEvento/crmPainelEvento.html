@@ -1,0 +1,44 @@
+<template>
+    <div class="panel-container">
+        <template if:true={metrics}>
+            <div class="panel-header">
+                <h2><lightning-icon icon-name="custom:custom11" size="small" class="slds-m-right_x-small"></lightning-icon> Dashboard de Lotação e Vendas</h2>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" onclick={handleExportarLista}>
+                        <lightning-icon icon-name="utility:download" size="xx-small" class="slds-m-right_xxx-small"></lightning-icon> Imprimir Portaria
+                    </button>
+                    <button class="btn btn-danger" onclick={handleBloquearVendas} disabled={isEsgotado}>
+                        <lightning-icon icon-name="utility:lock" size="xx-small" class="slds-m-right_xxx-small" variant="inverse"></lightning-icon> 
+                        {isEsgotadoLabel}
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Estatística 1 -->
+                <div class="stat-card">
+                    <div class="stat-title">Lotação do Evento</div>
+                    <div class="progress-wrapper">
+                        <div class="progress-bg">
+                            <div class={lotacaoClass} lwc:ref="progressBar"></div>
+                        </div>
+                        <div class="progress-text">
+                            <strong>{lotacaoLabel}</strong> ({bilhetesVendidos} / {capacidadeTotal} lugares)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estatística 2 -->
+                <div class="stat-card">
+                    <div class="stat-title">Receita Total de Bilheteira</div>
+                    <div class="stat-value highlight">{formattedReceita}</div>
+                    <div class="stat-subtext">Valor calculado com base no preço base</div>
+                </div>
+            </div>
+        </template>
+
+        <template if:false={metrics}>
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </template>
+    </div>
+</template>

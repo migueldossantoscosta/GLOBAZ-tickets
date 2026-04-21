@@ -1,0 +1,134 @@
+.gestor-container {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.header {
+    margin-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+}
+
+.header h3 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #111827;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.tickets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.ticket-card {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.ticket-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.ticket-status-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge.success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge.neutral {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.event-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1f2937;
+    margin-bottom: 12px;
+    padding-right: 60px;
+}
+
+.ticket-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #4b5563;
+    margin-bottom: 4px;
+}
+
+.ticket-detail.code {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e5e7eb;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 6px 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.action-btn.secondary {
+    background: white;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+.action-btn.secondary:hover {
+    background: #f9fafb;
+}
+
+.action-btn.danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.action-btn.danger:hover {
+    background: #fecaca;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 32px;
+    color: #9ca3af;
+    font-style: italic;
+}
