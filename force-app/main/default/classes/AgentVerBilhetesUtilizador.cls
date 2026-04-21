@@ -21,6 +21,9 @@ public with sharing class AgentVerBilhetesUtilizador {
         @InvocableVariable(label='Bilhetes (JSON)')
         public String bilhetesJson;
 
+        @InvocableVariable(label='Lista de IDs (Técnico)')
+        public List<String> listaIds;
+
         @InvocableVariable(label='Mensagem formatada para o chat')
         public String mensagemChat;
 
@@ -99,6 +102,7 @@ public with sharing class AgentVerBilhetesUtilizador {
 
             String msg = '🎫 *Encontrei os seguintes bilhetes para os teus próximos eventos:*\n\n';
             List<Map<String, Object>> jsonList = new List<Map<String, Object>>();
+            out.listaIds = new List<String>();
 
             for (String nomeEvento : porEvento.keySet()) {
                 List<Bilhete__c> grupo = porEvento.get(nomeEvento);
@@ -115,15 +119,14 @@ public with sharing class AgentVerBilhetesUtilizador {
                 for (Bilhete__c b : grupo) {
                     msg += '   🎟️ Lugar **' + (Integer) b.NumeroLugar__c + '** (Fila ' + b.Fila__c + ')\n';
                     
+                    out.listaIds.add(b.Id);
                     jsonList.add(new Map<String, Object>{
                         'id'         => b.Id,
-                        'nome'       => b.Name,
                         'evento'     => nomeEvento,
                         'data'       => dataStr,
                         'fila'       => b.Fila__c,
                         'lugar'      => b.NumeroLugar__c,
-                        'orderId'    => b.Order__c,
-                        'pagamento'  => b.Order__r?.MetodoPagamento__c
+                        'orderId'    => b.Order__c
                     });
                 }
                 msg += '\n';

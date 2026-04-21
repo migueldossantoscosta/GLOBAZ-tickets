@@ -83,11 +83,9 @@ public with sharing class AgentPesquisarEventos {
             if (inp.precoMax != null && inp.precoMax > 0) {
                 soql += 'AND PrecoBilhete__c <= ' + inp.precoMax + ' ';
             }
-            if (inp.apenasDestaques == true) {
-                soql += 'AND Destaque__c = true ';
-            }
 
-            soql += 'ORDER BY DataEvento__c ASC LIMIT 5';
+
+            soql += 'ORDER BY Destaque__c DESC, DataEvento__c ASC LIMIT 50';
 
             // 3. Execução
             // Nota: Se usares variáveis com ":" dentro de Database.query, elas têm de estar no scope.

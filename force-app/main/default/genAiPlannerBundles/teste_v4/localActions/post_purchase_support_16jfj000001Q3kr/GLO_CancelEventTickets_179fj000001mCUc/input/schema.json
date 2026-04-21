@@ -1,0 +1,21 @@
+{
+  "required" : [ "emailUser", "nomeEvento" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "emailUser" : {
+      "title" : "Email",
+      "description" : "User email.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : true,
+      "copilotAction:isUserInput" : true
+    },
+    "nomeEvento" : {
+      "title" : "Evento",
+      "description" : "Explicit event name to cancel.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

@@ -1,0 +1,14 @@
+{
+  "required" : [ "emailUser" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "emailUser" : {
+      "title" : "Email",
+      "description" : "The user email for bulk cancellation.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : true,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

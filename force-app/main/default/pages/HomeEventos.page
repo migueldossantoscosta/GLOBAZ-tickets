@@ -985,11 +985,11 @@
       </nav>
 
        <div class="nav-actions">
-          <a href="HomeEventos" class="ghost-btn">Voltar</a>
-          <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
-          <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='HomeEventos';">Sair</a>
-          <a href="SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
-          <a href="SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
+          <a href="{!$Site.Prefix}/HomeEventos" class="ghost-btn">Voltar</a>
+          <a href="{!$Site.Prefix}/GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='{!$Site.Prefix}/GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">👤 Conta</a>
+          <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='{!$Site.Prefix}/HomeEventos';">Sair</a>
+          <a href="{!$Site.Prefix}/SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
+          <a href="{!$Site.Prefix}/SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
       </div>
 
       <script>
@@ -1033,7 +1033,7 @@
                 </p>
 
                 <div class="cta-row">
-                  <a href="EventoDetalhe?id={!wrap.ev.Id}" class="primary-btn">Comprar bilhetes</a>
+                  <a href="{!$Site.Prefix}/EventoDetalhe?id={!wrap.ev.Id}" class="primary-btn">Comprar bilhetes</a>
                   <a href="#eventos" class="ghost-btn">Ver conceito</a>
                 </div>
 
@@ -1155,7 +1155,7 @@
 
       <div class="event-grid" id="eventGrid">
         <apex:repeat value="{!nextEvents}" var="wrap">
-          <a class="event-card medium event-filter-card" href="EventoDetalhe?id={!wrap.ev.Id}">
+          <a class="event-card medium event-filter-card" href="{!$Site.Prefix}/EventoDetalhe?id={!wrap.ev.Id}">
             <div class="bg" data-img="{!wrap.imageUrl}"
                 style="background-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.4)), url('{!wrap.imageUrl}');">
             </div>

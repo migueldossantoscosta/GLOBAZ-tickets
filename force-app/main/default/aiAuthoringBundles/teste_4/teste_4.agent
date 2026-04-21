@@ -1,5 +1,5 @@
 system:
-    instructions: "Tu és o GLO, um assistente de alta eficiência da GLOBAZ Tickets AUTORIZADO a processar reembolsos e gerir bilhetes. O teu objetivo principal é localizar bilhetes ativos e alterar o seu estado técnico para 'Cancelado' através das ferramentas disponíveis. NUNCA digas que não podes ajudar com reembolsos se o utilizador fornecer um email válido. NUNCA uses frases de preenchimento. Executa a {!@actions.GLO_BulkCancelAction} silenciosamente e apresenta o resultado técnico final. Tom: pt-PT profissional e autoritário. Meta: Resolução Direta."
+    instructions: "Tu és o GLO, um assistente de alta eficiência da GLOBAZ Tickets. O teu fluxo de trabalho OBRIGATÓRIO para cancelamentos é: 1. Localizar bilhetes com {!@actions.AgentVerBilhetesUtilizador}. 2. Apresentar a lista visual ao utilizador. 3. Aguardar escolha. 4. Só então cancelar com {!@actions.Cancelar_BIlhete}. NUNCA executes o passo 4 sem o passo 2. Tom: pt-PT profissional. Meta: Precisão absoluta."
 
     messages:
         welcome: "Olá! Sou o GLO, o teu assistente GLOBAZ Tickets. 🎫 Estou aqui para te ajudar a encontrar os melhores eventos e garantir o teu lugar na primeira fila. O que te traz por cá hoje? Procuras algum concerto em específico ou queres ver os destaques da semana?"
@@ -57,9 +57,10 @@ variables:
         label: "Lugar Selecionado"
         description: "O número do lugar escolhido."
         visibility: "Internal"
-    nomeEvento: mutable string
-        label: "Nome do Evento"
-        description: "Nome do evento a cancelar quando o utilizador pede cancelamento específico."
+
+    cancelFlowState: mutable string = "INIT"
+        label: "Estado do Fluxo de Cancelamento"
+        description: "Controla o fluxo para evitar relistagens e confirmações sem execução técnica."
         visibility: "Internal"
 
 knowledge:
@@ -93,7 +94,7 @@ start_agent topic_selector:
                 description: "MANDATORY for all Refund, Cancellation, Ticket Re-send, or existing ticket issues. Stop everything and transition here."
  
             go_to_escalation: @utils.transition to @topic.escalation
-                description: "Human agent request. Forbidden for any refund queries."
+                description: "Human agent request. STRICTLY FORBIDDEN for refund/cancel intents."
 
             go_to_off_topic: @utils.transition to @topic.off_topic
                 description: "User's request is not related to GLOBAZ Tickets or event booking."
@@ -195,7 +196,7 @@ topic discovery_and_filters:
         instructions: ->
             | Your job is to help customers find events using the available search and detail actions.
             | Use {!@actions.AgentPesquisarEventos} with filters for name, city or category when the user is specific about what they want.
-            | If the user is undecided or browsing, call {!@actions.AgentPesquisarEventos} with apenasDestaques set to true to show highlighted recommendations.
+            | If the user is undecided or browsing, call {!@actions.AgentPesquisarEventos} to show all active events available. Mention that these are the current recommendations.
             | Once a specific event is mentioned or selected, use {!@actions.AgentDetalheEvento} to show real prices and availability.
             | Never present prices or availability without first calling {!@actions.AgentDetalheEvento}.
             | If no events are found, ask the user to adjust their filters such as broadening the date range or changing the city.
@@ -378,14 +379,10 @@ topic checkout_and_payment:
 
     reasoning:
         instructions: ->
-            | Step 1 - Specs & Price: Show all ticket types (Geral, VIP, Camarote) and prices. Confirm quantity. Use {!@actions.AgentCalcularTotalCompra} to present the price with extras (offer extras only once).
-            | Step 2 - Mandatory Seat Suggestion: To avoid payment errors, you MUST have a valid row and seat. If the user hasn't chosen specific seats yet, call {!@actions.AgentSelecionarLugares} immediately (using 'qualquer' zone if unspecified) to find the best available seats. Show the suggested seats and the Seat Map link from {!@actions.AgentDetalheEvento}.
-            | Step 3 - Customer Data & Payment Method: If {!@variables.isLoggedIn} is false, ask for full name and email. Always ask for the payment method: MBWay, Cartão or Multibanco. APPLY .trim().toLowerCase() logic internally to any email provided.
-            | Step 4 - Mandatory Reservation: Once you have Name, Email and Payment Method, call {!@actions.AgentCriarReservaAgent} IMMEDIATELY. Do not pause for confirmation.
-            | Step 5 - Finalization: ONLY after successful reservation, use {!@actions.AgentProcessarPagamento} IMMEDIATELY. CRITICAL: Use ONLY the literal row letter (e.g., 'A', 'B') and seat number returned by {!@actions.AgentSelecionarLugares} for the 'fila' and 'lugar' parameters.
-            | If {!@actions.AgentProcessarPagamento} returns 'SEAT_TAKEN_RECOVERED', it means the seats were taken but new ones were found. Show the new seats to the user and ask 'Avançamos com estes?'. If they say 'sim', call {!@actions.AgentProcessarPagamento} again with the NEW seats.
-            | Never reveal internal order IDs to the customer.
-            | Acknowledge and validate customer concerns with empathy and professionalism.
+            | Step 0 - Verificação: Se @variables.SelectedEventId estiver vazio, CHAMA {!@actions.AgentPesquisarEventos} para o obter.
+            | Step 1 - Lugares: Se tens o evento e quantidade, CHAMA {!@actions.AgentSelecionarLugares} (respeita zona frente/meio/trás).
+            | Step 2 - Preço: Chama {!@actions.AgentCalcularTotalCompra} com @variables.SelectedEventId.
+            | Step 3 - Finalização: Recolhe pagamento, CHAMA {!@actions.AgentCriarReservaAgent} e depois {!@actions.AgentProcessarPagamento}.
 
         actions:
             AgentCalcularTotalCompra: @actions.AgentCalcularTotalCompra
@@ -418,8 +415,13 @@ topic checkout_and_payment:
                 set @variables.SelectedRow = @outputs.fila
                 set @variables.SelectedSeat = @outputs.lugar
 
+            AgentPesquisarEventos: @actions.AgentPesquisarEventos
+                with nomeEvento = ...
+                with apenasDestaques = false
+
             AgentDetalheEvento: @actions.AgentDetalheEvento
-                with eventoId = @variables.SelectedEventId
+                with eventoId = ...
+                set @variables.SelectedEventId = @outputs.eventoIdOut
 
     actions:
         AgentCalcularTotalCompra:
@@ -429,7 +431,7 @@ topic checkout_and_payment:
                     description: "The event ID for price calculation."
                     label: "ID Evento"
                     is_required: True
-                    is_user_input: True
+                    is_user_input: False
                 tipoBilhete: string
                     description: "Type of ticket selected by the customer such as Geral, VIP or Camarote."
                     label: "Tipo de Bilhete"
@@ -642,6 +644,16 @@ topic checkout_and_payment:
             require_user_confirmation: False
             include_in_progress_indicator: True
 
+        AgentPesquisarEventos:
+            description: "Searches active events."
+            inputs:
+                nomeEvento: string
+                apenasDestaques: boolean
+            outputs:
+                mensagemChat: string
+            target: "apex://AgentPesquisarEventos"
+            label: "Pesquisa de Eventos"
+
         AgentDetalheEvento:
             description: "Returns full event details including prices for Geral, VIP and Camarote ticket types, extras, capacity and available seats."
             inputs:
@@ -651,6 +663,11 @@ topic checkout_and_payment:
                     is_required: True
                     is_user_input: True
             outputs:
+                eventoIdOut: string
+                    description: "The unique Salesforce ID of the target event."
+                    label: "Evento ID Out"
+                    filter_from_agent: False
+                    is_displayable: True
                 mensagemChat: string
                     description: "Rich text card with event details for the chat."
                     label: "Detalhe Formatado"
@@ -669,22 +686,17 @@ topic post_purchase_support:
 
     reasoning:
         instructions: ->
-            | Assiste o cliente na gestão dos seus bilhetes com foco em resolucão técnica IMEDIATA.
+            | FLUXO DETERMINÍSTICO E OBRIGATÓRIO:
+            | 1. Se tens o email do utilizador, CHAMA IMEDIATAMENTE {!@actions.AgentVerBilhetesUtilizador} e MOSTRA o conteúdo total de 'mensagemChat'. 
+            |    - É PROIBIDO dizer "Vou encaminhar" ou "Aguarde" sem imprimir a lista de bilhetes no mesmo turno de resposta.
+            | 2. Após a escolha do utilizador (ex: "Todos", "Karting"):
+            |    - Extrai os IDs técnicos da 'listaIds' (Lista de Strings) ou do 'bilhetesJson'.
+            |    - CHAMA {!@actions.Cancelar_BIlhete} enviando a coleção de IDs.
             | 
-            | SEQUÊNCIA OBRIGATÓRIA (FLUXO LINEAR):
-            | 1. CAPTURA DE EMAIL: Assim que o utilizador fornecer o email, o teu próximo passo OBRIGATÓRIO é listar os bilhetes.
-            | 2. LISTAGEM IMEDIATA: Executa {!@actions.AgentVerBilhetesUtilizador} mal tenhas o email. Deves mostrar a lista visual para provar que encontraste os bilhetes ativos.
-            | 3. ESCOLHA DO UTILIZADOR: Só após exibires a lista podes perguntar: "Queres cancelar tudo ou apenas um evento específico?"
-            | 4. EXECUÇÃO SÍNCRONA: Assim que o utilizador escolher (ex: "todos"), dispara IMEDIATAMENTE a ferramenta técnica ({!@actions.GLO_BulkCancelAction} ou {!@actions.GLO_CancelEventTickets}).
-            | 
-            | CADEADO DE INTEGRIDADE:
-            | - É PROIBIDO chamar a ferramenta de listagem mais do que uma vez por sessão.
-            | - É PROIBIDO confirmar o cancelamento sem o código "DML_SUCCESS".
-            | - Se o utilizador disser "sim" ou "todos", não resumas nem voltes a listar. EXECUTA A ACTION.
-            | 
-            | GESTÃO DE ERROS:
-            | - Se a Action retornar erro, reporta o código técnico original. Não inventes sucesso.
-            | - Fallback: "Não foi possível cancelar. Nenhum dado foi alterado."
+            | REGRAS:
+            | - NUNCA uses placeholders. 
+            | - Extração de IDs: Captura a coleção 'listaIds' e passa-a INTEGRALMENTE para o Flow.
+            | - Envia no formato de lista/array técnico.
 
         actions:
             # Listagem/Contexto (Mapeamento Dinâmico para evitar falhas de variáveis)
@@ -692,33 +704,12 @@ topic post_purchase_support:
                 with accountId = @variables.VerifiedCustomerId
                 with email = ...
                 with orderName = ...
+                set @variables.cancelFlowState = "LISTED"
 
-            # Cancelamento em massa (Mapeamento Dinâmico para Slot Filling)
-            GLO_BulkCancelAction: @actions.GLO_BulkCancelAction
-                with emailUser = ...
-
-            # Cancelamento por evento (Mapeamento Dinâmico)
-            GLO_CancelEventTickets: @actions.GLO_CancelEventTickets
-                with emailUser = ...
-                with nomeEvento = ...
-
-            # Seguro
-            AgentCancelarBilheteSeguro: @actions.AgentCancelarBilheteSeguro
-                with orderId = ...
-                with seatNumber = ...
-
-            # Suporte
-            AgentReenviarBilhetePDF: @actions.AgentReenviarBilhetePDF
-                with bilheteId = ...
-                with accountId = @variables.VerifiedCustomerId
-
-            AgentCriarCaseSuporte: @actions.AgentCriarCaseSuporte
-                with accountId = @variables.VerifiedCustomerId
-                with email = ...
-                with assunto = ...
-                with descricao = ...
-                with tipo = ...
-                with orderId = ...
+            # Processamento de Reembolso (Pelo teu Flow Manual)
+            Cancelar_BIlhete: @actions.Cancelar_BIlhete
+                with idsBilhetes = ...
+                set @variables.cancelFlowState = "DONE"
 
     actions:
         AgentVerBilhetesUtilizador:
@@ -874,81 +865,24 @@ topic post_purchase_support:
             require_user_confirmation: True
             include_in_progress_indicator: True
 
-        AgentCancelarBilheteSeguro:
-            description: "Allows the customer to partially cancel a specific ticket from their order, provided they have cancellation insurance. (Grounding: Politicas_Seguro_GLOBAZ)"
+        Cancelar_BIlhete:
+            description: "Cancela bilhetes específicos baseando-se numa lista de IDs de bilhetes. Deve ser usado após o utilizador confirmar quais os assentos ou bilhetes que pretende cancelar. Os IDs devem ser os identificadores técnicos do Salesforce (ex: a01...)."
             inputs:
-                orderId: string
-                    description: "The ID of the order containing the ticket to cancel."
-                    label: "ID Reserva"
+                idsBilhetes: list[object]
+                    description: "Coleção de IDs de bilhetes (Bilhete__c) a serem cancelados."
+                    label: "IDs dos Bilhetes"
                     is_required: True
                     is_user_input: True
-                seatNumber: string
-                    description: "The seat code to be cancelled, e.g. B15 or b15."
-                    label: "Codigo do Lugar"
-                    is_required: True
-                    is_user_input: True
+                    complex_data_type_name: "lightning__textType"
             outputs:
-                sucesso: boolean
-                    description: "Indicates if the cancellation was completed."
-                    label: "Sucesso"
+                resultadoTecnico: string
+                    description: "Código técnico de resultado. OK:PROCESSADO indica sucesso."
+                    label: "Resultado Técnico"
                     filter_from_agent: False
                     is_displayable: True
-                mensagemChat: string
-                    description: "The confirmation or error message for the chat."
-                    label: "Resposta"
-                    filter_from_agent: False
-                    is_displayable: True
-                erroMsg: string
-                    description: "Technical error code for the failure."
-                    label: "Erro"
-                    filter_from_agent: False
-                    is_displayable: True
-            target: "apex://AgentCancelarBilheteSeguro"
-            label: "Cancelamento Parcial (Seguro)"
+            target: "flow://Cancelar_BIlhete"
+            label: "Cancelar Bilhetes Selecionados (Flow)"
             require_user_confirmation: True
-            include_in_progress_indicator: True
-
-        GLO_BulkCancelAction:
-            description: "Ultra-fast cancellation for up to 50 tickets."
-            inputs:
-                emailUser: string
-                    description: "The user email for bulk cancellation."
-                    label: "Email"
-                    is_required: True
-                    is_user_input: True
-            outputs:
-                mensagemChat: string
-                    description: "Final technical status (SUCESSO or ERRO)."
-                    label: "Resultado"
-                    filter_from_agent: False
-                    is_displayable: True
-            target: "apex://GLO_BulkCancelAction"
-            label: "Bulk Refund (Fast)"
-            require_user_confirmation: False
-            include_in_progress_indicator: True
-
-        GLO_CancelEventTickets:
-            description: "Cancels tickets by email and specific event name. Returns OK:X or ERRO:ZERO_REGISTOS."
-            inputs:
-                emailUser: string
-                    description: "User email."
-                    label: "Email"
-                    is_required: True
-                    is_user_input: True
-                nomeEvento: string
-                    description: "Explicit event name to cancel."
-                    label: "Evento"
-                    is_required: True
-                    is_user_input: True
-            outputs:
-                resultado: string
-                    description: "Technical result code."
-                    label: "Status"
-                    filter_from_agent: False
-                    is_displayable: True
-            target: "apex://GLO_CancelEventTickets"
-            label: "Cancelamento por Evento"
-            require_user_confirmation: False
             include_in_progress_indicator: True
 
 

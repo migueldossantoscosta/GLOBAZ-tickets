@@ -502,13 +502,13 @@
       </div>
 
       <div class="nav-actions">
-        <a href="HomeEventos" class="ghost-btn">Voltar</a>
-        <a href="GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">
+        <a href="{!$Site.Prefix}/HomeEventos" class="ghost-btn">Voltar</a>
+        <a href="{!$Site.Prefix}/GlobazSiteAccount" class="ghost-btn" id="navAccount" style="display:none;cursor:pointer;opacity:.9;" onclick="event.preventDefault(); var uid=getCookie('globaz_uid'); window.location.href='{!$Site.Prefix}/GlobazSiteAccount'+(uid?'?uid='+encodeURIComponent(uid):'');">
           👤 Meu Perfil, <apex:outputText value="{!currentAccountName}" />
         </a>
-        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='{!$Page.HomeEventos}';">Sair</a>
-        <a href="SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
-        <a href="SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
+        <a href="javascript:void(0)" class="ghost-btn" id="navLogout" style="display:none;color:#ff6b6b;border-color:rgba(255,107,107,.28);" onclick="event.preventDefault(); document.cookie='globaz_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; window.location.href='{!$Site.Prefix}/HomeEventos';">Sair</a>
+        <a href="{!$Site.Prefix}/SiteLogin" class="ghost-btn" id="navLogin">Entrar</a>
+        <a href="{!$Site.Prefix}/SiteRegister" class="primary-btn" id="navRegister">Criar conta</a>
       </div>
     </div>
   </header>
@@ -546,8 +546,8 @@
           </div>
 
           <div class="cta-row">
-            <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
-            <a href="HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
+            <a href="{!$Site.Prefix}/EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
+            <a href="{!$Site.Prefix}/HomeEventos#eventos" class="ghost-btn">Ver mais eventos</a>
           </div>
 
           <div class="hero-bottom">

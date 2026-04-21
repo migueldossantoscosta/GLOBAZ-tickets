@@ -12,8 +12,24 @@ public class BilheteTriggerHandler extends TriggerHandler {
         processarContas();
     }
 
+    protected override void beforeUpdate() {
+        marcarChaveComoCancelada();
+    }
+
     protected override void beforeDelete() {
         processarContasDelecao();
+    }
+
+    private void marcarChaveComoCancelada() {
+        for (Bilhete__c b : (List<Bilhete__c>)Trigger.new) {
+            Bilhete__c oldB = (Bilhete__c)Trigger.oldMap.get(b.Id);
+            // Se o estado mudou para Cancelado nesta transação
+            if (b.EstadoBilhete__c == 'Cancelado' && oldB.EstadoBilhete__c != 'Cancelado') {
+                if (String.isNotBlank(b.ChaveUnica__c) && !b.ChaveUnica__c.contains('-CANCELADO')) {
+                    b.ChaveUnica__c += '-CANCELADO';
+                }
+            }
+        }
     }
 
     private void processarContas() {
