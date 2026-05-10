@@ -83,25 +83,11 @@
               margin-bottom:30px;
           }
 
-          .brand-mark{
+          .logo-img{
               width:42px;
               height:42px;
-              border-radius:14px;
-              background:linear-gradient(135deg, rgba(94,162,255,.95), rgba(37,99,235,.80));
-              position:relative;
-              box-shadow:var(--glow);
+              object-fit:contain;
           }
-
-          .brand-mark:before,
-          .brand-mark:after{
-              content:"";
-              position:absolute;
-              background:rgba(255,255,255,.92);
-              border-radius:999px;
-          }
-
-          .brand-mark:before{width:24px;height:5px;left:10px;top:13px;}
-          .brand-mark:after{width:16px;height:5px;left:10px;top:24px;}
 
           .brand-text strong{
               display:block;
@@ -195,7 +181,7 @@
           }
 
           .input,
-          .field input,
+          .field input:not([type="checkbox"]),
           .field select,
           input[type="text"],
           input[type="password"],
@@ -213,16 +199,21 @@
 
           .checkbox-row{
               display:flex;
-              align-items:flex-start;
-              gap:10px;
+              align-items:center;
+              gap:12px;
               color:var(--muted);
               font-size:13px;
-              line-height:1.5;
-              margin-top:4px;
+              line-height:1.4;
+              margin-top:6px;
+              cursor:pointer;
           }
 
-          .checkbox-row input{
-              margin-top:3px;
+          .checkbox-row input[type="checkbox"]{
+              width:18px;
+              height:18px;
+              margin:0;
+              cursor:pointer;
+              accent-color:var(--blue);
           }
 
           .btn{
@@ -266,7 +257,7 @@
               <div class="grid">
                   <div class="side">
                       <div class="brand">
-                          <div class="brand-mark"></div>
+                          <img src="{!$Resource.Logo}" class="logo-img" alt="Globaz Tickets" />
                           <div class="brand-text">
                               <strong>GLOBAZ TICKETS</strong>
                               <span>premium ticketing experience</span>

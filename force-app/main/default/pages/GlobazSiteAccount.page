@@ -78,6 +78,9 @@
     <apex:outputPanel rendered="{!isLoggedIn}">
         <!-- DADOS DA CONTA -->
         <div class="card">
+            <div style="display:flex; justify-content:center; margin-bottom:20px;">
+                <img src="{!$Resource.Logo}" style="width:64px; height:64px; object-fit:contain;" alt="Globaz Tickets" />
+            </div>
             <div class="eyebrow">Área Pessoal</div>
             <div class="title">Olá, {!account.FirstName}!</div>
             <p style="color:var(--muted); font-size:14px; margin-bottom:20px;">Edita as tuas informações. As tuas credenciais e preferências estão seguras.</p>
@@ -150,7 +153,7 @@
                 </div>
                 
                 <!-- Read Only Stats -->
-                <div class="info-box" data-uid="{!accountId}">
+                <div class="info-box" data-uid="{!account.Id}">
                     <div class="info-label">Total Gasto (Histórico)</div>
                     <input type="text" class="info-input" value="{!accTotalStr} €" disabled="true" />
                 </div>

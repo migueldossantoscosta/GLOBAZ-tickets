@@ -3,50 +3,39 @@ public with sharing class ComissoesAcumuladasServico {
     public static void recalcularComissoes(Set<Id> accIds) {
         if (accIds == null || accIds.isEmpty()) return;
 
-        // Não recalcular comissões no contexto do site/guest
-        if (UserInfo.getUserType() == 'Guest') return;
-
-        // 1. Inicializa as contas a 0 (excelente para quando o último bilhete é apagado)
+        // 1. Inicializa as contas e busca as taxas de comissão
         Map<Id, Account> contasParaAtualizar = new Map<Id, Account>();
-        for (Id accId : accIds) {
-            contasParaAtualizar.put(accId, new Account(Id = accId, ComissoesAcumuladas__c = 0));
+        for (Account acc : [SELECT Id, TaxaComissao__c FROM Account WHERE Id IN :accIds]) {
+            contasParaAtualizar.put(acc.Id, new Account(
+                Id = acc.Id, 
+                ComissoesAcumuladas__c = 0,
+                TaxaComissao__c = acc.TaxaComissao__c // Guardamos para usar na matemática abaixo
+            ));
         }
 
-        // 2. UM ÚNICO MAPA: O construtor do Map já cria a chave (Id) e o valor (Evento__c) automaticamente
-        Map<Id, Evento__c> eventosMap = new Map<Id, Evento__c>([
-            SELECT Id, PrecoBilhete__c, Account__c, Account__r.TaxaComissao__c
-            FROM Evento__c
-            WHERE Account__c IN :accIds
-        ]);
-
-        // 3. Consulta agregada
+        // 2. Consulta agregada baseada em OrderItems (muito mais preciso que contar bilhetes)
+        // Filtramos por itens que são bilhetes (código BLT-%) e ordens ativadas
         for (AggregateResult ar : [
-            SELECT Evento__c eId, COUNT(Id) qtd
-            FROM Bilhete__c
-            WHERE Evento__r.Account__c IN :accIds
-              AND EstadoBilhete__c = 'Vendido'
-            GROUP BY Evento__c
+            SELECT Order.Evento__r.Account__c accId, SUM(TotalPrice) total
+            FROM OrderItem
+            WHERE Order.Evento__r.Account__c IN :accIds
+              AND Order.Status = 'Activated'
+              AND PricebookEntry.Product2.ProductCode LIKE 'BLT-%'
+            GROUP BY Order.Evento__r.Account__c
         ]) {
-            Id eId = (Id) ar.get('eId');
-            Integer totalBilhetes = (Integer) ar.get('qtd');
-
-            // Verifica se o evento está no nosso mapa
-            if (eventosMap.containsKey(eId)) {
-                Evento__c ev = eventosMap.get(eId);
-                Id accId = ev.Account__c;
+            Id accId = (Id) ar.get('accId');
+            Decimal totalVendas = (Decimal) ar.get('total');
+            
+            if (contasParaAtualizar.containsKey(accId)) {
+                Account acc = contasParaAtualizar.get(accId);
+                Decimal taxa = acc.TaxaComissao__c != null ? acc.TaxaComissao__c : 0;
                 
-                // Extrai e trata os nulos
-                Decimal preco = ev.PrecoBilhete__c != null ? ev.PrecoBilhete__c : 0;
-                Decimal taxa  = (ev.Account__r != null && ev.Account__r.TaxaComissao__c != null)
-                                ? ev.Account__r.TaxaComissao__c : 0;
-
-                // Faz a matemática e soma ao total da conta correspondente
-                Decimal comissaoDesteEvento = (preco * taxa / 100) * totalBilhetes;
-                contasParaAtualizar.get(accId).ComissoesAcumuladas__c += comissaoDesteEvento;
+                // Calcula a comissão: (Total de Vendas * Taxa / 100)
+                acc.ComissoesAcumuladas__c = (totalVendas * taxa / 100).setScale(2);
             }
         }
 
-        // 4. DML final
+        // 3. DML final
         if (!contasParaAtualizar.isEmpty()) {
             update contasParaAtualizar.values();
         }

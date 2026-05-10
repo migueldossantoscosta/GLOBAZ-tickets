@@ -85,7 +85,7 @@ public with sharing class AgentPesquisarEventos {
             }
 
 
-            soql += 'ORDER BY Destaque__c DESC, DataEvento__c ASC LIMIT 50';
+            soql += 'ORDER BY DataEvento__c ASC LIMIT 50';
 
             // 3. Execução
             // Nota: Se usares variáveis com ":" dentro de Database.query, elas têm de estar no scope.
@@ -117,10 +117,10 @@ public with sharing class AgentPesquisarEventos {
                 String cidade  = ev.Recinto__r != null ? ev.Recinto__r.Cidade__c : '';
                 String recinto = ev.Recinto__r != null ? ev.Recinto__r.Name : '';
 
-                msg += emoji + ' *' + ev.Name + '*\n';
-                msg += '   📅 ' + dataStr + '\n';
-                msg += '   📍 ' + recinto + (String.isNotBlank(cidade) ? ', ' + cidade : '') + '\n';
-                msg += '   💶 A partir de ' + precoStr + '\n\n';
+                msg += emoji + ' **' + ev.Name + '**\n\n';
+                msg += '📅 **Data:** ' + dataStr + '\n\n';
+                msg += '📍 **Local:** ' + recinto + (String.isNotBlank(cidade) ? ', ' + cidade : '') + '\n\n';
+                msg += '💶 **Preço:** ' + precoStr + '\n\n---\n\n';
 
                 listaJson.add(new Map<String, Object>{
                     'id'        => ev.Id,

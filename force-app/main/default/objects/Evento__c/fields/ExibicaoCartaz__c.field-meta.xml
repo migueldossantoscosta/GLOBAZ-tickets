@@ -4,7 +4,7 @@
     <externalId>false</externalId>
     <formula>IMAGE(URLImagem__c, &quot;Cartaz&quot;, 470, 470)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Exibicao Cartaz</label>
+    <label>Exibição no Cartaz</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

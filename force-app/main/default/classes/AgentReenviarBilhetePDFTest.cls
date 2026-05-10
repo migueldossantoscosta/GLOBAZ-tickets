@@ -7,10 +7,12 @@ private class AgentReenviarBilhetePDFTest {
         Account acc = AgentTestDataFactory.createPersonAccount();
         Account promotor = AgentTestDataFactory.createBusinessAccount();
         Evento__c ev = AgentTestDataFactory.createEvento(promotor.Id);
+        Order ord = AgentTestDataFactory.createOrder(acc.Id, ev.Id);
         
         Bilhete__c b = new Bilhete__c(
             Account__c = acc.Id,
             Evento__c = ev.Id,
+            Order__c = ord.Id,
             EstadoBilhete__c = 'Vendido'
         );
         insert b;
@@ -33,10 +35,12 @@ private class AgentReenviarBilhetePDFTest {
         Account otherAcc = AgentTestDataFactory.createPersonAccount();
         Account promotor = AgentTestDataFactory.createBusinessAccount();
         Evento__c ev = AgentTestDataFactory.createEvento(promotor.Id);
+        Order ord = AgentTestDataFactory.createOrder(acc.Id, ev.Id);
         
         Bilhete__c b = new Bilhete__c(
             Account__c = acc.Id,
             Evento__c = ev.Id,
+            Order__c = ord.Id,
             EstadoBilhete__c = 'Vendido'
         );
         insert b;

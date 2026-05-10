@@ -273,6 +273,15 @@ public without sharing class BilheteiraController {
         String email
     ) {
         try {
+            // Regra: M16 e M18 exige conta criada
+            List<Evento__c> evAge = [SELECT ClassificacaoEtaria__c FROM Evento__c WHERE Id = :eventoId LIMIT 1];
+            if (!evAge.isEmpty() && evAge[0].ClassificacaoEtaria__c != null && 
+               (evAge[0].ClassificacaoEtaria__c.contains('16') || evAge[0].ClassificacaoEtaria__c.contains('18'))) {
+                if (accountId == null) {
+                    return 'ERRO: LOGIN_REQUIRED_AGE_RESTRICTED';
+                }
+            }
+
             // Se não há accountId, nome e email são obrigatórios
             if (accountId == null) {
                 if (String.isBlank(nomeCompleto)) {

@@ -155,7 +155,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Recinto</label>
     <nameField>
-        <label>Recinto Name</label>
+        <label>Nome do Recinto</label>
         <type>Text</type>
     </nameField>
     <pluralLabel>Recintos</pluralLabel>

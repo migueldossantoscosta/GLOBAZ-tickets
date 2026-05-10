@@ -153,9 +153,7 @@ public with sharing class AgentSelecionarLugares {
             String zonaNome = zonaLabel(inp.zonaPreferida);
             out.mensagemChat =
                 '✅ Encontrei ' + qty + ' lugar(es) consecutivo(s) ' + zonaNome + ':\n\n'
-                + seatList
-                + '\nPodes visualizar ou alterar no mapa:\n'
-                + '📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](' + mapUrl + ')';
+                + seatList;
 
         } catch (Exception e) {
             out.sucesso      = false;

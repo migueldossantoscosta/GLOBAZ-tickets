@@ -1,6 +1,6 @@
 <apex:component id="headerComponent">
   <apex:panelGrid cellpadding="0" cellspacing="0" width="98%" border="0" columns="2" style="text-align: left;" id="theHeader">
-    <apex:image url="{!$Site.Prefix}/img/sites/force_logo.png" style="align: left;" alt="Salesforce" width="233" height="55" title="Salesforce"/>
+    <apex:image url="{!$Resource.Logo}" style="align: left;" alt="Globaz Tickets" width="100" height="100" title="Globaz Tickets"/>
     <apex:panelGrid cellpadding="0" cellspacing="0" width="100%" border="0" columns="1" style="text-align: right;" id="Links">
 	  <apex:panelGroup rendered="{!AND(ISPICKVAL($User.UserType,'Guest'), $Site.LoginEnabled)}">
 		<apex:outputLink value="/site/SiteLogin.apexp">{!$Label.site.login_button}</apex:outputLink>

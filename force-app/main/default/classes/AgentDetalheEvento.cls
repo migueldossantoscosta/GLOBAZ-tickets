@@ -149,14 +149,7 @@ public with sharing class AgentDetalheEvento {
                 }
             }
 
-            String idLimpo = String.valueOf(out.eventoIdOut);
-            String url = 'https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + idLimpo;
-            if (String.isNotBlank(inputs[0].recordId)) {
-                url += '&accId=' + inputs[0].recordId;
-            }
-
-            out.mensagemChat = msg + '\n🪑 Lugares: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima +
-                               '\n📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](' + url + ')';
+            out.mensagemChat = msg + '\n🪑 Lugares: ' + out.lugaresDisponiveis + ' / ' + out.capacidadeMaxima;
 
         } catch (Exception e) {
             out.erroMsg = 'Erro: ' + e.getMessage();

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>CapacidadeMaxima__c</fullName>
-    <description>LOTAÇÃO MAXIMA TEM QUE SER MENOR ou iqual QUE  A LOTAÇÃO DO RECINTO</description>
+    <description>LOTAÇÃO MÁXIMA TEM QUE SER MENOR ou igual QUE A LOTAÇÃO DO RECINTO</description>
     <externalId>false</externalId>
-    <label>Capacidade Maxima</label>
+    <label>Capacidade Máxima</label>
     <precision>6</precision>
     <required>true</required>
     <scale>0</scale>

@@ -75,9 +75,11 @@ private class AgentSelecionarLugaresTest {
         Evento__c ev     = AgentTestDataFactory.createEvento(promotor.Id);
 
         // Occupy A-1 so the first free pair must be A-2 & A-3
+        Order ord = AgentTestDataFactory.createOrder(promotor.Id, ev.Id);
         Bilhete__c ocupado = new Bilhete__c(
             Evento__c        = ev.Id,
             Account__c       = promotor.Id,
+            Order__c         = ord.Id,
             Fila__c          = 'A',
             NumeroLugar__c   = 1,
             EstadoBilhete__c = 'Vendido'
@@ -109,9 +111,10 @@ private class AgentSelecionarLugaresTest {
         Evento__c ev     = AgentTestDataFactory.createEvento(promotor.Id);
 
         // Occupy A-1 and A-3, leaving A-2 isolated — first pair must be A-4 & A-5
+        Order ord = AgentTestDataFactory.createOrder(promotor.Id, ev.Id);
         List<Bilhete__c> toInsert = new List<Bilhete__c>{
-            new Bilhete__c(Evento__c=ev.Id, Account__c=promotor.Id, Fila__c='A', NumeroLugar__c=1, EstadoBilhete__c='Vendido'),
-            new Bilhete__c(Evento__c=ev.Id, Account__c=promotor.Id, Fila__c='A', NumeroLugar__c=3, EstadoBilhete__c='Vendido')
+            new Bilhete__c(Evento__c=ev.Id, Account__c=promotor.Id, Order__c=ord.Id, Fila__c='A', NumeroLugar__c=1, EstadoBilhete__c='Vendido'),
+            new Bilhete__c(Evento__c=ev.Id, Account__c=promotor.Id, Order__c=ord.Id, Fila__c='A', NumeroLugar__c=3, EstadoBilhete__c='Vendido')
         };
         insert toInsert;
 
@@ -166,11 +169,13 @@ private class AgentSelecionarLugaresTest {
         Evento__c ev     = AgentTestDataFactory.createEvento(promotor.Id);
 
         // Fill all 20 seats of row A
+        Order ord = AgentTestDataFactory.createOrder(promotor.Id, ev.Id);
         List<Bilhete__c> rowA = new List<Bilhete__c>();
         for (Integer i = 1; i <= 20; i++) {
             rowA.add(new Bilhete__c(
                 Evento__c        = ev.Id,
                 Account__c       = promotor.Id,
+                Order__c         = ord.Id,
                 Fila__c          = 'A',
                 NumeroLugar__c   = i,
                 EstadoBilhete__c = 'Vendido'

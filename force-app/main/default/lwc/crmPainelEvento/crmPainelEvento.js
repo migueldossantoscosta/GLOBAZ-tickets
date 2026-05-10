@@ -1,7 +1,6 @@
 import { LightningElement, api, wire } from 'lwc';
-import { getRecord, notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
+import { getRecord } from 'lightning/uiRecordApi';
 import getMetrics from '@salesforce/apex/CrmEventoMetricsController.getMetrics';
-import bloquearVendasApex from '@salesforce/apex/CrmEventoMetricsController.bloquearVendas';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class CrmPainelEvento extends LightningElement {
@@ -18,7 +17,7 @@ export default class CrmPainelEvento extends LightningElement {
         } else if (error) {
             this.error = error;
             this.metrics = undefined;
-        }
+        }   
     }
 
     get capacidadeTotal() {
@@ -46,9 +45,7 @@ export default class CrmPainelEvento extends LightningElement {
         return `${this.percentagemLotacao}%`;
     }
     
-    get isEsgotadoLabel() {
-        return this.isEsgotado ? 'Vendas Bloqueadas' : 'Bloquear Vendas';
-    }
+
 
     get lotacaoClass() {
         if (this.percentagemLotacao > 90) return 'progress-bar warning';
@@ -65,41 +62,5 @@ export default class CrmPainelEvento extends LightningElement {
         }
     }
 
-    async handleBloquearVendas() {
-        try {
-            await bloquearVendasApex({ eventId: this.recordId });
-            
-            this.dispatchEvent(
-                new ShowToastEvent({
-                    title: 'Sucesso',
-                    message: 'Vendas bloqueadas com sucesso!',
-                    variant: 'success'
-                })
-            );
 
-            // Forçar atualização do gráfico e do registo
-            await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-            // O @wire deve atualizar automaticamente se não for cacheable, 
-            // mas como é cacheable, podemos precisar de refreshApex se quisermos instantâneo sem refresh da página.
-            // Por simplicidade aqui, o notifyRecordUpdateAvailable ajuda o Salesforce a saber que mudou.
-        } catch (error) {
-            this.dispatchEvent(
-                new ShowToastEvent({
-                    title: 'Erro',
-                    message: error.body ? error.body.message : 'Erro desconhecido',
-                    variant: 'error'
-                })
-            );
-        }
-    }
-
-    handleExportarLista() {
-        this.dispatchEvent(
-            new ShowToastEvent({
-                title: 'Info',
-                message: 'A funcionalidade de exportação será implementada na próxima fase.',
-                variant: 'info'
-            })
-        );
-    }
 }

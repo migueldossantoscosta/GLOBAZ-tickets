@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>EstadoEvento__c</fullName>
-    <label>Estado Evento</label>
+    <label>Estado do Evento</label>
     <required>true</required>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

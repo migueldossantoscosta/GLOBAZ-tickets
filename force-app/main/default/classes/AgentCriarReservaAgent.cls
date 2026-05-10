@@ -86,8 +86,13 @@ public without sharing class AgentCriarReservaAgent {
             if (resultado.startsWith('ERRO:')) {
                 out.sucesso      = false;
                 out.erroMsg      = resultado;
-                out.mensagemChat = '⚠️ Ocorreu um erro: ' + resultado.replace('ERRO: ', '')
-                    + '\nTenta novamente ou contacta o suporte.';
+                
+                if (resultado.contains('LOGIN_REQUIRED_AGE_RESTRICTED')) {
+                    out.mensagemChat = '⚠️ Este evento tem restrição de idade (M16/M18), pelo que é obrigatório teres uma conta GLOBAZ para prosseguir com a reserva. Por favor, faz login ou regista-te no portal.';
+                } else {
+                    out.mensagemChat = '⚠️ Ocorreu um erro: ' + resultado.replace('ERRO: ', '')
+                        + '\nTenta novamente ou contacta o suporte.';
+                }
                 return new List<Output>{ out };
             }
 

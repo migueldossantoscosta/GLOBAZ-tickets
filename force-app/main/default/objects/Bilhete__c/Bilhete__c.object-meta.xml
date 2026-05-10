@@ -162,7 +162,7 @@
     <label>Bilhete</label>
     <nameField>
         <displayFormat>LOB-{000000000}</displayFormat>
-        <label>Bilhete Name</label>
+        <label>Número do Bilhete</label>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Bilhetes</pluralLabel>

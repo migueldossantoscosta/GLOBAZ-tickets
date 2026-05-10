@@ -68,27 +68,11 @@
             gap:16px;
         }
 
-        .brand-mark{
-            width:44px;
-            height:44px;
-            border-radius:14px;
-            background:linear-gradient(135deg, rgba(94,162,255,.95), rgba(37,99,235,.80));
-            box-shadow:var(--glow);
-            position:relative;
-            overflow:hidden;
-            flex-shrink:0;
+        .logo-img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
         }
-
-        .brand-mark::before,
-        .brand-mark::after{
-            content:"";
-            position:absolute;
-            background:rgba(255,255,255,.9);
-            border-radius:999px;
-        }
-
-        .brand-mark::before{width:24px;height:5px;left:10px;top:13px;}
-        .brand-mark::after{width:16px;height:5px;left:10px;top:24px;}
 
         .brand-text{
             display:flex;
@@ -518,7 +502,7 @@
     <div class="container">
     <div id="main-header" class="brand-header">
         <div class="brand-left">
-            <div class="brand-mark"></div>
+            <img src="{!$Resource.Logo}" class="logo-img" alt="Globaz Tickets" />
             <div class="brand-text">
                 <div id="logo-text" class="brand-logo">GLOBAZ TICKETS</div>
                 <div id="subtitle-text" class="brand-subtitle">premium ticketing experience</div>
@@ -1791,7 +1775,11 @@
             }
 
             if(result && result.indexOf('ERRO:') === 0){
-                alert(result);
+                if (result.includes('LOGIN_REQUIRED_AGE_RESTRICTED')) {
+                    alert('⚠️ Este evento tem restrição de idade (M16/M18), pelo que é obrigatório teres uma conta GLOBAZ para prosseguir com a reserva. Por favor, faz login ou regista-te no portal.');
+                } else {
+                    alert(result);
+                }
                 return;
             }
 

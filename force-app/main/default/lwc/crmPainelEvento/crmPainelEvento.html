@@ -3,15 +3,6 @@
         <template if:true={metrics}>
             <div class="panel-header">
                 <h2><lightning-icon icon-name="custom:custom11" size="small" class="slds-m-right_x-small"></lightning-icon> Dashboard de Lotação e Vendas</h2>
-                <div class="panel-actions">
-                    <button class="btn btn-secondary" onclick={handleExportarLista}>
-                        <lightning-icon icon-name="utility:download" size="xx-small" class="slds-m-right_xxx-small"></lightning-icon> Imprimir Portaria
-                    </button>
-                    <button class="btn btn-danger" onclick={handleBloquearVendas} disabled={isEsgotado}>
-                        <lightning-icon icon-name="utility:lock" size="xx-small" class="slds-m-right_xxx-small" variant="inverse"></lightning-icon> 
-                        {isEsgotadoLabel}
-                    </button>
-                </div>
             </div>
 
             <div class="stats-grid">

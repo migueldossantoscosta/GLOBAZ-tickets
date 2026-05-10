@@ -154,6 +154,7 @@
 	function initEmbeddedMessaging() {
 		try {
 			embeddedservice_bootstrap.settings.language = 'en_US'; // For example, enter 'en' or 'en-US'
+			embeddedservice_bootstrap.settings.buttonLabel = 'Precisa de Ajuda?';
 
 			embeddedservice_bootstrap.init(
 				'00Dfj00000L0KFa',
@@ -163,6 +164,17 @@
 					scrt2URL: 'https://orgfarm-64aee8f1dd-dev-ed.develop.my.salesforce-scrt.com'
 				}
 			);
+
+			// HACK: Injetar o texto no seletor específico .chat-fab-text
+			setInterval(function() {
+				var chatBtn = document.querySelector('embedded-messaging-container');
+				if (chatBtn && chatBtn.shadowRoot) {
+					var label = chatBtn.shadowRoot.querySelector('.chat-fab-text');
+					if (label && label.textContent !== 'Precisa de Ajuda?') {
+						label.textContent = 'Precisa de Ajuda?';
+					}
+				}
+			}, 500);
 		} catch (err) {
 			console.error('Error loading Embedded Messaging: ', err);
 		}

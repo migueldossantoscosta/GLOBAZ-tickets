@@ -11,6 +11,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Globaz Tickets — Homepage</title>
+  <link rel="icon" type="image/png" href="{!$Resource.Logo}" />
   <script>
       // Helpers de Cookie
       function setCookie(name, value, days) {
@@ -130,26 +131,11 @@
       gap: 16px;
     }
 
-    .brand-mark {
+    .logo-img {
       width: 44px;
       height: 44px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(94,162,255,0.95), rgba(37,99,235,0.80));
-      box-shadow: var(--glow);
-      position: relative;
-      overflow: hidden;
+      object-fit: contain;
     }
-
-    .brand-mark::before,
-    .brand-mark::after {
-      content: "";
-      position: absolute;
-      background: rgba(255,255,255,0.9);
-      border-radius: 999px;
-    }
-
-    .brand-mark::before { width: 24px; height: 5px; left: 10px; top: 13px; }
-    .brand-mark::after { width: 16px; height: 5px; left: 10px; top: 24px; }
 
     .brand {
       display: flex;
@@ -562,11 +548,18 @@
       height: 56px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
+      background: rgba(13, 20, 41, 0.95); /* Fundo mais sólido e escuro */
       color: #fff;
       padding: 0 16px;
       outline: none;
       font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Forçar o fundo preto nas opções da lista */
+    .search-item select option {
+      background-color: #091125;
+      color: #fff;
     }
 
     .section {
@@ -972,7 +965,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand-wrap">
-        <div class="brand-mark"></div>
+        <img src="{!$Resource.Logo}" class="logo-img" alt="Globaz Tickets" />
         <div class="brand">
           <strong>GLOBAZ TICKETS</strong>
           <span>premium ticketing experience</span>
@@ -1503,7 +1496,8 @@
   <script type='text/javascript'>
     function initEmbeddedMessaging() {
       try {
-        embeddedservice_bootstrap.settings.language = 'en_US'; // For example, enter 'en' or 'en-US'
+        embeddedservice_bootstrap.settings.language = 'en_US'; 
+        embeddedservice_bootstrap.settings.buttonLabel = 'Precisa de Ajuda?';
 
         embeddedservice_bootstrap.init(
           '00Dfj00000L0KFa',
@@ -1513,6 +1507,17 @@
             scrt2URL: 'https://orgfarm-64aee8f1dd-dev-ed.develop.my.salesforce-scrt.com'
           }
         );
+
+        // HACK: Injetar o texto no seletor específico .chat-fab-text
+        setInterval(function() {
+            var chatBtn = document.querySelector('embedded-messaging-container');
+            if (chatBtn && chatBtn.shadowRoot) {
+                var label = chatBtn.shadowRoot.querySelector('.chat-fab-text');
+                if (label && label.textContent !== 'Precisa de Ajuda?') {
+                    label.textContent = 'Precisa de Ajuda?';
+                }
+            }
+        }, 500);
       } catch (err) {
         console.error('Error loading Embedded Messaging: ', err);
       }

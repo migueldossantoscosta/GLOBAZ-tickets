@@ -1,46 +1,77 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement, api, wire } from 'lwc';
+import getTicketsByRecordId from '@salesforce/apex/CrmTicketController.getTicketsByRecordId';
+import reenviarPdf from '@salesforce/apex/CrmTicketController.reenviarPdf';
+import cancelarBilhete from '@salesforce/apex/CrmTicketController.cancelarBilhete';
+import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class CrmGestorBilhetesContexto extends LightningElement {
     @api recordId; // ID do Contact ou Account
     
-    // Dados para demonstração (substituir por @wire que chame método Apex depois)
-    bilhetesAtivos = [
-        {
-            id: 'TKT-001',
-            eventoNome: 'FCP vs Benfica - Liga Portugal',
-            data: '24 de Maio, 2026 - 20:30',
-            lugar: 'Bancada Sul - Fila 8 - Lugar 12',
-            status: 'Válido',
-            statusClass: 'badge success',
-            isValido: true,
-            codigo: 'X39B-JHQ2'
-        },
-        {
-            id: 'TKT-002',
-            eventoNome: 'FCP vs Benfica - Liga Portugal',
-            data: '24 de Maio, 2026 - 20:30',
-            lugar: 'Bancada Sul - Fila 8 - Lugar 13',
-            status: 'Cancelado',
-            statusClass: 'badge neutral',
-            isValido: false,
-            codigo: 'P9ZN-2L0A'
+    bilhetesAtivos;
+    error;
+    wiredBilhetesResult;
+
+    @wire(getTicketsByRecordId, { recordId: '$recordId' })
+    wiredBilhetes(result) {
+        this.wiredBilhetesResult = result;
+        if (result.data) {
+            this.bilhetesAtivos = result.data;
+            this.error = undefined;
+        } else if (result.error) {
+            this.error = result.error;
+            this.bilhetesAtivos = undefined;
         }
-    ];
+    }
 
     get temBilhetes() {
         return this.bilhetesAtivos && this.bilhetesAtivos.length > 0;
     }
 
-    handleReenviarPdf(event) {
+    async handleReenviarPdf(event) {
         const ticketId = event.target.dataset.id;
-        // Invocaria Action ou Apex aqui
-        alert(`O PDF do bilhete ${ticketId} foi colocado na fila de envio com sucesso!`);
+        try {
+            await reenviarPdf({ ticketId: ticketId });
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Sucesso',
+                    message: 'O PDF do bilhete foi colocado na fila de envio.',
+                    variant: 'success'
+                })
+            );
+        } catch (error) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Erro no Reenvio',
+                    message: error.body.message,
+                    variant: 'error'
+                })
+            );
+        }
     }
 
-    handleCancelar(event) {
+    async handleCancelar(event) {
         const ticketId = event.target.dataset.id;
-        if(confirm(`Tem a certeza que deseja efetuar o cancelamento do bilhete ${ticketId}? Esta ação não pode ser revertida.`)) {
-            alert('Bilhete cancelado! A atualizar backend...');
+        if(confirm(`Tem a certeza que deseja efetuar o cancelamento do bilhete? Esta ação não pode ser revertida.`)) {
+            try {
+                await cancelarBilhete({ ticketId: ticketId });
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Cancelado',
+                        message: 'O bilhete foi cancelado com sucesso.',
+                        variant: 'success'
+                    })
+                );
+                await refreshApex(this.wiredBilhetesResult);
+            } catch (error) {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Erro ao Cancelar',
+                        message: error.body.message,
+                        variant: 'error'
+                    })
+                );
+            }
         }
     }
 }

@@ -161,7 +161,7 @@
     <externalSharingModel>Read</externalSharingModel>
     <label>Evento</label>
     <nameField>
-        <label>Evento Name</label>
+        <label>Nome do Evento</label>
         <type>Text</type>
     </nameField>
     <pluralLabel>Eventos</pluralLabel>

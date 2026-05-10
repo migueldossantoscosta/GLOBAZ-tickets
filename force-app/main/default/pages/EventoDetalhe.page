@@ -101,26 +101,11 @@
       gap: 16px;
     }
 
-    .brand-mark {
+    .logo-img {
       width: 44px;
       height: 44px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(94,162,255,0.95), rgba(37,99,235,0.80));
-      box-shadow: var(--glow);
-      position: relative;
-      overflow: hidden;
+      object-fit: contain;
     }
-
-    .brand-mark::before,
-    .brand-mark::after {
-      content: "";
-      position: absolute;
-      background: rgba(255,255,255,0.9);
-      border-radius: 999px;
-    }
-
-    .brand-mark::before { width: 24px; height: 5px; left: 10px; top: 13px; }
-    .brand-mark::after { width: 16px; height: 5px; left: 10px; top: 24px; }
 
     .brand {
       display: flex;
@@ -494,7 +479,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand-wrap">
-        <div class="brand-mark"></div>
+        <img src="{!$Resource.Logo}" class="logo-img" alt="Globaz Tickets" />
         <div class="brand">
           <strong>GLOBAZ TICKETS</strong>
           <span>premium ticketing experience</span>
@@ -538,6 +523,7 @@
             <apex:outputPanel rendered="{!NOT(ISBLANK(evento.LocalizacaoEvento__c))}">
                 <span class="meta-pill">{!evento.LocalizacaoEvento__c}</span>
             </apex:outputPanel>
+            <span class="meta-pill">🔞 {!IF(ISBLANK(evento.ClassificacaoEtaria__c), 'Livre', evento.ClassificacaoEtaria__c)}</span>
             <span class="meta-pill">{!evento.CategoriaPrincipal__c}</span>
           </div>
 
@@ -587,11 +573,6 @@
             <strong>Categoria</strong>
             <span>{!evento.CategoriaPrincipal__c}</span>
           </div>
-
-          <div class="detail-row">
-            <strong>Em destaque</strong>
-            <span><apex:outputText value="{!IF(evento.Destaque__c, 'Sim', 'Não')}" /></span>
-          </div>
         </div>
       </div>
 
@@ -608,11 +589,21 @@
             <strong><apex:outputText value="{0, number, #,##0.00} €"><apex:param value="{!precoDesde}" /></apex:outputText></strong>
           </div>
 
-          <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
-          <a href="HomeEventos#eventos" class="ghost-btn">Continuar a explorar</a>
+          <apex:outputPanel rendered="{!AND(isAgeRestricted, NOT(isLoggedIn))}">
+            <div class="note-box" style="background:rgba(239, 68, 68, 0.1); border-color:rgba(239, 68, 68, 0.3); color:#fca5a5; margin-bottom:12px;">
+              <strong>⚠️ Atenção:</strong> Este evento tem restrição de idade (M16/M18). É obrigatório teres conta na GLOBAZ para poderes comprar bilhetes.
+            </div>
+            <a href="{!$Site.Prefix}/SiteLogin" class="primary-btn" style="width:100%; margin-bottom:8px;">Fazer Login</a>
+            <a href="{!$Site.Prefix}/SiteRegister" class="ghost-btn" style="width:100%;">Criar Conta</a>
+          </apex:outputPanel>
+
+          <apex:outputPanel rendered="{!OR(NOT(isAgeRestricted), isLoggedIn)}">
+            <a href="EscolherLugar?idEvento={!evento.Id}" class="primary-btn js-buy-btn">Comprar bilhete</a>
+            <a href="HomeEventos#eventos" class="ghost-btn">Continuar a explorar</a>
+          </apex:outputPanel>
 
           <div class="note-box">
-            Depois podes substituir este valor fixo pelo preço real do evento ou pelo pricebook que estiver associado.
+            Aproveita a nossa bilheteira premium. Bilhetes digitais enviados na hora após validação do pagamento.
           </div>
         </div>
       </div>

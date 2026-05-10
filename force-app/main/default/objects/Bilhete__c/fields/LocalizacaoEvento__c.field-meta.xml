@@ -5,7 +5,7 @@
     <formula>Evento__r.Recinto__r.Name &amp; &quot; - &quot; &amp; Evento__r.Recinto__r.MoradaCompleta__c &amp; &quot; - &quot; &amp; Evento__r.Recinto__r.Cidade__c &amp; &quot; | &quot; &amp;
 TEXT(Evento__r.DataEvento__c)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Localização Evento</label>
+    <label>Localização do Evento</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

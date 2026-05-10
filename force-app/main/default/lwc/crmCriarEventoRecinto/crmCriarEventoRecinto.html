@@ -1,0 +1,47 @@
+<template>
+    <lightning-card title="Criar Novo Evento" icon-name="standard:event">
+        <div class="slds-p-around_medium glass-container">
+            <lightning-record-edit-form object-api-name="Evento__c" onsuccess={handleSuccess} onerror={handleError}>
+                <lightning-messages></lightning-messages>
+                
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.name} required></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.venue} value={recordId} disabled></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.date} required></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.endDate}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.type}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.status}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.pricebook}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.capacity} value={defaultCapacity}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.image}></lightning-input-field>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_x-small">
+                        <lightning-input-field field-name={fields.description}></lightning-input-field>
+                    </div>
+                </div>
+
+                <div class="slds-m-top_medium slds-text-align_center">
+                    <lightning-button class="slds-m-right_small" label="Cancelar" onclick={handleCancel}></lightning-button>
+                    <lightning-button type="submit" variant="brand" label="Criar Evento" icon-name="utility:save"></lightning-button>
+                </div>
+            </lightning-record-edit-form>
+        </div>
+    </lightning-card>
+</template>

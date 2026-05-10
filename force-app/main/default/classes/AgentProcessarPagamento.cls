@@ -71,8 +71,8 @@ public without sharing class AgentProcessarPagamento {
             List<Map<String, Object>> bilhetesList = new List<Map<String, Object>>();
             Integer qtd = (inp.quantidade != null) ? inp.quantidade : 1;
 
-            // Se não temos fila/lugar, vamos procurar automaticamente antes de prosseguir
-            if (String.isBlank(inp.fila) || inp.lugar == null) {
+            // Se não temos fila/lugar válidos, vamos procurar automaticamente antes de prosseguir
+            if (String.isBlank(inp.fila) || inp.lugar == null || inp.lugar <= 0) {
                 List<Map<String, Object>> autoSeats = AgentSelecionarLugares.autoRecoverSeats(evId, qtd, inp.zona);
                 if (autoSeats != null && !autoSeats.isEmpty()) {
                     inp.fila = (String) autoSeats[0].get('fila');
@@ -112,8 +112,6 @@ public without sharing class AgentProcessarPagamento {
                 out.mensagemChat = '✅ *A tua compra já foi confirmada anteriormente, ' + nome + '!*\n\n'
                     + '🎫 Já tens ' + out.totalBilhetes + ' bilhete(s) garantidos para este evento.\n'
                     + '📧 O PDF já foi enviado para o teu e-mail.\n\n'
-                    + '📍 [🗺️ Ver Meus Lugares no Mapa](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + evId + ')\n'
-                    + '🎫 [⬇ Download Bilhete (PDF)](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/GerarBilhetePDF?id=' + firstBId + ')\n\n'
                     + 'Posso ajudar-te com mais alguma coisa? 😊';
                 return new List<Output>{ out };
             }
@@ -171,8 +169,6 @@ public without sharing class AgentProcessarPagamento {
 
                 out.mensagemChat = msgBase
                     + '📧 O teu bilhete PDF já foi enviado para o e-mail *' + emailCliente + '* e está prontinho a usar!\n\n'
-                    + '📍 [🗺️ Ver Meus Lugares no Mapa e Detalhes](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/EscolherLugar?idEvento=' + evId + ')\n'
-                    + '🎫 [⬇ Download Bilhete (PDF)](https://orgfarm-64aee8f1dd-dev-ed.develop.my.site.com/globaztickets/GerarBilhetePDF?id=' + ordId + ')\n\n'
                     + 'Posso ajudar-te com mais alguma coisa? 😊';
 
                 // Disparar envio de email assíncrono

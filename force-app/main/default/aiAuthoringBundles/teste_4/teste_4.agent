@@ -6,13 +6,13 @@ system:
         error: "Lamentamos, mas encontrei um pequeno problema técnico. Podemos tentar novamente ou, se preferires, posso passar-te a um colega humano."
 
 config:
-    agent_label: "teste"
-    developer_name: "teste"
+    agent_label: "GLO"
+    developer_name: "GLO"
     description: "Deliver personalized customer interactions with an autonomous AI agent. Agentforce Service Agent intelligently supports your customers with common inquiries and escalates complex issues."
     default_agent_user: "teste@00dfj00000l0kfa134616335.ext"
 
 language:
-    default_locale: "en_US"
+    default_locale: "pt_PT"
     additional_locales: "en_GB"
     all_additional_locales: False
 
@@ -77,7 +77,9 @@ start_agent topic_selector:
         instructions: ->
             | Your SOLE purpose is to route the user to the correct topic. 
             | - REFUND/CANCEL intent: Transition IMMEDIATELY to {!@actions.go_to_post_purchase_support}. 
-            | - DO NOT ask questions, DO NOT collect information, and DO NOT call ANY other tool if the user mentions "cancelar", "reembolsar", "dinheiro", "bilhete" or "refund".
+            | - EVENT DISCOVERY/DETAIL intent (e.g., event name, search, browsing): Transition to {!@actions.go_to_discovery_and_filters}.
+            | - PURCHASE intent (e.g., "comprar", "checkout", "reservar"): Transition to {!@actions.go_to_checkout_and_payment}.
+            | - DO NOT ask questions or call tools here; just transition.
             | - Escalation to Support via {!@actions.go_to_escalation} is STRICTLY FORBIDDEN for refunds.
 
         actions:
@@ -116,6 +118,7 @@ topic account_or_guest:
             | Always call {!@actions.go_to_checkout_and_payment} if the user was in the middle of a purchase.
             | Never ask the user to provide their accountId directly. The system will attempt to resolve it automatically.
             | After verification, proceed with the action the user intended to perform.
+            | REGRA IDADE: Se a classificação do evento for M16 ou M18, informa o utilizador que é OBRIGATÓRIO ter conta criada para prosseguir. Se não estiver autenticado (@variables.isLoggedIn == false), sugere a autenticação imediata.
 
         actions:
             AgentVerificarSessao: @actions.AgentVerificarSessao
@@ -195,10 +198,11 @@ topic discovery_and_filters:
     reasoning:
         instructions: ->
             | Your job is to help customers find events using the available search and detail actions.
-            | Use {!@actions.AgentPesquisarEventos} with filters for name, city or category when the user is specific about what they want.
-            | If the user is undecided or browsing, call {!@actions.AgentPesquisarEventos} to show all active events available. Mention that these are the current recommendations.
+            | If the user asks for events, browsing or undecided, IMMEDIATELY call {!@actions.AgentPesquisarEventos} with appropriate filters or empty to show all.
+            | CRITICAL: You MUST output the exact content of {!@actions.AgentPesquisarEventos.mensagemChat} to the user. Do NOT summarize, reformat or omit the emojis and line breaks provided in that variable.
             | Once a specific event is mentioned or selected, use {!@actions.AgentDetalheEvento} to show real prices and availability.
             | Never present prices or availability without first calling {!@actions.AgentDetalheEvento}.
+            | If the user decides to buy or proceed to checkout, IMMEDIATELY transition to {!@actions.go_to_checkout_and_payment}.
             | If no events are found, ask the user to adjust their filters such as broadening the date range or changing the city.
 
         actions:
@@ -216,6 +220,9 @@ topic discovery_and_filters:
                 set @variables.SelectedEventId = @outputs.eventoIdOut
                 set @variables.SelectedEventPrice = @outputs.precoGeral
                 set @variables.SelectedEventExtras = @outputs.extrasJson
+
+            go_to_checkout_and_payment: @utils.transition to @topic.checkout_and_payment
+                description: "User wants to buy tickets for the selected event."
 
     actions:
         AgentPesquisarEventos:
@@ -379,10 +386,21 @@ topic checkout_and_payment:
 
     reasoning:
         instructions: ->
-            | Step 0 - Verificação: Se @variables.SelectedEventId estiver vazio, CHAMA {!@actions.AgentPesquisarEventos} para o obter.
-            | Step 1 - Lugares: Se tens o evento e quantidade, CHAMA {!@actions.AgentSelecionarLugares} (respeita zona frente/meio/trás).
-            | Step 2 - Preço: Chama {!@actions.AgentCalcularTotalCompra} com @variables.SelectedEventId.
-            | Step 3 - Finalização: Recolhe pagamento, CHAMA {!@actions.AgentCriarReservaAgent} e depois {!@actions.AgentProcessarPagamento}.
+            | PRÉ-REQUISITO: Se @variables.SelectedEventId estiver nulo/vazio, deves obrigatoriamente:
+            | 1. Chamar {!@actions.AgentPesquisarEventos} com o nome do evento fornecido.
+            | 2. Do resultado, identificar o ID do evento e chamar {!@actions.AgentDetalheEvento} para popular @variables.SelectedEventId.
+            | 3. SÓ DEPOIS podes avançar para o cálculo de preço e reserva.
+            |
+            | FLUXO DE COMPRA:
+            | 1. PREFERÊNCIAS: Pergunta SEMPRE ao utilizador qual a zona onde prefere ficar (Frente, Meio ou Trás) ou se tem um lugar específico.
+            | 2. LUGARES: Assim que tiveres o evento, quantidade e zona/lugar, CHAMA {!@actions.AgentSelecionarLugares}.
+            | 3. PREÇO: Chama {!@actions.AgentCalcularTotalCompra} com @variables.SelectedEventId.
+            | 4. FINALIZAÇÃO: Recolhe pagamento, CHAMA {!@actions.AgentCriarReservaAgent} e depois {!@actions.AgentProcessarPagamento}.
+            |
+            | REGRAS:
+            | - NUNCA menciones "Mapa de Lugares" ou links externos para escolha de assento.
+            | - Pede ativamente ao utilizador para descrever onde quer ficar.
+            | - REGRA IDADE: Se o evento for M16 ou M18 e o utilizador não tiver conta (@variables.isLoggedIn == false), avisa que a conta é obrigatória para este evento específico.
 
         actions:
             AgentCalcularTotalCompra: @actions.AgentCalcularTotalCompra
@@ -422,6 +440,8 @@ topic checkout_and_payment:
             AgentDetalheEvento: @actions.AgentDetalheEvento
                 with eventoId = ...
                 set @variables.SelectedEventId = @outputs.eventoIdOut
+                set @variables.SelectedEventPrice = @outputs.precoGeral
+                set @variables.SelectedEventExtras = @outputs.extrasJson
 
     actions:
         AgentCalcularTotalCompra:
@@ -668,6 +688,16 @@ topic checkout_and_payment:
                     label: "Evento ID Out"
                     filter_from_agent: False
                     is_displayable: True
+                precoGeral: number
+                    description: "Price for General tickets including VAT."
+                    label: "Preco Geral"
+                    filter_from_agent: False
+                    is_displayable: True
+                extrasJson: string
+                    description: "List of available extras in JSON format."
+                    label: "Extras JSON"
+                    filter_from_agent: False
+                    is_displayable: True
                 mensagemChat: string
                     description: "Rich text card with event details for the chat."
                     label: "Detalhe Formatado"
@@ -695,8 +725,8 @@ topic post_purchase_support:
             | 
             | REGRAS:
             | - NUNCA uses placeholders. 
-            | - Extração de IDs: Captura a coleção 'listaIds' e passa-a INTEGRALMENTE para o Flow.
-            | - Envia no formato de lista/array técnico.
+            | - Extração de IDs: Captura a coleção 'listaIds' ou extrai do JSON e passa-a INTEGRALMENTE para o Flow.
+            | - O parâmetro 'idsBilhetes' DEVE ser passado como uma lista (array), mesmo que contenha apenas um ID. NUNCA passes como string simples.
 
         actions:
             # Listagem/Contexto (Mapeamento Dinâmico para evitar falhas de variáveis)

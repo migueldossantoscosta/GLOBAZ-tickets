@@ -40,10 +40,18 @@ public without sharing class EventoDetalheController {
         }
     }
 
+    public Boolean isAgeRestricted {
+        get {
+            return evento != null && evento.ClassificacaoEtaria__c != null && 
+                  (evento.ClassificacaoEtaria__c.contains('16') || evento.ClassificacaoEtaria__c.contains('18'));
+        }
+    }
+
     private void loadEvento() {
         List<Evento__c> resultados = [
             SELECT Id, Name, DataEvento__c, LocalizacaoEvento__c, URLImagem__c,
-                   CategoriaPrincipal__c, Destaque__c, Pricebook__c, DescricaoDetalhada__c
+                   CategoriaPrincipal__c, Destaque__c, Pricebook__c, DescricaoDetalhada__c,
+                   ClassificacaoEtaria__c
             FROM Evento__c
             WHERE Id = :eventId
             LIMIT 1

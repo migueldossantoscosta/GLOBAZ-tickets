@@ -120,8 +120,7 @@ public without sharing class AgentCalcularTotalCompra {
 
             String msg = '🛒 *Resumo da tua seleção:*\n\n' +
                          itensSelecionados +
-                         '\n📍 [🗺️ Ver Mapa de Lugares e Escolher Assento](' + mapUrl + ')' +
-                         '\n\n💰 *TOTAL FINAL (c/ IVA): ' + out.totalComIva + '€*';
+                         '\n💰 *TOTAL FINAL (c/ IVA): ' + out.totalComIva + '€*';
 
             out.resumoChat = msg;
 

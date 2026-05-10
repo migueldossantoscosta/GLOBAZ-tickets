@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>NomeDonoRecinto__c</fullName>
     <externalId>false</externalId>
-    <label>Nome Dono Recinto</label>
+    <label>Nome do Proprietário do Recinto</label>
     <length>80</length>
     <required>false</required>
     <trackTrending>false</trackTrending>

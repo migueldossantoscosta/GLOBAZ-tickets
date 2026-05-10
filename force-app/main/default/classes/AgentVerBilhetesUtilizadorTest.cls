@@ -5,10 +5,12 @@ private class AgentVerBilhetesUtilizadorTest {
         Account acc = AgentTestDataFactory.createPersonAccount();
         Account promotor = AgentTestDataFactory.createBusinessAccount();
         Evento__c ev = AgentTestDataFactory.createEvento(promotor.Id);
+        Order ord = AgentTestDataFactory.createOrder(acc.Id, ev.Id);
         
         Bilhete__c b = new Bilhete__c(
             Account__c = acc.Id,
             Evento__c = ev.Id,
+            Order__c = ord.Id,
             Fila__c = 'A',
             NumeroLugar__c = 10,
             EstadoBilhete__c = 'Vendido'
@@ -39,6 +41,6 @@ private class AgentVerBilhetesUtilizadorTest {
         Test.stopTest();
 
         Assert.isFalse(results[0].temBilhetes);
-        Assert.isTrue(results[0].mensagemChat.contains('Não tens bilhetes'));
+        Assert.isTrue(results[0].mensagemChat.contains('Não encontrei nenhum bilhete ativo'));
     }
 }

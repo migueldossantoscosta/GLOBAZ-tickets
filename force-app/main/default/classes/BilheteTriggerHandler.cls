@@ -1,5 +1,9 @@
 public class BilheteTriggerHandler extends TriggerHandler {
 
+    protected override void beforeInsert() {
+        gerarChavesDeSeguranca();
+    }
+
     protected override void afterInsert() {
         processarContas();
     }
@@ -16,6 +20,24 @@ public class BilheteTriggerHandler extends TriggerHandler {
         marcarChaveComoCancelada();
     }
 
+    private void gerarChavesDeSeguranca() {
+        for (Bilhete__c b : (List<Bilhete__c>)Trigger.new) {
+            if (String.isBlank(b.ChaveUnicaSeguranca__c)) {
+                b.ChaveUnicaSeguranca__c = generateRandomKey();
+            }
+        }
+    }
+
+    private String generateRandomKey() {
+        String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        String key = '';
+        while (key.length() < 12) {
+            Integer idx = Math.mod(Math.abs(Crypto.getRandomInteger()), chars.length());
+            key += chars.substring(idx, idx+1);
+        }
+        return key;
+    }
+
     protected override void beforeDelete() {
         processarContasDelecao();
     }
@@ -25,17 +47,14 @@ public class BilheteTriggerHandler extends TriggerHandler {
             Bilhete__c oldB = (Bilhete__c)Trigger.oldMap.get(b.Id);
             // Se o estado mudou para Cancelado nesta transação
             if (b.EstadoBilhete__c == 'Cancelado' && oldB.EstadoBilhete__c != 'Cancelado') {
-                if (String.isNotBlank(b.ChaveUnica__c) && !b.ChaveUnica__c.contains('-CANCELADO')) {
-                    b.ChaveUnica__c += '-CANCELADO';
+                if (String.isNotBlank(b.ChaveUnicaSeguranca__c) && !b.ChaveUnicaSeguranca__c.contains('-CANCELADO')) {
+                    b.ChaveUnicaSeguranca__c += '-CANCELADO';
                 }
             }
         }
     }
 
     private void processarContas() {
-        // Ignora guest users para não onerar o checkout 
-        if (UserInfo.getUserType() == 'Guest') return;
-        
         Set<Id> accIds = new Set<Id>();
         for (Bilhete__c b : [
             SELECT Evento__r.Account__c
@@ -48,8 +67,6 @@ public class BilheteTriggerHandler extends TriggerHandler {
     }
 
     private void processarContasDelecao() {
-        if (UserInfo.getUserType() == 'Guest') return;
-
         Set<Id> accIds = new Set<Id>();
         for (Bilhete__c b : [
             SELECT Evento__r.Account__c

@@ -26,46 +26,67 @@ public with sharing class AgentReenviarBilhetePDF {
 
     @InvocableMethod(
         label       = 'Agente — Reenviar Bilhete PDF por Email'
-        description = 'Reenvia o bilhete em PDF para o email do cliente. Valida que o bilhete pertence ao utilizador autenticado antes de enviar.'
+        description = 'Reenvia o bilhete em PDF para o email do cliente. Suporta tanto o ID técnico (a01...) como o Nome visível (LOB-...).'
         category    = 'GLOBAZ Tickets'
     )
     public static List<Output> reenviarBilhete(List<Input> inputs) {
         Output out = new Output();
         try {
-            Id bilheteId = (Id) inputs[0].bilheteId;
-            Id accIdVal  = (Id) inputs[0].accountId;
+            String bilheteIdentificador = inputs[0].bilheteId;
+            Id accIdVal = (Id) inputs[0].accountId;
 
-            // Validar que o bilhete pertence ao utilizador
-            List<Bilhete__c> bilhetes = [
-                SELECT Id, Account__c, Account__r.PersonEmail, Account__r.FirstName
-                FROM   Bilhete__c
-                WHERE  Id         = :bilheteId
-                AND    Account__c = :accIdVal
-                LIMIT  1
-            ];
+            // 1. Tentar encontrar o bilhete por ID ou por Name (LOB-...)
+            List<Bilhete__c> bilhetes;
+            
+            // Verifica se o identificador parece um ID do Salesforce
+            Boolean isId = false;
+            try {
+                Id.valueOf(bilheteIdentificador);
+                isId = true;
+            } catch (Exception e) {
+                isId = false;
+            }
+
+            if (isId) {
+                bilhetes = [
+                    SELECT Id, Name, Account__c, Account__r.PersonEmail, Account__r.FirstName
+                    FROM   Bilhete__c
+                    WHERE  Id         = :bilheteIdentificador
+                    AND    Account__c = :accIdVal
+                    LIMIT  1
+                ];
+            } else {
+                bilhetes = [
+                    SELECT Id, Name, Account__c, Account__r.PersonEmail, Account__r.FirstName
+                    FROM   Bilhete__c
+                    WHERE  Name       = :bilheteIdentificador
+                    AND    Account__c = :accIdVal
+                    LIMIT  1
+                ];
+            }
 
             if (bilhetes.isEmpty()) {
                 out.sucesso      = false;
                 out.erroMsg      = 'Bilhete não encontrado ou não pertence a este utilizador.';
-                out.mensagemChat = '⚠️ Não encontrei esse bilhete na tua conta.';
+                out.mensagemChat = '⚠️ Não encontrei o bilhete "' + bilheteIdentificador + '" na tua conta. Podes confirmar o número?';
                 return new List<Output>{ out };
             }
 
             String emailCliente = bilhetes[0].Account__r.PersonEmail;
+            Id bilheteRealId   = bilhetes[0].Id;
 
-            // Invocar o envio de PDF
-            EnviarBilhetePDF.enviarEmailFuturo(new List<Id>{ bilheteId });
+            // 2. Invocar o envio de PDF (usando o ID real encontrado)
+            EnviarBilhetePDF.enviarEmailFuturo(new List<Id>{ bilheteRealId });
 
             out.sucesso      = true;
             out.emailEnviado = emailCliente;
-            out.mensagemChat = '📧 Bilhete reenviado com sucesso para *' + emailCliente + '*!\n'
-                + 'Verifica também a pasta de spam se não aparecer na caixa de entrada.';
+            out.mensagemChat = '📧 O bilhete *' + bilhetes[0].Name + '* foi reenviado para *' + emailCliente + '*!\n'
+                + 'Deve chegar dentro de instantes. Verifica também a pasta de spam.';
 
         } catch (Exception e) {
             out.sucesso      = false;
             out.erroMsg      = e.getMessage();
-            out.mensagemChat = '⚠️ Não foi possível reenviar o bilhete. '
-                + 'Contacta o suporte se o problema persistir.';
+            out.mensagemChat = '⚠️ Ocorreu um erro ao tentar reenviar o bilhete: ' + e.getMessage();
         }
         return new List<Output>{ out };
     }
